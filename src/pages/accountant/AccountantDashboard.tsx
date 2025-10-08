@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 const AccountantDashboard = () => {
   const { toast } = useToast();
   const [requisitions, setRequisitions] = useState(mockRequisitions);
-  const [uploadedPOP, setUploadedPOP] = useState<{ [key: string]: boolean }>({});
+  const [uploadedPOP, setUploadedPOP] = useState<{ [key: string]: File[] }>({});
 
   const approvedRequisitions = requisitions.filter(r => r.status === 'approved');
   
@@ -26,12 +26,22 @@ const AccountantDashboard = () => {
   const paidAmount = paymentSchedule.filter(item => item.status === 'Paid').reduce((sum, item) => sum + item.amount, 0);
   const pendingAmount = totalAmount - paidAmount;
 
-  const handleUploadPOP = (reqId: string) => {
-    setUploadedPOP({ ...uploadedPOP, [reqId]: true });
-    toast({
-      title: "Proof of Payment Uploaded",
-      description: "Payment proof has been attached to the requisition",
-    });
+  const handleUploadPOP = (reqId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) {
+      setUploadedPOP({ ...uploadedPOP, [reqId]: [...(uploadedPOP[reqId] || []), ...files] });
+      toast({
+        title: "Proof of Payment Uploaded",
+        description: `${files.length} file(s) uploaded`,
+      });
+    }
+  };
+
+  const removePOPFile = (reqId: string, fileIndex: number) => {
+    setUploadedPOP(prev => ({
+      ...prev,
+      [reqId]: prev[reqId].filter((_, i) => i !== fileIndex)
+    }));
   };
 
   const handleMarkComplete = (reqId: string) => {
@@ -112,16 +122,45 @@ const AccountantDashboard = () => {
                       </div>
 
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
-                        <p className="font-semibold mb-2">Step 2: Upload Proof of Payment</p>
-                        <div 
-                          className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer"
-                          onClick={() => handleUploadPOP(req.id)}
+                        <p className="font-semibold mb-2">Step 2: Upload Proof of Payment (Multiple files allowed)</p>
+                        <input
+                          type="file"
+                          id={`pop-${req.id}`}
+                          accept=".pdf,.jpg,.jpeg,.png"
+                          onChange={(e) => handleUploadPOP(req.id, e)}
+                          className="hidden"
+                          multiple
+                        />
+                        <label
+                          htmlFor={`pop-${req.id}`}
+                          className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer flex flex-col items-center"
                         >
-                          <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                          <Upload className="h-8 w-8 text-gray-400" />
                           <p className="mt-2 text-sm text-gray-600">
-                            {uploadedPOP[req.id] ? '✓ proof_of_payment.pdf uploaded' : '📎 Click to upload proof_of_payment.pdf'}
+                            📎 Click to upload proof of payment files
                           </p>
-                        </div>
+                          <p className="text-xs text-gray-500">PDF, JPG, PNG (multiple files allowed)</p>
+                        </label>
+
+                        {uploadedPOP[req.id] && uploadedPOP[req.id].length > 0 && (
+                          <div className="mt-3 space-y-2">
+                            <p className="text-sm font-medium">Uploaded Files ({uploadedPOP[req.id].length}):</p>
+                            {uploadedPOP[req.id].map((file, index) => (
+                              <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                <span className="text-sm text-gray-700">✓ {file.name}</span>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removePOPFile(req.id, index)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  Remove
+                                </Button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
@@ -129,7 +168,7 @@ const AccountantDashboard = () => {
                         <div className="flex gap-3">
                           <Button
                             onClick={() => handleMarkComplete(req.id)}
-                            disabled={!uploadedPOP[req.id]}
+                            disabled={!uploadedPOP[req.id] || uploadedPOP[req.id].length === 0}
                             className="flex-1 bg-green-600 hover:bg-green-700"
                           >
                             <CheckCircle className="mr-2 h-4 w-4" />
@@ -137,7 +176,7 @@ const AccountantDashboard = () => {
                           </Button>
                           <Button
                             onClick={() => handleNotifyHOD(req.id)}
-                            disabled={!uploadedPOP[req.id]}
+                            disabled={!uploadedPOP[req.id] || uploadedPOP[req.id].length === 0}
                             className="flex-1 bg-blue-600 hover:bg-blue-700"
                           >
                             <Mail className="mr-2 h-4 w-4" />

@@ -143,7 +143,11 @@ const HODDashboard = () => {
                     <TableCell>{new Date(req.submittedDate).toLocaleDateString()}</TableCell>
                     <TableCell>
                       {req.status === 'rejected' ? (
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate('/hod/new-requisition', { state: { editRequisition: req } })}
+                        >
                           <Edit className="mr-2 h-4 w-4" />
                           Edit & Resubmit
                         </Button>

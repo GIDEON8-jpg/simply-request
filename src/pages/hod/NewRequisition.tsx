@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,10 @@ import { Department, RequisitionType } from '@/types/requisition';
 
 const NewRequisition = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  const editRequisition = location.state?.editRequisition;
+  
   const [formData, setFormData] = useState({
     title: '',
     department: '' as Department,
@@ -29,14 +32,61 @@ const NewRequisition = () => {
     description: '',
   });
 
+  const [supportingDocuments, setSupportingDocuments] = useState<File[]>([]);
+  const [chosenRequisitionFile, setChosenRequisitionFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    if (editRequisition) {
+      setFormData({
+        title: editRequisition.title,
+        department: editRequisition.department,
+        amount: editRequisition.amount.toString(),
+        chosenSupplier: editRequisition.chosenSupplier.id,
+        otherSupplier1: '',
+        otherSupplier2: '',
+        chosenRequisition: '',
+        type: editRequisition.type,
+        deviationReason: editRequisition.deviationReason || '',
+        budgetCode: editRequisition.budgetCode,
+        description: editRequisition.description,
+      });
+    }
+  }, [editRequisition]);
+
   const selectedSupplier = mockSuppliers.find(s => s.id === formData.chosenSupplier);
   const taxClearance = mockTaxClearances.find(tc => tc.supplierId === formData.chosenSupplier);
+
+  const handleChosenRequisitionUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setChosenRequisitionFile(file);
+      toast({
+        title: "File Selected",
+        description: `${file.name} selected`,
+      });
+    }
+  };
+
+  const handleSupportingDocumentsUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSupportingDocuments(prev => [...prev, ...files]);
+    toast({
+      title: "Files Selected",
+      description: `${files.length} file(s) added`,
+    });
+  };
+
+  const removeDocument = (index: number) => {
+    setSupportingDocuments(prev => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: "Requisition Submitted",
-      description: "Your requisition has been submitted for approval.",
+      title: editRequisition ? "Requisition Resubmitted" : "Requisition Submitted",
+      description: editRequisition 
+        ? "Your requisition has been resubmitted for approval." 
+        : "Your requisition has been submitted for approval.",
     });
     navigate('/hod');
   };
@@ -58,7 +108,14 @@ const NewRequisition = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>New Requisition Form</CardTitle>
+            <CardTitle>
+              {editRequisition ? 'Edit & Resubmit Requisition' : 'New Requisition Form'}
+              {editRequisition && (
+                <span className="ml-2 text-sm text-red-600 font-normal">
+                  (Previously Rejected - {editRequisition.rejectionReason})
+                </span>
+              )}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -148,11 +205,24 @@ const NewRequisition = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="chosenRequisition">Upload Chosen Requisition *</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors cursor-pointer">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600">Click to upload chosen requisition</p>
+                  <input
+                    type="file"
+                    id="chosenRequisition"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleChosenRequisitionUpload}
+                    className="hidden"
+                    required={!editRequisition}
+                  />
+                  <label
+                    htmlFor="chosenRequisition"
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors cursor-pointer flex flex-col items-center"
+                  >
+                    <Upload className="h-8 w-8 text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-600">
+                      {chosenRequisitionFile ? `✓ ${chosenRequisitionFile.name}` : 'Click to upload chosen requisition'}
+                    </p>
                     <p className="text-xs text-gray-500">PDF, DOC (max 5MB)</p>
-                  </div>
+                  </label>
                 </div>
               </div>
 
@@ -198,24 +268,45 @@ const NewRequisition = () => {
               </div>
 
               <div className="space-y-4 border-t pt-4">
-                <h3 className="text-lg font-semibold">Supporting Documents</h3>
+                <h3 className="text-lg font-semibold">Supporting Documents (Multiple files allowed)</h3>
                 
                 <div className="space-y-2">
-                  <Label>Supporting Document 1</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors cursor-pointer">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600">Click to upload document</p>
-                    <p className="text-xs text-gray-500">PDF, DOC, XLS (max 10MB)</p>
-                  </div>
-                </div>
+                  <input
+                    type="file"
+                    id="supportingDocuments"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx"
+                    onChange={handleSupportingDocumentsUpload}
+                    className="hidden"
+                    multiple
+                  />
+                  <label
+                    htmlFor="supportingDocuments"
+                    className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors cursor-pointer flex flex-col items-center"
+                  >
+                    <Upload className="h-8 w-8 text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-600">Click to upload supporting documents</p>
+                    <p className="text-xs text-gray-500">PDF, DOC, XLS (max 10MB each, multiple files allowed)</p>
+                  </label>
 
-                <div className="space-y-2">
-                  <Label>Supporting Document 2</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors cursor-pointer">
-                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
-                    <p className="mt-2 text-sm text-gray-600">Click to upload document</p>
-                    <p className="text-xs text-gray-500">PDF, DOC, XLS (max 10MB)</p>
-                  </div>
+                  {supportingDocuments.length > 0 && (
+                    <div className="mt-3 space-y-2">
+                      <p className="text-sm font-medium">Attached Files ({supportingDocuments.length}):</p>
+                      {supportingDocuments.map((file, index) => (
+                        <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
+                          <span className="text-sm text-gray-700">✓ {file.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeDocument(index)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
