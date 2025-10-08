@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
+import BudgetWarning from '@/components/BudgetWarning';
 import { mockRequisitions } from '@/data/mockData';
 import { Plus, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -11,6 +12,12 @@ import { useNavigate } from 'react-router-dom';
 const HODDashboard = () => {
   const navigate = useNavigate();
   const [requisitions] = useState(mockRequisitions);
+  
+  // Budget tracking (frontend mock - will sync with backend)
+  const monthlyBudget = 10000; // Mock budget
+  const budgetUsed = requisitions
+    .filter(r => r.status === 'approved' || r.status === 'completed')
+    .reduce((sum, r) => sum + r.amount, 0);
 
   const statusCounts = {
     pending: requisitions.filter(r => r.status === 'pending').length,
@@ -27,6 +34,9 @@ const HODDashboard = () => {
   return (
     <DashboardLayout title="Head of Department Dashboard">
       <div className="space-y-6">
+        {/* Budget Warning */}
+        <BudgetWarning budgetUsed={budgetUsed} budgetTotal={monthlyBudget} />
+
         {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card className="border-l-4 border-l-[hsl(var(--status-pending))]">

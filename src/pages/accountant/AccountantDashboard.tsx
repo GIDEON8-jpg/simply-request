@@ -39,9 +39,10 @@ const AccountantDashboard = () => {
       req.id === reqId ? { ...req, status: 'completed' as any } : req
     ));
     toast({
-      title: "Marked as Completed",
-      description: "Requisition status updated to Completed",
+      title: "Status Synced",
+      description: "Requisition status updated to Completed and synced with system",
     });
+    // In real app: sync with backend to update status across all dashboards
   };
 
   const handleNotifyHOD = (reqId: string) => {

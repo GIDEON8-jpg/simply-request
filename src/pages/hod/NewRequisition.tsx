@@ -118,10 +118,10 @@ const NewRequisition = () => {
 
               {/* Supplier Section */}
               <div className="space-y-4 border-t pt-4">
-                <h3 className="text-lg font-semibold">Supplier Information</h3>
+                <h3 className="text-lg font-semibold">Supplier & Documents</h3>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="chosenSupplier">Chosen Supplier (after bid analysis) *</Label>
+                  <Label htmlFor="chosenSupplier">Chosen Supplier *</Label>
                   <Select
                     value={formData.chosenSupplier}
                     onValueChange={(value) => setFormData({ ...formData, chosenSupplier: value })}
@@ -147,52 +147,13 @@ const NewRequisition = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="otherSupplier1">Other Supplier 1</Label>
-                  <Select
-                    value={formData.otherSupplier1}
-                    onValueChange={(value) => setFormData({ ...formData, otherSupplier1: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select supplier (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockSuppliers.filter(s => s.status === 'active' && s.id !== formData.chosenSupplier).map(supplier => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="chosenRequisition">Upload Chosen Requisition *</Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors cursor-pointer">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-600">Click to upload chosen requisition</p>
+                    <p className="text-xs text-gray-500">PDF, DOC (max 5MB)</p>
+                  </div>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="otherSupplier2">Other Supplier 2</Label>
-                  <Select
-                    value={formData.otherSupplier2}
-                    onValueChange={(value) => setFormData({ ...formData, otherSupplier2: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select supplier (optional)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mockSuppliers.filter(s => s.status === 'active' && s.id !== formData.chosenSupplier && s.id !== formData.otherSupplier1).map(supplier => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="chosenRequisition">Chosen Requisition *</Label>
-                <Input
-                  id="chosenRequisition"
-                  value={formData.chosenRequisition}
-                  onChange={(e) => setFormData({ ...formData, chosenRequisition: e.target.value })}
-                  required
-                />
               </div>
 
               <div className="space-y-2">
@@ -236,12 +197,25 @@ const NewRequisition = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="documents">Supporting Documents</Label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
-                  <p className="text-xs text-gray-500">PDF, DOC, XLS (max 10MB)</p>
+              <div className="space-y-4 border-t pt-4">
+                <h3 className="text-lg font-semibold">Supporting Documents</h3>
+                
+                <div className="space-y-2">
+                  <Label>Supporting Document 1</Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors cursor-pointer">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-600">Click to upload document</p>
+                    <p className="text-xs text-gray-500">PDF, DOC, XLS (max 10MB)</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Supporting Document 2</Label>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-primary transition-colors cursor-pointer">
+                    <Upload className="mx-auto h-8 w-8 text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-600">Click to upload document</p>
+                    <p className="text-xs text-gray-500">PDF, DOC, XLS (max 10MB)</p>
+                  </div>
                 </div>
               </div>
 

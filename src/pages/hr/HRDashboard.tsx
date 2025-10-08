@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { mockSuppliers, mockTaxClearances } from '@/data/mockData';
-import { Plus, Upload, Trash2, Eye } from 'lucide-react';
+import { Plus, Upload, Trash2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
@@ -61,10 +61,10 @@ const HRDashboard = () => {
     });
   };
 
-  const handleViewAllTaxClearances = () => {
+  const handleDownloadTaxClearance = (fileName: string) => {
     toast({
-      title: "Tax Clearances",
-      description: "Opening tax clearance repository",
+      title: "Downloading",
+      description: `${fileName} is being downloaded`,
     });
   };
 
@@ -144,16 +144,10 @@ const HRDashboard = () => {
               <p className="text-xs text-green-600 mt-2">Valid: Q3 2025 (Sep-Dec) - Quarterly validation</p>
             </div>
 
-            <div className="flex gap-3">
-              <Button onClick={handleUploadTaxClearance} className="flex-1 bg-green-600 hover:bg-green-700">
-                <Upload className="mr-2 h-4 w-4" />
-                UPLOAD TAX CLEARANCE
-              </Button>
-              <Button onClick={handleViewAllTaxClearances} variant="outline" className="flex-1">
-                <Eye className="mr-2 h-4 w-4" />
-                VIEW ALL TAX CLEARANCES
-              </Button>
-            </div>
+            <Button onClick={handleUploadTaxClearance} className="w-full bg-green-600 hover:bg-green-700">
+              <Upload className="mr-2 h-4 w-4" />
+              UPLOAD TAX CLEARANCE
+            </Button>
           </CardContent>
         </Card>
 
@@ -202,6 +196,7 @@ const HRDashboard = () => {
                   <TableHead>Valid From</TableHead>
                   <TableHead>Valid To</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -220,6 +215,16 @@ const HRDashboard = () => {
                         <Badge className={isValid ? 'bg-green-600' : 'bg-red-600'}>
                           {isValid ? 'Valid' : 'Expired'}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleDownloadTaxClearance(tc.fileName)}
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );

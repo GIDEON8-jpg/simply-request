@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { mockRequisitions } from '@/data/mockData';
-import { Upload, Download, Mail } from 'lucide-react';
+import { Download, Mail, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
 
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [requisitions] = useState(mockRequisitions);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
 
   const statusCounts = {
     pending: requisitions.filter(r => r.status === 'pending').length,
@@ -23,24 +26,10 @@ const AdminDashboard = () => {
     .filter(r => r.status === 'completed')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const handleUploadSuppliers = () => {
-    toast({
-      title: "Supplier List Uploaded",
-      description: "Supplier database has been updated",
-    });
-  };
-
-  const handleUploadBudget = () => {
-    toast({
-      title: "Budget Uploaded",
-      description: "Monthly budget has been updated",
-    });
-  };
-
   const handleGenerateReport = () => {
     toast({
       title: "Generating Report",
-      description: "Monthly requisition report is being generated",
+      description: `Report for ${selectedMonth} is being generated`,
     });
   };
 
@@ -61,40 +50,50 @@ const AdminDashboard = () => {
   return (
     <DashboardLayout title="Administrator Dashboard">
       <div className="space-y-6">
-        {/* Upload Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload Supplier List</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div 
-                onClick={handleUploadSuppliers}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
-              >
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
-                <p className="text-xs text-gray-500">CSV file with supplier information</p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Upload Monthly Budget</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div 
-                onClick={handleUploadBudget}
-                className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary transition-colors cursor-pointer"
-              >
-                <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                <p className="mt-2 text-sm text-gray-600">Click to upload or drag and drop</p>
-                <p className="text-xs text-gray-500">Clears automatically every month</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* Generate Report Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Generate Monthly Report</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="reportMonth">Select Month</Label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select month" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2025-01">January 2025</SelectItem>
+                  <SelectItem value="2025-02">February 2025</SelectItem>
+                  <SelectItem value="2025-03">March 2025</SelectItem>
+                  <SelectItem value="2025-04">April 2025</SelectItem>
+                  <SelectItem value="2025-05">May 2025</SelectItem>
+                  <SelectItem value="2025-06">June 2025</SelectItem>
+                  <SelectItem value="2025-07">July 2025</SelectItem>
+                  <SelectItem value="2025-08">August 2025</SelectItem>
+                  <SelectItem value="2025-09">September 2025</SelectItem>
+                  <SelectItem value="2025-10">October 2025</SelectItem>
+                  <SelectItem value="2025-11">November 2025</SelectItem>
+                  <SelectItem value="2025-12">December 2025</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={handleGenerateReport} className="flex-1">
+                <FileText className="mr-2 h-4 w-4" />
+                Generate Report
+              </Button>
+              <Button onClick={handleExportEmail} variant="outline" className="flex-1">
+                <Mail className="mr-2 h-4 w-4" />
+                Export to Email
+              </Button>
+              <Button onClick={handleDownloadCSV} variant="outline" className="flex-1">
+                <Download className="mr-2 h-4 w-4" />
+                Download CSV
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Monthly Report Summary */}
         <Card>
@@ -130,27 +129,6 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-3">
-              <Button onClick={handleGenerateReport} variant="outline">
-                Generate Report
-              </Button>
-              <Button onClick={handleExportEmail} variant="outline">
-                <Mail className="mr-2 h-4 w-4" />
-                Export to Email
-              </Button>
-              <Button onClick={handleDownloadCSV} variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Download CSV
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* All Requisitions Table */}
         <Card>
@@ -192,19 +170,6 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* System Stats */}
-        <Card>
-          <CardHeader>
-            <CardTitle>System Stats Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-muted-foreground">
-              <p className="mb-2">ℹ️ Supplier management is handled by HR & Admin</p>
-              <p>Total active suppliers: 5</p>
-              <p>Total users: 5 (across all roles)</p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );
