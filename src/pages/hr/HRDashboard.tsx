@@ -6,15 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { mockSuppliers, mockTaxClearances } from '@/data/mockData';
 import { Plus, Upload, Trash2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { useSuppliers } from '@/contexts/SuppliersContext';
 
 const HRDashboard = () => {
   const { toast } = useToast();
-  const [suppliers, setSuppliers] = useState(mockSuppliers);
-  const [taxClearances, setTaxClearances] = useState(mockTaxClearances);
+  const { suppliers, taxClearances, addSupplier, addTaxClearance, deactivateSupplier } = useSuppliers();
   const [newSupplier, setNewSupplier] = useState({
     name: '',
     icazNumber: '',
@@ -45,7 +44,7 @@ const HRDashboard = () => {
       contactInfo: newSupplier.contactInfo,
       status: 'active' as const,
     };
-    setSuppliers([...suppliers, newSupplierData]);
+    addSupplier(newSupplierData);
 
     // Add tax clearance to repository
     const newTaxClearance = {
@@ -57,7 +56,7 @@ const HRDashboard = () => {
       validFrom: '2025-09-01',
       validTo: '2025-12-31',
     };
-    setTaxClearances([...taxClearances, newTaxClearance]);
+    addTaxClearance(newTaxClearance);
 
     toast({
       title: "Supplier Added",
@@ -140,10 +139,12 @@ const HRDashboard = () => {
       });
       return;
     }
+    deactivateSupplier(selectedSupplierId);
     toast({
       title: "Supplier Deactivated",
       description: "Supplier has been removed from the active list (history preserved)",
     });
+    setSelectedSupplierId('');
   };
 
   const handleDownloadTaxClearance = (fileName: string) => {

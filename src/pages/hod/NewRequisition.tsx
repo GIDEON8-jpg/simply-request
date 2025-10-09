@@ -8,14 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { mockSuppliers, mockTaxClearances } from '@/data/mockData';
 import { ArrowLeft, Upload, CheckCircle } from 'lucide-react';
 import { Department, RequisitionType } from '@/types/requisition';
+import { useSuppliers } from '@/contexts/SuppliersContext';
 
 const NewRequisition = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { suppliers, taxClearances } = useSuppliers();
   const editRequisition = location.state?.editRequisition;
   
   const [formData, setFormData] = useState({
@@ -53,8 +54,8 @@ const NewRequisition = () => {
     }
   }, [editRequisition]);
 
-  const selectedSupplier = mockSuppliers.find(s => s.id === formData.chosenSupplier);
-  const taxClearance = mockTaxClearances.find(tc => tc.supplierId === formData.chosenSupplier);
+  const selectedSupplier = suppliers.find(s => s.id === formData.chosenSupplier);
+  const taxClearance = taxClearances.find(tc => tc.supplierId === formData.chosenSupplier);
 
   const handleChosenRequisitionUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -188,7 +189,7 @@ const NewRequisition = () => {
                       <SelectValue placeholder="Select supplier" />
                     </SelectTrigger>
                     <SelectContent>
-                      {mockSuppliers.filter(s => s.status === 'active').map(supplier => (
+                      {suppliers.filter(s => s.status === 'active').map(supplier => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name} - {supplier.icazNumber}
                         </SelectItem>
