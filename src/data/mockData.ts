@@ -42,7 +42,7 @@ export const mockRequisitions: Requisition[] = [
   {
     id: 'REQ-002',
     title: 'Multicopy Paper',
-    department: 'Operations',
+    department: 'Technical',
     amount: 255.00,
     chosenSupplier: mockSuppliers[1],
     chosenRequisition: 'Office paper supplies',
@@ -78,7 +78,7 @@ export const mockRequisitions: Requisition[] = [
   {
     id: 'REQ-004',
     title: 'Marketing Materials',
-    department: 'Marketing',
+    department: 'Marketing and PR',
     amount: 850.00,
     chosenSupplier: mockSuppliers[4],
     chosenRequisition: 'Promotional materials for Q4 campaign',

@@ -13,10 +13,19 @@ const HODDashboard = () => {
   const navigate = useNavigate();
   const [requisitions] = useState(mockRequisitions);
   
-  // Budget tracking (frontend mock - will sync with backend)
-  const monthlyBudget = 10000; // Mock budget
+  // Budget tracking per department (frontend mock - will sync with backend)
+  const userDepartment = requisitions[0]?.department || 'IT'; // Mock: get from auth context
+  const departmentBudgets = {
+    'Education': 5000,
+    'IT': 10000,
+    'Marketing and PR': 7000,
+    'Technical': 8000,
+    'Human Resources and Admin': 6000,
+  };
+  
+  const monthlyBudget = departmentBudgets[userDepartment as keyof typeof departmentBudgets] || 10000;
   const budgetUsed = requisitions
-    .filter(r => r.status === 'approved' || r.status === 'completed')
+    .filter(r => r.department === userDepartment && (r.status === 'approved' || r.status === 'completed'))
     .reduce((sum, r) => sum + r.amount, 0);
 
   const statusCounts = {

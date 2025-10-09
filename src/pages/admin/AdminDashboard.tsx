@@ -5,15 +5,28 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { mockRequisitions } from '@/data/mockData';
-import { Download, Mail, FileText } from 'lucide-react';
+import { Download, Mail, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Department } from '@/types/requisition';
+
+const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Technical', 'Human Resources and Admin'];
 
 const AdminDashboard = () => {
   const { toast } = useToast();
   const [requisitions] = useState(mockRequisitions);
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  
+  // Department budgets (will sync with backend)
+  const [budgets, setBudgets] = useState<Record<Department, number>>({
+    'Education': 5000,
+    'IT': 10000,
+    'Marketing and PR': 7000,
+    'Technical': 8000,
+    'Human Resources and Admin': 6000,
+  });
 
   const statusCounts = {
     pending: requisitions.filter(r => r.status === 'pending').length,
@@ -47,9 +60,91 @@ const AdminDashboard = () => {
     });
   };
 
+  const handleSaveBudgets = () => {
+    toast({
+      title: "Budgets Saved",
+      description: "Department budgets have been updated successfully",
+    });
+  };
+
+  const handleBudgetChange = (dept: Department, value: string) => {
+    const numValue = parseFloat(value) || 0;
+    setBudgets(prev => ({ ...prev, [dept]: numValue }));
+  };
+
+  // Calculate budget usage per department
+  const departmentBudgetUsage = departments.map(dept => {
+    const used = requisitions
+      .filter(r => r.department === dept && (r.status === 'approved' || r.status === 'completed'))
+      .reduce((sum, r) => sum + r.amount, 0);
+    const total = budgets[dept];
+    const percentage = total > 0 ? (used / total) * 100 : 0;
+    return { department: dept, used, total, percentage };
+  });
+
   return (
     <DashboardLayout title="Administrator Dashboard">
       <div className="space-y-6">
+        {/* Department Budgets */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Department Budgets</CardTitle>
+            <p className="text-sm text-muted-foreground">Set and manage budgets for each department</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {departments.map(dept => {
+                const usage = departmentBudgetUsage.find(d => d.department === dept);
+                const isNearLimit = usage && usage.percentage >= 80;
+                const isExceeded = usage && usage.percentage >= 100;
+                
+                return (
+                  <div key={dept} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor={`budget-${dept}`}>{dept}</Label>
+                      {usage && (
+                        <span className={`text-sm font-medium ${
+                          isExceeded ? 'text-red-600' : isNearLimit ? 'text-orange-600' : 'text-green-600'
+                        }`}>
+                          ${usage.used.toFixed(2)} / ${usage.total.toFixed(2)} ({usage.percentage.toFixed(1)}%)
+                        </span>
+                      )}
+                    </div>
+                    <Input
+                      id={`budget-${dept}`}
+                      type="number"
+                      step="0.01"
+                      value={budgets[dept]}
+                      onChange={(e) => handleBudgetChange(dept, e.target.value)}
+                      className={isExceeded ? 'border-red-500' : isNearLimit ? 'border-orange-500' : ''}
+                    />
+                    {usage && usage.percentage > 0 && (
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className={`h-2 rounded-full transition-all ${
+                            isExceeded ? 'bg-red-600' : isNearLimit ? 'bg-orange-600' : 'bg-green-600'
+                          }`}
+                          style={{ width: `${Math.min(usage.percentage, 100)}%` }}
+                        />
+                      </div>
+                    )}
+                    {isExceeded && (
+                      <p className="text-xs text-red-600 font-medium">⚠ Budget exceeded!</p>
+                    )}
+                    {isNearLimit && !isExceeded && (
+                      <p className="text-xs text-orange-600 font-medium">⚠ Approaching budget limit</p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <Button onClick={handleSaveBudgets} className="w-full">
+              <Save className="mr-2 h-4 w-4" />
+              Save Department Budgets
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Generate Report Section */}
         <Card>
           <CardHeader>

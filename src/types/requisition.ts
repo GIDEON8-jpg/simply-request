@@ -1,6 +1,6 @@
 export type RequisitionStatus = 'pending' | 'approved' | 'approved_wait' | 'completed' | 'rejected';
 export type RequisitionType = 'standard' | 'deviation';
-export type Department = 'Marketing' | 'IT' | 'HR' | 'Finance' | 'Operations';
+export type Department = 'Education' | 'IT' | 'Marketing and PR' | 'Technical' | 'Human Resources and Admin';
 
 export interface Supplier {
   id: string;

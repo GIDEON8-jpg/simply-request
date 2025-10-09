@@ -141,11 +141,11 @@ const NewRequisition = () => {
                       <SelectValue placeholder="Select department" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Education">Education</SelectItem>
                       <SelectItem value="IT">IT</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="Operations">Operations</SelectItem>
+                      <SelectItem value="Marketing and PR">Marketing and PR</SelectItem>
+                      <SelectItem value="Technical">Technical</SelectItem>
+                      <SelectItem value="Human Resources and Admin">Human Resources and Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
