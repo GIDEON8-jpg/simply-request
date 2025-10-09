@@ -21,6 +21,7 @@ const HRDashboard = () => {
     contactInfo: '',
   });
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
+  const [taxClearanceFile, setTaxClearanceFile] = useState<File | null>(null);
 
   const handleAddSupplier = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +30,25 @@ const HRDashboard = () => {
       description: `${newSupplier.name} has been added to the database`,
     });
     setNewSupplier({ name: '', icazNumber: '', contactInfo: '' });
+  };
+
+  const handleTaxClearanceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF file",
+          variant: "destructive",
+        });
+        return;
+      }
+      setTaxClearanceFile(file);
+      toast({
+        title: "File Selected",
+        description: `${file.name} is ready to upload`,
+      });
+    }
   };
 
   const handleUploadTaxClearance = () => {
@@ -40,10 +60,20 @@ const HRDashboard = () => {
       });
       return;
     }
+    if (!taxClearanceFile) {
+      toast({
+        title: "No File Selected",
+        description: "Please select a tax clearance file to upload",
+        variant: "destructive",
+      });
+      return;
+    }
     toast({
       title: "Tax Clearance Uploaded",
-      description: "Tax clearance certificate has been added to the repository",
+      description: `${taxClearanceFile.name} has been added to the repository`,
     });
+    setTaxClearanceFile(null);
+    setSelectedSupplierId('');
   };
 
   const handleDeactivateSupplier = () => {
@@ -137,14 +167,32 @@ const HRDashboard = () => {
               </Select>
             </div>
 
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors cursor-pointer">
-              <Upload className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-2 text-sm text-gray-600">Click to upload Tax Clearance Certificate</p>
-              <p className="text-xs text-gray-500">PDF format only</p>
-              <p className="text-xs text-green-600 mt-2">Valid: Q3 2025 (Sep-Dec) - Quarterly validation</p>
+            <div className="space-y-2">
+              <Label htmlFor="taxClearanceFile">Tax Clearance Certificate (PDF)</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                <input
+                  type="file"
+                  id="taxClearanceFile"
+                  accept=".pdf"
+                  onChange={handleTaxClearanceFileChange}
+                  className="hidden"
+                />
+                <label htmlFor="taxClearanceFile" className="cursor-pointer block">
+                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-600">
+                    {taxClearanceFile ? taxClearanceFile.name : 'Click to upload Tax Clearance Certificate'}
+                  </p>
+                  <p className="text-xs text-gray-500">PDF format only</p>
+                  <p className="text-xs text-green-600 mt-2">Valid: Q3 2025 (Sep-Dec) - Quarterly validation</p>
+                </label>
+              </div>
             </div>
 
-            <Button onClick={handleUploadTaxClearance} className="w-full bg-green-600 hover:bg-green-700">
+            <Button 
+              onClick={handleUploadTaxClearance} 
+              className="w-full bg-green-600 hover:bg-green-700"
+              disabled={!taxClearanceFile || !selectedSupplierId}
+            >
               <Upload className="mr-2 h-4 w-4" />
               UPLOAD TAX CLEARANCE
             </Button>
