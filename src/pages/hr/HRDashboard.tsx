@@ -14,22 +14,77 @@ import { Badge } from '@/components/ui/badge';
 const HRDashboard = () => {
   const { toast } = useToast();
   const [suppliers, setSuppliers] = useState(mockSuppliers);
-  const [taxClearances] = useState(mockTaxClearances);
+  const [taxClearances, setTaxClearances] = useState(mockTaxClearances);
   const [newSupplier, setNewSupplier] = useState({
     name: '',
     icazNumber: '',
     contactInfo: '',
   });
+  const [newSupplierTaxFile, setNewSupplierTaxFile] = useState<File | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [taxClearanceFile, setTaxClearanceFile] = useState<File | null>(null);
 
   const handleAddSupplier = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!newSupplierTaxFile) {
+      toast({
+        title: "Tax Clearance Required",
+        description: "Please upload a tax clearance certificate before adding the supplier",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Add new supplier
+    const newSupplierId = `SUP00${suppliers.length + 1}`;
+    const newSupplierData = {
+      id: newSupplierId,
+      name: newSupplier.name,
+      icazNumber: newSupplier.icazNumber,
+      contactInfo: newSupplier.contactInfo,
+      status: 'active' as const,
+    };
+    setSuppliers([...suppliers, newSupplierData]);
+
+    // Add tax clearance to repository
+    const newTaxClearance = {
+      id: `TC00${taxClearances.length + 1}`,
+      supplierId: newSupplierId,
+      fileName: newSupplierTaxFile.name,
+      quarter: 'Q3',
+      year: '2025',
+      validFrom: '2025-09-01',
+      validTo: '2025-12-31',
+    };
+    setTaxClearances([...taxClearances, newTaxClearance]);
+
     toast({
       title: "Supplier Added",
-      description: `${newSupplier.name} has been added to the database`,
+      description: `${newSupplier.name} has been added with tax clearance`,
     });
+    
     setNewSupplier({ name: '', icazNumber: '', contactInfo: '' });
+    setNewSupplierTaxFile(null);
+  };
+
+  const handleNewSupplierTaxFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        toast({
+          title: "Invalid File Type",
+          description: "Please upload a PDF file",
+          variant: "destructive",
+        });
+        return;
+      }
+      setNewSupplierTaxFile(file);
+      toast({
+        title: "File Selected",
+        description: `${file.name} is ready to upload`,
+      });
+    }
   };
 
   const handleTaxClearanceFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,7 +192,29 @@ const HRDashboard = () => {
                   />
                 </div>
               </div>
-              <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
+
+              <div className="space-y-2">
+                <Label htmlFor="newSupplierTaxFile">Tax Clearance Certificate (PDF) *</Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-primary transition-colors">
+                  <input
+                    type="file"
+                    id="newSupplierTaxFile"
+                    accept=".pdf"
+                    onChange={handleNewSupplierTaxFileChange}
+                    className="hidden"
+                  />
+                  <label htmlFor="newSupplierTaxFile" className="cursor-pointer block">
+                    <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                    <p className="mt-2 text-sm text-gray-600">
+                      {newSupplierTaxFile ? newSupplierTaxFile.name : 'Click to upload Tax Clearance Certificate'}
+                    </p>
+                    <p className="text-xs text-gray-500">PDF format only - Required before adding supplier</p>
+                    <p className="text-xs text-green-600 mt-2">Valid: Q3 2025 (Sep-Dec) - Quarterly validation</p>
+                  </label>
+                </div>
+              </div>
+
+              <Button type="submit" className="bg-purple-600 hover:bg-purple-700" disabled={!newSupplierTaxFile}>
                 <Plus className="mr-2 h-4 w-4" />
                 ADD SUPPLIER
               </Button>
