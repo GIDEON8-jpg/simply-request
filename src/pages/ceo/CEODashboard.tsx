@@ -7,14 +7,16 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 
-const FinanceDashboard = () => {
+const CEODashboard = () => {
   const { toast } = useToast();
   const { requisitions, updateRequisition } = useRequisitions();
   const [comments, setComments] = useState<Record<string, string>>({});
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
 
-  const pendingRequisitions = requisitions.filter(r => r.status === 'pending' && r.amount < 100);
+  const pendingRequisitions = requisitions.filter(
+    r => r.status === 'pending' && r.amount > 5000
+  );
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
@@ -38,7 +40,7 @@ const FinanceDashboard = () => {
     const updates: Partial<typeof requisitions[0]> = {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
-      approvedBy: action !== 'reject' ? 'Finance Officer' : undefined,
+      approvedBy: action !== 'reject' ? 'CEO' : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
     };
 
@@ -46,7 +48,7 @@ const FinanceDashboard = () => {
 
     toast({
       title: action === 'approve' ? "Requisition Approved" : action === 'reject' ? "Requisition Rejected" : "Approved with Wait Status",
-      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to Admin' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
+      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to Accountant' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
     });
 
     setComments(prev => ({ ...prev, [reqId]: '' }));
@@ -59,13 +61,13 @@ const FinanceDashboard = () => {
   };
 
   return (
-    <DashboardLayout title="Finance Dashboard">
+    <DashboardLayout title="Chief Executive Officer Dashboard">
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Pending Requisitions for Review (Less than $100)</CardTitle>
+            <CardTitle>Pending Requisitions for Review (Above $5,000)</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Requisitions requiring your approval (Amount below $100)
+              High-value requisitions requiring CEO approval
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -73,7 +75,7 @@ const FinanceDashboard = () => {
               <p className="text-center text-muted-foreground py-8">No pending requisitions to review</p>
             ) : (
               pendingRequisitions.map(req => (
-                <Card key={req.id} className="border-l-4 border-l-blue-500">
+                <Card key={req.id} className="border-l-4 border-l-red-500">
                   <CardContent className="pt-6 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -82,7 +84,7 @@ const FinanceDashboard = () => {
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Amount</p>
-                        <p className="font-semibold text-lg">${req.amount.toFixed(2)}</p>
+                        <p className="font-semibold text-lg text-red-600">${req.amount.toFixed(2)}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Title</p>
@@ -169,4 +171,4 @@ const FinanceDashboard = () => {
   );
 };
 
-export default FinanceDashboard;
+export default CEODashboard;

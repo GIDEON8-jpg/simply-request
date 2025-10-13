@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
-import { mockRequisitions } from '@/data/mockData';
+import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { Download, Mail, FileText, Save } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,7 +16,7 @@ const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Techn
 
 const AdminDashboard = () => {
   const { toast } = useToast();
-  const [requisitions] = useState(mockRequisitions);
+  const { requisitions } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   
   // Department budgets (will sync with backend)

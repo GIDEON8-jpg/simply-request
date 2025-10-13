@@ -5,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
-import { mockRequisitions } from '@/data/mockData';
+import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { Plus, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
-  const [requisitions] = useState(mockRequisitions);
+  const { requisitions } = useRequisitions();
   
   // Budget tracking per department (frontend mock - will sync with backend)
   const userDepartment = requisitions[0]?.department || 'IT'; // Mock: get from auth context

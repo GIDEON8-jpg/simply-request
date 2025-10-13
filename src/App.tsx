@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { SuppliersProvider } from "./contexts/SuppliersContext";
+import { RequisitionsProvider } from "./contexts/RequisitionsContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import HODDashboard from "./pages/hod/HODDashboard";
@@ -13,6 +14,8 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import FinanceDashboard from "./pages/finance/FinanceDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
+import TechnicalDirectorDashboard from "./pages/technical/TechnicalDirectorDashboard";
+import CEODashboard from "./pages/ceo/CEODashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,11 +38,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <SuppliersProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Routes>
+        <RequisitionsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             
@@ -83,11 +87,26 @@ const App = () => (
               </ProtectedRoute>
             } />
             
+            {/* Technical Director Routes */}
+            <Route path="/technical" element={
+              <ProtectedRoute allowedRole="technical">
+                <TechnicalDirectorDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* CEO Routes */}
+            <Route path="/ceo" element={
+              <ProtectedRoute allowedRole="ceo">
+                <CEODashboard />
+              </ProtectedRoute>
+            } />
+            
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </RequisitionsProvider>
       </SuppliersProvider>
     </AuthProvider>
   </QueryClientProvider>

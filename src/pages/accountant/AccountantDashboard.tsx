@@ -3,17 +3,32 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { mockRequisitions } from '@/data/mockData';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { Upload, CheckCircle, Mail, FileDown, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
 const AccountantDashboard = () => {
   const { toast } = useToast();
-  const [requisitions, setRequisitions] = useState(mockRequisitions);
+  const { requisitions, updateRequisition } = useRequisitions();
   const [uploadedPOP, setUploadedPOP] = useState<{ [key: string]: File[] }>({});
+  const [comments, setComments] = useState<Record<string, string>>({});
+  const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
+  const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
 
-  const approvedRequisitions = requisitions.filter(r => r.status === 'approved');
+  const pendingApprovals = requisitions.filter(r => 
+    r.status === 'approved' && 
+    !r.paymentDate && 
+    r.approvedBy && 
+    (r.approvedBy === 'Technical Director' || r.approvedBy === 'CEO')
+  );
+
+  const approvedForPayment = requisitions.filter(r => 
+    r.status === 'approved' && 
+    r.approvedBy === 'Accountant'
+  );
   
   const paymentSchedule = [
     { id: 'REQ-001', description: 'ICT Accessories', supplier: 'MultiChoice', amount: 510.00, date: '21/09/25', status: 'Paid' },
@@ -25,6 +40,48 @@ const AccountantDashboard = () => {
   const totalAmount = paymentSchedule.reduce((sum, item) => sum + item.amount, 0);
   const paidAmount = paymentSchedule.filter(item => item.status === 'Paid').reduce((sum, item) => sum + item.amount, 0);
   const pendingAmount = totalAmount - paidAmount;
+
+  const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
+    if (action === 'reject' && !comments[reqId]?.trim()) {
+      toast({
+        title: "Comment Required",
+        description: "Please provide a comment for rejection",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (action === 'wait' && !waitReasons[reqId]?.trim()) {
+      toast({
+        title: "Reason Required",
+        description: "Please provide a reason for approval with wait status",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updates: Partial<typeof requisitions[0]> = {
+      status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
+      approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
+      approvedBy: action !== 'reject' ? 'Accountant' : undefined,
+      approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
+    };
+
+    updateRequisition(reqId, updates);
+
+    toast({
+      title: action === 'approve' ? "Requisition Approved" : action === 'reject' ? "Requisition Rejected" : "Approved with Wait Status",
+      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved for payment processing' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
+    });
+
+    setComments(prev => ({ ...prev, [reqId]: '' }));
+    setWaitReasons(prev => ({ ...prev, [reqId]: '' }));
+    setShowWaitField(prev => ({ ...prev, [reqId]: false }));
+  };
+
+  const handleWaitClick = (reqId: string) => {
+    setShowWaitField(prev => ({ ...prev, [reqId]: !prev[reqId] }));
+  };
 
   const handleUploadPOP = (reqId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -45,14 +102,24 @@ const AccountantDashboard = () => {
   };
 
   const handleMarkComplete = (reqId: string) => {
-    setRequisitions(prev => prev.map(req => 
-      req.id === reqId ? { ...req, status: 'completed' as any } : req
-    ));
+    if (!uploadedPOP[reqId] || uploadedPOP[reqId].length === 0) {
+      toast({
+        title: "Upload Required",
+        description: "Please upload proof of payment before marking as complete",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateRequisition(reqId, { 
+      status: 'completed', 
+      paymentDate: new Date().toISOString() 
+    });
+
     toast({
       title: "Status Synced",
       description: "Requisition status updated to Completed and synced with system",
     });
-    // In real app: sync with backend to update status across all dashboards
   };
 
   const handleNotifyHOD = (reqId: string) => {
@@ -79,17 +146,122 @@ const AccountantDashboard = () => {
   return (
     <DashboardLayout title="Accountant Dashboard">
       <div className="space-y-6">
+        {/* Pending Approvals from Technical Director or CEO */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Pending Requisitions for Final Review</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Requisitions approved by Technical Director or CEO awaiting your final decision
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {pendingApprovals.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No pending requisitions for review</p>
+            ) : (
+              pendingApprovals.map(req => (
+                <Card key={req.id} className="border-l-4 border-l-blue-500">
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Requisition ID</p>
+                        <p className="font-semibold">{req.id}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Amount</p>
+                        <p className="font-semibold text-lg">${req.amount.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Title</p>
+                        <p className="font-medium">{req.title}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Department</p>
+                        <p className="font-medium">{req.department}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Approved By</p>
+                        <p className="font-medium">{req.approvedBy || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Supplier</p>
+                        <p className="font-medium">{req.chosenSupplier.name}</p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-sm text-muted-foreground">Description</p>
+                      <p className="text-sm mt-1">{req.description}</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor={`acc-comment-${req.id}`}>Comments (Required for rejection)</Label>
+                      <Textarea
+                        id={`acc-comment-${req.id}`}
+                        value={comments[req.id] || ''}
+                        onChange={(e) => setComments(prev => ({ ...prev, [req.id]: e.target.value }))}
+                        placeholder="Add your comments here..."
+                        rows={3}
+                      />
+                    </div>
+
+                    {showWaitField[req.id] && (
+                      <div className="space-y-2 bg-orange-50 p-4 rounded-lg border border-orange-200">
+                        <Label htmlFor={`acc-wait-${req.id}`}>Reason for Wait *</Label>
+                        <Textarea
+                          id={`acc-wait-${req.id}`}
+                          value={waitReasons[req.id] || ''}
+                          onChange={(e) => setWaitReasons(prev => ({ ...prev, [req.id]: e.target.value }))}
+                          placeholder="Please provide reason for approval with wait status..."
+                          rows={3}
+                        />
+                      </div>
+                    )}
+
+                    <div className="flex gap-3">
+                      <Button
+                        onClick={() => handleAction(req.id, 'approve')}
+                        className="flex-1 bg-green-600 hover:bg-green-700"
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          if (showWaitField[req.id]) {
+                            handleAction(req.id, 'wait');
+                          } else {
+                            handleWaitClick(req.id);
+                          }
+                        }}
+                        className="flex-1 bg-orange-600 hover:bg-orange-700"
+                      >
+                        {showWaitField[req.id] ? 'Submit Wait' : 'Approve but Wait'}
+                      </Button>
+                      <Button
+                        onClick={() => handleAction(req.id, 'reject')}
+                        variant="destructive"
+                        className="flex-1"
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
         {/* Approved Requisitions - Payment Processing */}
         <Card>
           <CardHeader>
             <CardTitle>Approved Requisitions - Payment Processing</CardTitle>
           </CardHeader>
           <CardContent>
-            {approvedRequisitions.length === 0 ? (
+            {approvedForPayment.length === 0 ? (
               <p className="text-center text-muted-foreground py-8">No approved requisitions pending payment</p>
             ) : (
               <div className="space-y-6">
-                {approvedRequisitions.map((req) => (
+                {approvedForPayment.map((req) => (
                   <Card key={req.id} className="border-2 border-green-200 bg-green-50/30">
                     <CardContent className="pt-6 space-y-4">
                       <div className="flex items-start justify-between">

@@ -11,13 +11,18 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Upload, CheckCircle } from 'lucide-react';
 import { Department, RequisitionType } from '@/types/requisition';
 import { useSuppliers } from '@/contexts/SuppliersContext';
+import { useRequisitions } from '@/contexts/RequisitionsContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const NewRequisition = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { suppliers, taxClearances } = useSuppliers();
+  const { addRequisition } = useRequisitions();
+  const { user } = useAuth();
   const editRequisition = location.state?.editRequisition;
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -83,20 +88,50 @@ const NewRequisition = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: editRequisition ? "Requisition Resubmitted" : "Requisition Submitted",
-      description: editRequisition 
-        ? "Your requisition has been resubmitted for approval." 
-        : "Your requisition has been submitted for approval.",
-    });
-    navigate('/hod');
-  };
+    
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
 
-  const handleSaveDraft = () => {
+    const selectedSupplierData = suppliers.find(s => s.id === formData.chosenSupplier);
+    const taxClearanceData = taxClearances.find(tc => tc.supplierId === formData.chosenSupplier);
+
+    if (!selectedSupplierData) {
+      toast({
+        title: "Error",
+        description: "Please select a valid supplier",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    const newRequisition = {
+      id: `REQ-${Date.now()}`,
+      title: formData.title,
+      department: formData.department,
+      amount: parseFloat(formData.amount),
+      chosenSupplier: selectedSupplierData,
+      chosenRequisition: chosenRequisitionFile?.name || '',
+      type: formData.type,
+      deviationReason: formData.deviationReason,
+      budgetCode: formData.budgetCode,
+      description: formData.description,
+      status: 'pending' as const,
+      submittedBy: user?.username || 'Unknown',
+      submittedDate: new Date().toISOString(),
+      taxClearanceAttached: taxClearanceData,
+      documents: supportingDocuments.map(f => f.name),
+    };
+
+    addRequisition(newRequisition);
+
     toast({
-      title: "Draft Saved",
-      description: "Your requisition has been saved as a draft.",
+      title: "Requisition Submitted Successfully",
+      description: "Your requisition has been submitted and is pending approval.",
     });
+
+    navigate('/hod');
   };
 
   return (
@@ -312,13 +347,14 @@ const NewRequisition = () => {
               </div>
 
               <div className="flex gap-4 pt-4">
-                <Button type="submit" className="flex-1 bg-green-600 hover:bg-green-700">
-                  Submit Requisition
+                <Button 
+                  type="submit" 
+                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Requisition'}
                 </Button>
-                <Button type="button" variant="outline" onClick={handleSaveDraft} className="flex-1">
-                  Save Draft
-                </Button>
-                <Button type="button" variant="destructive" onClick={() => navigate('/hod')}>
+                <Button type="button" variant="destructive" onClick={() => navigate('/hod')} className="flex-1">
                   Cancel
                 </Button>
               </div>
