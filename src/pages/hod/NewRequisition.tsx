@@ -13,13 +13,14 @@ import { Department, RequisitionType } from '@/types/requisition';
 import { useSuppliers } from '@/contexts/SuppliersContext';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
+import BudgetWarning from '@/components/BudgetWarning';
 
 const NewRequisition = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
   const { suppliers, taxClearances } = useSuppliers();
-  const { addRequisition } = useRequisitions();
+  const { addRequisition, getRemainingBudget } = useRequisitions();
   const { user } = useAuth();
   const editRequisition = location.state?.editRequisition;
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -91,6 +92,18 @@ const NewRequisition = () => {
     
     if (isSubmitting) return;
     
+    const reqAmount = parseFloat(formData.amount);
+    const remaining = getRemainingBudget(formData.department);
+    
+    if (reqAmount > remaining) {
+      toast({
+        title: "Insufficient Budget",
+        description: `This requisition exceeds the remaining budget of $${remaining.toFixed(2)}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
 
     const selectedSupplierData = suppliers.find(s => s.id === formData.chosenSupplier);
@@ -134,6 +147,9 @@ const NewRequisition = () => {
     navigate('/hod');
   };
 
+  const remainingBudget = formData.department ? getRemainingBudget(formData.department) : 0;
+  const isOverBudget = parseFloat(formData.amount || '0') > remainingBudget;
+
   return (
     <DashboardLayout title="Create New Requisition">
       <div className="max-w-4xl mx-auto">
@@ -154,6 +170,7 @@ const NewRequisition = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
+            {formData.department && <BudgetWarning department={formData.department} />}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -350,14 +367,19 @@ const NewRequisition = () => {
                 <Button 
                   type="submit" 
                   className="flex-1 bg-green-600 hover:bg-green-700"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || remainingBudget <= 0 || isOverBudget}
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit Requisition'}
+                  {remainingBudget <= 0 ? 'Budget Exhausted' : isSubmitting ? 'Submitting...' : 'Submit Requisition'}
                 </Button>
                 <Button type="button" variant="destructive" onClick={() => navigate('/hod')} className="flex-1">
                   Cancel
                 </Button>
               </div>
+              {isOverBudget && remainingBudget > 0 && (
+                <p className="text-sm text-red-600 font-medium">
+                  This amount exceeds the remaining budget of ${remainingBudget.toFixed(2)}
+                </p>
+              )}
             </form>
           </CardContent>
         </Card>

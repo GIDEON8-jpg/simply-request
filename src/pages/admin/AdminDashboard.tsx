@@ -16,17 +16,9 @@ const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Techn
 
 const AdminDashboard = () => {
   const { toast } = useToast();
-  const { requisitions } = useRequisitions();
+  const { requisitions, budgets, setBudgets: saveBudgets } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
-  
-  // Department budgets (will sync with backend)
-  const [budgets, setBudgets] = useState<Record<Department, number>>({
-    'Education': 5000,
-    'IT': 10000,
-    'Marketing and PR': 7000,
-    'Technical': 8000,
-    'Human Resources and Admin': 6000,
-  });
+  const [localBudgets, setLocalBudgets] = useState(budgets);
 
   const statusCounts = {
     pending: requisitions.filter(r => r.status === 'pending').length,
@@ -40,9 +32,31 @@ const AdminDashboard = () => {
     .reduce((sum, r) => sum + r.amount, 0);
 
   const handleGenerateReport = () => {
+    const [year, month] = selectedMonth.split('-');
+    const reportData = requisitions.filter(r => {
+      const reqDate = new Date(r.submittedDate);
+      return reqDate.getFullYear() === parseInt(year) && 
+             (reqDate.getMonth() + 1) === parseInt(month);
+    });
+
+    const reportText = `Monthly Report - ${month}/${year}\n\n` +
+      `Total Requisitions: ${reportData.length}\n` +
+      `Approved: ${reportData.filter(r => r.status === 'approved').length}\n` +
+      `Completed: ${reportData.filter(r => r.status === 'completed').length}\n` +
+      `Rejected: ${reportData.filter(r => r.status === 'rejected').length}\n\n` +
+      `Department Breakdown:\n` +
+      departments.map(dept => {
+        const deptReqs = reportData.filter(r => r.department === dept);
+        const totalSpent = deptReqs
+          .filter(r => r.status === 'approved' || r.status === 'completed')
+          .reduce((sum, r) => sum + r.amount, 0);
+        return `${dept}: ${deptReqs.length} requisitions, $${totalSpent.toFixed(2)} spent`;
+      }).join('\n');
+
+    console.log(reportText);
     toast({
-      title: "Generating Report",
-      description: `Report for ${selectedMonth} is being generated`,
+      title: "Report Generated",
+      description: `Report for ${month}/${year} has been generated. Check console for details.`,
     });
   };
 
@@ -54,13 +68,33 @@ const AdminDashboard = () => {
   };
 
   const handleDownloadCSV = () => {
+    const csvContent = [
+      ['ID', 'Title', 'Department', 'Amount', 'Status', 'Date Submitted'],
+      ...requisitions.map(r => [
+        r.id,
+        r.title,
+        r.department,
+        r.amount.toFixed(2),
+        r.status,
+        r.submittedDate
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `requisitions-${selectedMonth}.csv`;
+    a.click();
+    
     toast({
-      title: "Downloading",
-      description: "CSV file is being downloaded",
+      title: "Download Complete",
+      description: "CSV file has been downloaded",
     });
   };
 
   const handleSaveBudgets = () => {
+    saveBudgets(localBudgets);
     toast({
       title: "Budgets Saved",
       description: "Department budgets have been updated successfully",
@@ -69,7 +103,7 @@ const AdminDashboard = () => {
 
   const handleBudgetChange = (dept: Department, value: string) => {
     const numValue = parseFloat(value) || 0;
-    setBudgets(prev => ({ ...prev, [dept]: numValue }));
+    setLocalBudgets(prev => ({ ...prev, [dept]: numValue }));
   };
 
   // Calculate budget usage per department
@@ -77,7 +111,7 @@ const AdminDashboard = () => {
     const used = requisitions
       .filter(r => r.department === dept && (r.status === 'approved' || r.status === 'completed'))
       .reduce((sum, r) => sum + r.amount, 0);
-    const total = budgets[dept];
+    const total = localBudgets[dept];
     const percentage = total > 0 ? (used / total) * 100 : 0;
     return { department: dept, used, total, percentage };
   });
@@ -114,7 +148,7 @@ const AdminDashboard = () => {
                       id={`budget-${dept}`}
                       type="number"
                       step="0.01"
-                      value={budgets[dept]}
+                      value={localBudgets[dept]}
                       onChange={(e) => handleBudgetChange(dept, e.target.value)}
                       className={isExceeded ? 'border-red-500' : isNearLimit ? 'border-orange-500' : ''}
                     />

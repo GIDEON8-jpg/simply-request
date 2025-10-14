@@ -6,27 +6,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { Department } from '@/types/requisition';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
-  const { requisitions } = useRequisitions();
+  const { requisitions, getRemainingBudget } = useRequisitions();
+  const { user } = useAuth();
   
-  // Budget tracking per department (frontend mock - will sync with backend)
-  const userDepartment = requisitions[0]?.department || 'IT'; // Mock: get from auth context
-  const departmentBudgets = {
-    'Education': 5000,
-    'IT': 10000,
-    'Marketing and PR': 7000,
-    'Technical': 8000,
-    'Human Resources and Admin': 6000,
-  };
-  
-  const monthlyBudget = departmentBudgets[userDepartment as keyof typeof departmentBudgets] || 10000;
-  const budgetUsed = requisitions
-    .filter(r => r.department === userDepartment && (r.status === 'approved' || r.status === 'completed'))
-    .reduce((sum, r) => sum + r.amount, 0);
+  const userDepartment: Department = (user?.department as Department) || 'IT';
 
   const statusCounts = {
     pending: requisitions.filter(r => r.status === 'pending').length,
@@ -40,11 +30,13 @@ const HODDashboard = () => {
     .filter(r => r.status === 'completed')
     .reduce((sum, r) => sum + r.amount, 0);
 
+  const remainingBudget = getRemainingBudget(userDepartment);
+
   return (
     <DashboardLayout title="Head of Department Dashboard">
       <div className="space-y-6">
         {/* Budget Warning */}
-        <BudgetWarning budgetUsed={budgetUsed} budgetTotal={monthlyBudget} />
+        <BudgetWarning department={userDepartment} />
 
         {/* Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -115,9 +107,13 @@ const HODDashboard = () => {
 
         {/* Actions */}
         <div className="flex justify-end">
-          <Button onClick={() => navigate('/hod/new-requisition')} size="lg">
+          <Button 
+            onClick={() => navigate('/hod/new-requisition')} 
+            size="lg"
+            disabled={remainingBudget <= 0}
+          >
             <Plus className="mr-2 h-5 w-5" />
-            Create New Requisition
+            {remainingBudget <= 0 ? 'Budget Exhausted' : 'Create New Requisition'}
           </Button>
         </div>
 
