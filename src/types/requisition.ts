@@ -1,6 +1,7 @@
 export type RequisitionStatus = 'pending' | 'approved' | 'approved_wait' | 'completed' | 'rejected';
 export type RequisitionType = 'standard' | 'deviation';
 export type Department = 'Education' | 'IT' | 'Marketing and PR' | 'Technical' | 'Human Resources and Admin';
+export type Currency = 'USD' | 'ZWG' | 'GBP' | 'EUR';
 
 export interface Supplier {
   id: string;
@@ -25,6 +26,7 @@ export interface Requisition {
   title: string;
   department: Department;
   amount: number;
+  currency: Currency;
   chosenSupplier: Supplier;
   otherSupplier1?: Supplier;
   otherSupplier2?: Supplier;

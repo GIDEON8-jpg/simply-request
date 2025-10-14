@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
+import { Download, FileText } from 'lucide-react';
 
 const FinanceDashboard = () => {
   const { toast } = useToast();
@@ -58,6 +59,23 @@ const FinanceDashboard = () => {
     setShowWaitField(prev => ({ ...prev, [reqId]: !prev[reqId] }));
   };
 
+  const handleDownloadDocument = (fileName: string) => {
+    toast({
+      title: "Downloading",
+      description: `${fileName} is being downloaded`,
+    });
+  };
+
+  const getCurrencySymbol = (currency: string) => {
+    switch(currency) {
+      case 'USD': return '$';
+      case 'ZWG': return 'ZW$';
+      case 'GBP': return '£';
+      case 'EUR': return '€';
+      default: return '$';
+    }
+  };
+
   return (
     <DashboardLayout title="Finance Dashboard">
       <div className="space-y-6">
@@ -82,7 +100,7 @@ const FinanceDashboard = () => {
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Amount</p>
-                        <p className="font-semibold text-lg">${req.amount.toFixed(2)}</p>
+                        <p className="font-semibold text-lg">{getCurrencySymbol(req.currency)}{req.amount.toFixed(2)} ({req.currency})</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Title</p>
@@ -106,6 +124,46 @@ const FinanceDashboard = () => {
                       <p className="text-sm text-muted-foreground">Description</p>
                       <p className="text-sm mt-1">{req.description}</p>
                     </div>
+
+                    {/* Documents Section */}
+                    {(req.documents.length > 0 || req.taxClearanceAttached) && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">Supporting Documents</p>
+                        <div className="flex flex-wrap gap-2">
+                          {req.chosenRequisition && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(req.chosenRequisition)}
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              Chosen Requisition
+                            </Button>
+                          )}
+                          {req.documents.map((doc, idx) => (
+                            <Button
+                              key={idx}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(doc)}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              {doc}
+                            </Button>
+                          ))}
+                          {req.taxClearanceAttached && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(req.taxClearanceAttached!.fileName)}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Tax Clearance: {req.taxClearanceAttached.fileName}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor={`comment-${req.id}`}>Comments (Required for rejection)</Label>

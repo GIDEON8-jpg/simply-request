@@ -39,24 +39,57 @@ const AdminDashboard = () => {
              (reqDate.getMonth() + 1) === parseInt(month);
     });
 
-    const reportText = `Monthly Report - ${month}/${year}\n\n` +
-      `Total Requisitions: ${reportData.length}\n` +
-      `Approved: ${reportData.filter(r => r.status === 'approved').length}\n` +
-      `Completed: ${reportData.filter(r => r.status === 'completed').length}\n` +
-      `Rejected: ${reportData.filter(r => r.status === 'rejected').length}\n\n` +
-      `Department Breakdown:\n` +
-      departments.map(dept => {
-        const deptReqs = reportData.filter(r => r.department === dept);
-        const totalSpent = deptReqs
-          .filter(r => r.status === 'approved' || r.status === 'completed')
-          .reduce((sum, r) => sum + r.amount, 0);
-        return `${dept}: ${deptReqs.length} requisitions, $${totalSpent.toFixed(2)} spent`;
-      }).join('\n');
+    const totalSpent = reportData
+      .filter(r => r.status === 'approved' || r.status === 'completed')
+      .reduce((sum, r) => sum + r.amount, 0);
+
+    const reportText = `
+═══════════════════════════════════════════════════════════
+              MONTHLY REQUISITION REPORT
+               ${month}/${year}
+═══════════════════════════════════════════════════════════
+
+SUMMARY
+-------
+Total Requisitions: ${reportData.length}
+Pending:   ${reportData.filter(r => r.status === 'pending').length}
+Approved:  ${reportData.filter(r => r.status === 'approved').length}
+Completed: ${reportData.filter(r => r.status === 'completed').length}
+Rejected:  ${reportData.filter(r => r.status === 'rejected').length}
+
+Total Amount Spent: $${totalSpent.toFixed(2)}
+
+DEPARTMENT BREAKDOWN
+--------------------
+${departments.map(dept => {
+  const deptReqs = reportData.filter(r => r.department === dept);
+  const totalSpent = deptReqs
+    .filter(r => r.status === 'approved' || r.status === 'completed')
+    .reduce((sum, r) => sum + r.amount, 0);
+  const budgetUsed = budgets[dept] > 0 ? (totalSpent / budgets[dept] * 100).toFixed(1) : 0;
+  return `${dept}:
+  Requisitions: ${deptReqs.length}
+  Amount Spent: $${totalSpent.toFixed(2)}
+  Budget Used: ${budgetUsed}%`;
+}).join('\n\n')}
+
+═══════════════════════════════════════════════════════════
+    `.trim();
 
     console.log(reportText);
+    
+    // Create a downloadable text file
+    const blob = new Blob([reportText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `monthly-report-${selectedMonth}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+
     toast({
       title: "Report Generated",
-      description: `Report for ${month}/${year} has been generated. Check console for details.`,
+      description: `Report for ${month}/${year} downloaded successfully`,
     });
   };
 
@@ -68,15 +101,28 @@ const AdminDashboard = () => {
   };
 
   const handleDownloadCSV = () => {
+    const getCurrencySymbol = (currency: string) => {
+      switch(currency) {
+        case 'USD': return '$';
+        case 'ZWG': return 'ZW$';
+        case 'GBP': return '£';
+        case 'EUR': return '€';
+        default: return '$';
+      }
+    };
+
     const csvContent = [
-      ['ID', 'Title', 'Department', 'Amount', 'Status', 'Date Submitted'],
+      ['ID', 'Title', 'Department', 'Amount', 'Currency', 'Status', 'Date Submitted', 'Submitted By', 'Supplier'],
       ...requisitions.map(r => [
         r.id,
-        r.title,
+        `"${r.title}"`,
         r.department,
         r.amount.toFixed(2),
+        r.currency,
         r.status,
-        r.submittedDate
+        new Date(r.submittedDate).toLocaleDateString(),
+        r.submittedBy,
+        `"${r.chosenSupplier.name}"`
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -84,12 +130,13 @@ const AdminDashboard = () => {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `requisitions-${selectedMonth}.csv`;
+    a.download = `requisitions-report-${selectedMonth}.csv`;
     a.click();
+    window.URL.revokeObjectURL(url);
     
     toast({
-      title: "Download Complete",
-      description: "CSV file has been downloaded",
+      title: "CSV Export Complete",
+      description: `Report exported with ${requisitions.length} requisitions`,
     });
   };
 

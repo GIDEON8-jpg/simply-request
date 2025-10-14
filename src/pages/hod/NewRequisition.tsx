@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Upload, CheckCircle } from 'lucide-react';
-import { Department, RequisitionType } from '@/types/requisition';
+import { Department, RequisitionType, Currency } from '@/types/requisition';
 import { useSuppliers } from '@/contexts/SuppliersContext';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +29,7 @@ const NewRequisition = () => {
     title: '',
     department: '' as Department,
     amount: '',
+    currency: 'USD' as Currency,
     chosenSupplier: '',
     otherSupplier1: '',
     otherSupplier2: '',
@@ -48,6 +49,7 @@ const NewRequisition = () => {
         title: editRequisition.title,
         department: editRequisition.department,
         amount: editRequisition.amount.toString(),
+        currency: editRequisition.currency || 'USD',
         chosenSupplier: editRequisition.chosenSupplier.id,
         otherSupplier1: '',
         otherSupplier2: '',
@@ -124,6 +126,7 @@ const NewRequisition = () => {
       title: formData.title,
       department: formData.department,
       amount: parseFloat(formData.amount),
+      currency: formData.currency,
       chosenSupplier: selectedSupplierData,
       chosenRequisition: chosenRequisitionFile?.name || '',
       type: formData.type,
@@ -204,7 +207,7 @@ const NewRequisition = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount ($) *</Label>
+                  <Label htmlFor="amount">Amount *</Label>
                   <Input
                     id="amount"
                     type="number"
@@ -213,6 +216,25 @@ const NewRequisition = () => {
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     required
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency *</Label>
+                  <Select
+                    value={formData.currency}
+                    onValueChange={(value) => setFormData({ ...formData, currency: value as Currency })}
+                    required
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select currency" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="USD">USD ($)</SelectItem>
+                      <SelectItem value="ZWG">ZWG (ZW$)</SelectItem>
+                      <SelectItem value="GBP">GBP (£)</SelectItem>
+                      <SelectItem value="EUR">EUR (€)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">

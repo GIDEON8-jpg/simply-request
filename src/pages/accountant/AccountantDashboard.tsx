@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Upload, CheckCircle, Mail, FileDown, Send } from 'lucide-react';
+import { Upload, CheckCircle, Mail, FileDown, Send, Download, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 
@@ -143,6 +143,23 @@ const AccountantDashboard = () => {
     });
   };
 
+  const handleDownloadDocument = (fileName: string) => {
+    toast({
+      title: "Downloading",
+      description: `${fileName} is being downloaded`,
+    });
+  };
+
+  const getCurrencySymbol = (currency: string) => {
+    switch(currency) {
+      case 'USD': return '$';
+      case 'ZWG': return 'ZW$';
+      case 'GBP': return '£';
+      case 'EUR': return '€';
+      default: return '$';
+    }
+  };
+
   return (
     <DashboardLayout title="Accountant Dashboard">
       <div className="space-y-6">
@@ -168,7 +185,7 @@ const AccountantDashboard = () => {
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Amount</p>
-                        <p className="font-semibold text-lg">${req.amount.toFixed(2)}</p>
+                        <p className="font-semibold text-lg">{getCurrencySymbol(req.currency)}{req.amount.toFixed(2)} ({req.currency})</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Title</p>
@@ -192,6 +209,46 @@ const AccountantDashboard = () => {
                       <p className="text-sm text-muted-foreground">Description</p>
                       <p className="text-sm mt-1">{req.description}</p>
                     </div>
+
+                    {/* Documents Section */}
+                    {(req.documents.length > 0 || req.taxClearanceAttached) && (
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-muted-foreground">Supporting Documents</p>
+                        <div className="flex flex-wrap gap-2">
+                          {req.chosenRequisition && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(req.chosenRequisition)}
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              Chosen Requisition
+                            </Button>
+                          )}
+                          {req.documents.map((doc, idx) => (
+                            <Button
+                              key={idx}
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(doc)}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              {doc}
+                            </Button>
+                          ))}
+                          {req.taxClearanceAttached && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(req.taxClearanceAttached!.fileName)}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              Tax Clearance: {req.taxClearanceAttached.fileName}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     <div className="space-y-2">
                       <Label htmlFor={`acc-comment-${req.id}`}>Comments (Required for rejection)</Label>
@@ -269,7 +326,7 @@ const AccountantDashboard = () => {
                           <h3 className="text-lg font-bold">{req.id} - {req.title}</h3>
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline">{req.department}</Badge>
-                            <Badge variant="outline">${req.amount.toFixed(2)}</Badge>
+                            <Badge variant="outline">{getCurrencySymbol(req.currency)}{req.amount.toFixed(2)} ({req.currency})</Badge>
                             <Badge className="bg-green-600 text-white">✓ APPROVED (Awaiting Payment)</Badge>
                           </div>
                         </div>
@@ -285,6 +342,46 @@ const AccountantDashboard = () => {
                           <p className="font-medium">{req.submittedBy}</p>
                         </div>
                       </div>
+
+                      {/* Documents Section */}
+                      {(req.documents.length > 0 || req.taxClearanceAttached) && (
+                        <div className="space-y-2 bg-blue-50 p-3 rounded-lg">
+                          <p className="text-sm font-medium text-muted-foreground">Supporting Documents</p>
+                          <div className="flex flex-wrap gap-2">
+                            {req.chosenRequisition && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadDocument(req.chosenRequisition)}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                Chosen Requisition
+                              </Button>
+                            )}
+                            {req.documents.map((doc, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadDocument(doc)}
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                {doc}
+                              </Button>
+                            ))}
+                            {req.taxClearanceAttached && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDownloadDocument(req.taxClearanceAttached!.fileName)}
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Tax Clearance
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
 
                       <div className="bg-white p-4 rounded-lg border border-gray-200">
                         <p className="font-semibold mb-2">Step 1: Process Payment</p>
