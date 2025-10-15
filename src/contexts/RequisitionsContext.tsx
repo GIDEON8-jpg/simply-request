@@ -18,13 +18,13 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   const [budgets, setBudgetsState] = useState<Record<Department, number>>(() => {
     const saved = localStorage.getItem('departmentBudgets');
     return saved ? JSON.parse(saved) : {
-      'Education': 5000,
-      'IT': 10000,
-      'Marketing and PR': 7000,
-      'Technical': 8000,
-      'HR': 6000,
-      'Finance': 15000,
-      'CEO': 50000,
+      'Education': 10000,
+      'IT': 20000,
+      'Marketing and PR': 15000,
+      'Technical': 18000,
+      'HR': 12000,
+      'Finance': 25000,
+      'CEO': 100000,
     };
   });
 

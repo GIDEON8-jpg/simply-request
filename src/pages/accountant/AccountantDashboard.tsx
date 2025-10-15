@@ -144,9 +144,25 @@ const AccountantDashboard = () => {
   };
 
   const handleDownloadDocument = (fileName: string) => {
+    // Create a blob with sample content
+    const content = `Sample Document: ${fileName}\n\nThis is a placeholder for the actual document.\nIn production, this would be the actual file from your server.`;
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    
+    // Create a temporary link and trigger download
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    
+    // Cleanup
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+    
     toast({
-      title: "Downloading",
-      description: `${fileName} is being downloaded`,
+      title: "Downloaded",
+      description: `${fileName} has been downloaded`,
     });
   };
 
@@ -214,7 +230,7 @@ const AccountantDashboard = () => {
                     </div>
 
                     {/* Documents Section */}
-                    {(req.documents.length > 0 || req.taxClearanceAttached) && (
+                    {(req.chosenRequisition || req.documents.length > 0 || req.taxClearanceAttached) && (
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-muted-foreground">Supporting Documents</p>
                         <div className="flex flex-wrap gap-2">
@@ -222,7 +238,7 @@ const AccountantDashboard = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDownloadDocument(req.chosenRequisition)}
+                              onClick={() => handleDownloadDocument(req.chosenRequisition!)}
                             >
                               <FileText className="mr-2 h-4 w-4" />
                               Chosen Requisition
