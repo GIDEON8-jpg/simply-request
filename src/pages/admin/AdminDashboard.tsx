@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Department } from '@/types/requisition';
 
-const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Technical', 'Human Resources and Admin'];
+const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Technical', 'HR', 'Finance', 'CEO'];
 
 const AdminDashboard = () => {
   const { toast } = useToast();

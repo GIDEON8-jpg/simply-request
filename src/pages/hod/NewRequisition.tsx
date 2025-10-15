@@ -30,6 +30,7 @@ const NewRequisition = () => {
     department: '' as Department,
     amount: '',
     currency: 'USD' as Currency,
+    usdConvertible: '',
     chosenSupplier: '',
     otherSupplier1: '',
     otherSupplier2: '',
@@ -50,6 +51,7 @@ const NewRequisition = () => {
         department: editRequisition.department,
         amount: editRequisition.amount.toString(),
         currency: editRequisition.currency || 'USD',
+        usdConvertible: editRequisition.usdConvertible?.toString() || '',
         chosenSupplier: editRequisition.chosenSupplier.id,
         otherSupplier1: '',
         otherSupplier2: '',
@@ -127,6 +129,7 @@ const NewRequisition = () => {
       department: formData.department,
       amount: parseFloat(formData.amount),
       currency: formData.currency,
+      usdConvertible: formData.currency !== 'USD' && formData.usdConvertible ? parseFloat(formData.usdConvertible) : undefined,
       chosenSupplier: selectedSupplierData,
       chosenRequisition: chosenRequisitionFile?.name || '',
       type: formData.type,
@@ -236,6 +239,24 @@ const NewRequisition = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {(formData.currency as string) !== 'USD' && (
+                  <div className="space-y-2">
+                    <Label htmlFor="usdConvertible">USD Convertible Amount *</Label>
+                    <Input
+                      id="usdConvertible"
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter amount in USD"
+                      value={formData.usdConvertible}
+                      onChange={(e) => setFormData({ ...formData, usdConvertible: e.target.value })}
+                      required={(formData.currency as string) !== 'USD'}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter the equivalent amount in USD for authorization routing
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="budgetCode">Budget Code *</Label>

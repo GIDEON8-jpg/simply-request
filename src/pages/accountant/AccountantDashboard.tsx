@@ -186,6 +186,9 @@ const AccountantDashboard = () => {
                       <div>
                         <p className="text-sm text-muted-foreground">Amount</p>
                         <p className="font-semibold text-lg">{getCurrencySymbol(req.currency)}{req.amount.toFixed(2)} ({req.currency})</p>
+                        {req.usdConvertible && (
+                          <p className="text-xs text-muted-foreground">USD Equivalent: ${req.usdConvertible.toFixed(2)}</p>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Title</p>

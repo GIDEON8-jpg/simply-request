@@ -15,7 +15,10 @@ const FinanceDashboard = () => {
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
 
-  const pendingRequisitions = requisitions.filter(r => r.status === 'pending' && r.amount < 100);
+  const pendingRequisitions = requisitions.filter(r => {
+    const usdAmount = r.usdConvertible || r.amount;
+    return r.status === 'pending' && usdAmount < 100;
+  });
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
@@ -101,6 +104,9 @@ const FinanceDashboard = () => {
                       <div>
                         <p className="text-sm text-muted-foreground">Amount</p>
                         <p className="font-semibold text-lg">{getCurrencySymbol(req.currency)}{req.amount.toFixed(2)} ({req.currency})</p>
+                        {req.usdConvertible && (
+                          <p className="text-xs text-muted-foreground">USD Equivalent: ${req.usdConvertible.toFixed(2)}</p>
+                        )}
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Title</p>

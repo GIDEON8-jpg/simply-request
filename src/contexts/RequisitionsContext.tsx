@@ -22,7 +22,9 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       'IT': 10000,
       'Marketing and PR': 7000,
       'Technical': 8000,
-      'Human Resources and Admin': 6000,
+      'HR': 6000,
+      'Finance': 15000,
+      'CEO': 50000,
     };
   });
 
