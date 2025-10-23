@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,22 @@ const AdminDashboard = () => {
   const { toast } = useToast();
   const { requisitions, budgets, setBudgets: saveBudgets } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [localBudgets, setLocalBudgets] = useState(budgets);
+  const [localBudgets, setLocalBudgets] = useState<Record<Department, number>>({
+    'Education': 10000,
+    'IT': 20000,
+    'Marketing and PR': 15000,
+    'Technical': 18000,
+    'HR': 12000,
+    'Finance': 25000,
+    'CEO': 100000,
+  });
+
+  // Sync with context budgets on mount
+  useEffect(() => {
+    if (budgets) {
+      setLocalBudgets(budgets);
+    }
+  }, [budgets]);
 
   const statusCounts = {
     pending: requisitions.filter(r => r.status === 'pending').length,
@@ -66,7 +81,7 @@ ${departments.map(dept => {
   const totalSpent = deptReqs
     .filter(r => r.status === 'approved' || r.status === 'completed')
     .reduce((sum, r) => sum + (r.amount || 0), 0);
-  const budgetUsed = budgets[dept] > 0 ? (totalSpent / budgets[dept] * 100).toFixed(1) : 0;
+  const budgetUsed = localBudgets[dept] > 0 ? (totalSpent / localBudgets[dept] * 100).toFixed(1) : '0';
   return `${dept}:
   Requisitions: ${deptReqs.length}
   Amount Spent: $${totalSpent.toFixed(2)}
@@ -75,10 +90,7 @@ ${departments.map(dept => {
 
 ═══════════════════════════════════════════════════════════
     `.trim();
-
-    console.log(reportText);
     
-    // Create a downloadable text file
     const blob = new Blob([reportText], { type: 'text/plain' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -101,16 +113,6 @@ ${departments.map(dept => {
   };
 
   const handleDownloadCSV = () => {
-    const getCurrencySymbol = (currency: string) => {
-      switch(currency) {
-        case 'USD': return '$';
-        case 'ZWG': return 'ZW$';
-        case 'GBP': return '£';
-        case 'EUR': return '€';
-        default: return '$';
-      }
-    };
-
     const csvContent = [
       ['ID', 'Title', 'Department', 'Amount', 'Currency', 'Status', 'Date Submitted', 'Submitted By', 'Supplier'],
       ...requisitions.map(r => [
@@ -122,7 +124,7 @@ ${departments.map(dept => {
         r.status,
         new Date(r.submittedDate).toLocaleDateString(),
         r.submittedBy,
-        `"${r.chosenSupplier.name}"`
+        `"${r.chosenSupplier?.name || 'N/A'}"`
       ])
     ].map(row => row.join(',')).join('\n');
 
@@ -158,7 +160,7 @@ ${departments.map(dept => {
     const used = requisitions
       .filter(r => r.department === dept && (r.status === 'approved' || r.status === 'completed'))
       .reduce((sum, r) => sum + (r.amount || 0), 0);
-    const total = localBudgets[dept];
+    const total = localBudgets[dept] || 0;
     const percentage = total > 0 ? (used / total) * 100 : 0;
     return { department: dept, used, total, percentage };
   });
@@ -195,7 +197,7 @@ ${departments.map(dept => {
                       id={`budget-${dept}`}
                       type="number"
                       step="0.01"
-                      value={localBudgets[dept]}
+                      value={localBudgets[dept] || 0}
                       onChange={(e) => handleBudgetChange(dept, e.target.value)}
                       className={isExceeded ? 'border-red-500' : isNearLimit ? 'border-orange-500' : ''}
                     />
@@ -284,19 +286,19 @@ ${departments.map(dept => {
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="text-3xl font-bold text-[hsl(var(--status-pending))]">{statusCounts.pending}</p>
+                <p className="text-3xl font-bold text-yellow-600">{statusCounts.pending}</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Approved</p>
-                <p className="text-3xl font-bold text-[hsl(var(--status-approved))]">{statusCounts.approved}</p>
+                <p className="text-3xl font-bold text-blue-600">{statusCounts.approved}</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-3xl font-bold text-[hsl(var(--status-completed))]">{statusCounts.completed}</p>
+                <p className="text-3xl font-bold text-green-600">{statusCounts.completed}</p>
               </div>
               <div className="text-center">
                 <p className="text-sm text-muted-foreground">Rejected</p>
-                <p className="text-3xl font-bold text-[hsl(var(--status-rejected))]">{statusCounts.rejected}</p>
+                <p className="text-3xl font-bold text-red-600">{statusCounts.rejected}</p>
               </div>
             </div>
             <div className="border-t pt-4">
@@ -305,12 +307,11 @@ ${departments.map(dept => {
           </CardContent>
         </Card>
 
-
         {/* All Requisitions Table */}
         <Card>
           <CardHeader>
-            <CardTitle>View ALL Requisitions</CardTitle>
-            <p className="text-sm text-muted-foreground">Showing requisitions from all departments</p>
+            <CardTitle>All Requisitions</CardTitle>
+            <p className="text-sm text-muted-foreground">Showing all requisitions from all departments</p>
           </CardHeader>
           <CardContent>
             <Table>
@@ -327,25 +328,24 @@ ${departments.map(dept => {
               </TableHeader>
               <TableBody>
                 {requisitions.map((req) => (
-                <TableRow key={req.id}>
-                  <TableCell className="font-medium">{req.id}</TableCell>
-                  <TableCell>{req.title}</TableCell>
-                  <TableCell>{req.submittedBy}</TableCell>
-                  <TableCell>{req.department}</TableCell>
-                  <TableCell>${req.amount?.toFixed(2) || '0.00'}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={req.status} />
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm">View</Button>
-                  </TableCell>
-                </TableRow>
+                  <TableRow key={req.id}>
+                    <TableCell className="font-medium">{req.id}</TableCell>
+                    <TableCell>{req.title}</TableCell>
+                    <TableCell>{req.submittedBy}</TableCell>
+                    <TableCell>{req.department}</TableCell>
+                    <TableCell>${(req.amount || 0).toFixed(2)}</TableCell>
+                    <TableCell>
+                      <StatusBadge status={req.status} />
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="sm">View</Button>
+                    </TableCell>
+                  </TableRow>
                 ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
-
       </div>
     </DashboardLayout>
   );
