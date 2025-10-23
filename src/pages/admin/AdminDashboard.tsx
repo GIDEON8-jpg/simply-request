@@ -29,7 +29,7 @@ const AdminDashboard = () => {
 
   const totalAmount = requisitions
     .filter(r => r.status === 'completed')
-    .reduce((sum, r) => sum + r.amount, 0);
+    .reduce((sum, r) => sum + (r.amount || 0), 0);
 
   const handleGenerateReport = () => {
     const [year, month] = selectedMonth.split('-');
@@ -41,7 +41,7 @@ const AdminDashboard = () => {
 
     const totalSpent = reportData
       .filter(r => r.status === 'approved' || r.status === 'completed')
-      .reduce((sum, r) => sum + r.amount, 0);
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
 
     const reportText = `
 ═══════════════════════════════════════════════════════════
@@ -65,7 +65,7 @@ ${departments.map(dept => {
   const deptReqs = reportData.filter(r => r.department === dept);
   const totalSpent = deptReqs
     .filter(r => r.status === 'approved' || r.status === 'completed')
-    .reduce((sum, r) => sum + r.amount, 0);
+    .reduce((sum, r) => sum + (r.amount || 0), 0);
   const budgetUsed = budgets[dept] > 0 ? (totalSpent / budgets[dept] * 100).toFixed(1) : 0;
   return `${dept}:
   Requisitions: ${deptReqs.length}
@@ -117,7 +117,7 @@ ${departments.map(dept => {
         r.id,
         `"${r.title}"`,
         r.department,
-        r.amount.toFixed(2),
+        (r.amount || 0).toFixed(2),
         r.currency,
         r.status,
         new Date(r.submittedDate).toLocaleDateString(),
@@ -157,7 +157,7 @@ ${departments.map(dept => {
   const departmentBudgetUsage = departments.map(dept => {
     const used = requisitions
       .filter(r => r.department === dept && (r.status === 'approved' || r.status === 'completed'))
-      .reduce((sum, r) => sum + r.amount, 0);
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
     const total = localBudgets[dept];
     const percentage = total > 0 ? (used / total) * 100 : 0;
     return { department: dept, used, total, percentage };
