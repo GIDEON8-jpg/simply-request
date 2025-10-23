@@ -25,6 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const MOCK_USERS = [
   { id: '1', username: 'hod1', password: 'password', fullName: 'John Smith', firstName: 'John', email: 'john@company.com', role: 'hod' as UserRole, department: 'Marketing' },
   { id: '2', username: 'admin1', password: 'password', fullName: 'Sarah Admin', firstName: 'Sarah', email: 'sarah@company.com', role: 'admin' as UserRole },
+  { id: '2b', username: 'administrator', password: 'password', fullName: 'Admin User', firstName: 'Admin', email: 'admin@company.com', role: 'admin' as UserRole },
   { id: '3', username: 'finance1', password: 'password', fullName: 'Michael Finance', firstName: 'Michael', email: 'michael@company.com', role: 'finance' as UserRole },
   { id: '4', username: 'hr1', password: 'password', fullName: 'Emily HR', firstName: 'Emily', email: 'emily@company.com', role: 'hr' as UserRole },
   { id: '5', username: 'kenny', password: 'password', fullName: 'Kenny Accountant', firstName: 'Kenny', email: 'kenny@company.com', role: 'accountant' as UserRole },
