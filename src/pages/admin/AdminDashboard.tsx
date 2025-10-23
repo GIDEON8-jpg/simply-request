@@ -327,19 +327,19 @@ ${departments.map(dept => {
               </TableHeader>
               <TableBody>
                 {requisitions.map((req) => (
-                  <TableRow key={req.id}>
-                    <TableCell className="font-medium">{req.id}</TableCell>
-                    <TableCell>{req.title}</TableCell>
-                    <TableCell>{req.submittedBy}</TableCell>
-                    <TableCell>{req.department}</TableCell>
-                    <TableCell>${req.amount.toFixed(2)}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={req.status} />
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm">View</Button>
-                    </TableCell>
-                  </TableRow>
+                <TableRow key={req.id}>
+                  <TableCell className="font-medium">{req.id}</TableCell>
+                  <TableCell>{req.title}</TableCell>
+                  <TableCell>{req.submittedBy}</TableCell>
+                  <TableCell>{req.department}</TableCell>
+                  <TableCell>${req.amount?.toFixed(2) || '0.00'}</TableCell>
+                  <TableCell>
+                    <StatusBadge status={req.status} />
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm">View</Button>
+                  </TableCell>
+                </TableRow>
                 ))}
               </TableBody>
             </Table>
