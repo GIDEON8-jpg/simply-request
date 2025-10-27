@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, FileText } from 'lucide-react';
+import { Download, FileText, FileDown } from 'lucide-react';
 
 const TechnicalDirectorDashboard = () => {
   const { toast } = useToast();
@@ -17,7 +17,7 @@ const TechnicalDirectorDashboard = () => {
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.usdConvertible || r.amount;
-    return r.status === 'pending' && usdAmount >= 100 && usdAmount <= 5000;
+    return r.status === 'pending' && usdAmount > 100 && usdAmount < 500;
   });
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
@@ -95,15 +95,70 @@ const TechnicalDirectorDashboard = () => {
     }
   };
 
+  const handleExportCSV = () => {
+    if (pendingRequisitions.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No requisitions to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const headers = ['ID', 'Title', 'Department', 'Amount', 'Currency', 'USD Equivalent', 'Status', 'Submitted By', 'Submitted Date', 'Supplier', 'Budget Code'];
+    const csvRows = [headers.join(',')];
+
+    pendingRequisitions.forEach(req => {
+      const row = [
+        req.id,
+        `"${req.title}"`,
+        req.department,
+        req.amount,
+        req.currency,
+        req.usdConvertible || req.amount,
+        req.status,
+        `"${req.submittedBy}"`,
+        req.submittedDate,
+        `"${req.chosenSupplier.name}"`,
+        req.budgetCode
+      ];
+      csvRows.push(row.join(','));
+    });
+
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `technical_requisitions_${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
+    toast({
+      title: "Exported",
+      description: `${pendingRequisitions.length} requisitions exported to CSV`,
+    });
+  };
+
   return (
     <DashboardLayout title="Technical Director Dashboard">
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Pending Requisitions for Review ($100 - $5,000)</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Requisitions requiring your approval (Amount: $100 to $5,000)
-            </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle>Pending Requisitions for Review ($100 - $500)</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Requisitions requiring your approval (Amount &gt; $100 and &lt; $500 USD)
+                </p>
+              </div>
+              <Button onClick={handleExportCSV} variant="outline" size="sm">
+                <FileDown className="mr-2 h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {pendingRequisitions.length === 0 ? (
