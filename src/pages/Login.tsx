@@ -8,18 +8,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { FileText } from 'lucide-react';
+import { Department } from '@/types/requisition';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('hod');
+  const [department, setDepartment] = useState<Department>('IT');
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const success = await login(username, password, role);
+    const success = await login(username, password, role, role === 'hod' ? department : undefined);
     
     if (success) {
       toast({
@@ -86,6 +88,25 @@ const Login = () => {
                 </SelectContent>
               </Select>
             </div>
+            {role === 'hod' && (
+              <div className="space-y-2">
+                <Label htmlFor="department">Department</Label>
+                <Select value={department} onValueChange={(value) => setDepartment(value as Department)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Education">Education</SelectItem>
+                    <SelectItem value="IT">IT</SelectItem>
+                    <SelectItem value="Marketing and PR">Marketing and PR</SelectItem>
+                    <SelectItem value="Technical">Technical</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="Finance">Finance</SelectItem>
+                    <SelectItem value="CEO">CEO</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <Button type="submit" className="w-full">
               Sign In
             </Button>

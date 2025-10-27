@@ -14,7 +14,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (username: string, password: string, role: UserRole) => Promise<boolean>;
+  login: (username: string, password: string, role: UserRole, department?: string) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -41,15 +41,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const login = async (username: string, password: string, role: UserRole): Promise<boolean> => {
+  const login = async (username: string, password: string, role: UserRole, department?: string): Promise<boolean> => {
     const foundUser = MOCK_USERS.find(
       u => u.username === username && u.password === password && u.role === role
     );
 
     if (foundUser) {
       const { password: _, ...userWithoutPassword } = foundUser;
-      setUser(userWithoutPassword);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+      const userWithDepartment = role === 'hod' && department 
+        ? { ...userWithoutPassword, department }
+        : userWithoutPassword;
+      
+      setUser(userWithDepartment);
+      localStorage.setItem('user', JSON.stringify(userWithDepartment));
       return true;
     }
     return false;
