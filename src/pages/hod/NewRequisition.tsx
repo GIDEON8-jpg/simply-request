@@ -204,7 +204,7 @@ const NewRequisition = () => {
                       <SelectItem value="IT">IT</SelectItem>
                       <SelectItem value="Marketing and PR">Marketing and PR</SelectItem>
                       <SelectItem value="Technical">Technical</SelectItem>
-                      <SelectItem value="Human Resources and Admin">Human Resources and Admin</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

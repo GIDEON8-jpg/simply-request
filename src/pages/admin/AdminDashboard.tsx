@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, Mail, FileText, Save } from 'lucide-react';
+import { Download, Mail, FileText, Save, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -150,6 +150,19 @@ ${departments.map(dept => {
     });
   };
 
+  const handleResetBudgets = () => {
+    const zeros = departments.reduce((acc, dept) => {
+      acc[dept] = 0;
+      return acc;
+    }, {} as Record<Department, number>);
+    setLocalBudgets(zeros);
+    saveBudgets(zeros);
+    toast({
+      title: 'Budgets Reset',
+      description: 'All department budgets set to $0. Assign new amounts as needed.',
+    });
+  };
+
   const handleBudgetChange = (dept: Department, value: string) => {
     const numValue = parseFloat(value) || 0;
     setLocalBudgets(prev => ({ ...prev, [dept]: numValue }));
@@ -205,10 +218,16 @@ ${departments.map(dept => {
                 );
               })}
             </div>
-            <Button onClick={handleSaveBudgets} className="w-full">
-              <Save className="mr-2 h-4 w-4" />
-              Save Department Budgets
-            </Button>
+            <div className="flex gap-3">
+              <Button onClick={handleSaveBudgets} className="flex-1">
+                <Save className="mr-2 h-4 w-4" />
+                Save Department Budgets
+              </Button>
+              <Button onClick={handleResetBudgets} variant="destructive" className="flex-1">
+                <RotateCcw className="mr-2 h-4 w-4" />
+                Reset All Budgets
+              </Button>
+            </div>
           </CardContent>
         </Card>
 

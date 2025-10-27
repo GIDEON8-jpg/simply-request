@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,11 +10,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Department } from '@/types/requisition';
+import { useToast } from '@/hooks/use-toast';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
   const { requisitions, getRemainingBudget } = useRequisitions();
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const userDepartment: Department = (user?.department as Department) || 'IT';
 
@@ -31,6 +33,16 @@ const HODDashboard = () => {
     .reduce((sum, r) => sum + r.amount, 0);
 
   const remainingBudget = getRemainingBudget(userDepartment);
+
+  useEffect(() => {
+    if (remainingBudget <= 100) {
+      toast({
+        title: 'Budget Exhausted',
+        description: `${userDepartment} cannot create new requisitions. Remaining: $${remainingBudget.toFixed(2)}`,
+        variant: 'destructive',
+      });
+    }
+  }, [remainingBudget, userDepartment, toast]);
 
   return (
     <DashboardLayout title="Head of Department Dashboard">
