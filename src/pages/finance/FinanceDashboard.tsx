@@ -1,20 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, FileText, FileDown, PlusCircle, ClipboardList } from 'lucide-react';
+import { Download, FileText, FileDown, PlusCircle, ClipboardList, Plus, Edit } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
+import BudgetWarning from '@/components/BudgetWarning';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { requisitions, updateRequisition } = useRequisitions();
+  const { requisitions, updateRequisition, getRemainingBudget } = useRequisitions();
   const [comments, setComments] = useState<Record<string, string>>({});
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
@@ -25,6 +27,30 @@ const FinanceDashboard = () => {
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
+  
+  const remainingBudget = getRemainingBudget('Finance');
+
+  const statusCounts = {
+    pending: departmentRequisitions.filter(r => r.status === 'pending').length,
+    approved: departmentRequisitions.filter(r => r.status === 'approved').length,
+    approved_wait: departmentRequisitions.filter(r => r.status === 'approved_wait').length,
+    completed: departmentRequisitions.filter(r => r.status === 'completed').length,
+    rejected: departmentRequisitions.filter(r => r.status === 'rejected').length,
+  };
+
+  const totalAmount = departmentRequisitions
+    .filter(r => r.status === 'completed')
+    .reduce((sum, r) => sum + r.amount, 0);
+
+  useEffect(() => {
+    if (remainingBudget <= 100) {
+      toast({
+        title: 'Budget Exhausted',
+        description: `Finance cannot create new requisitions. Remaining: $${remainingBudget.toFixed(2)}`,
+        variant: 'destructive',
+      });
+    }
+  }, [remainingBudget, toast]);
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
@@ -164,61 +190,143 @@ const FinanceDashboard = () => {
 
         {/* Department Tab */}
         <TabsContent value="department" className="space-y-6">
+          {/* Budget Warning */}
+          <BudgetWarning department="Finance" />
+
+          {/* Status Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <Card className="border-l-4 border-l-[hsl(var(--status-pending))]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Pending</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{statusCounts.pending}</div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-[hsl(var(--status-approved))]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Approved</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{statusCounts.approved}</div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-[hsl(var(--status-approved-wait))]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Approved but Wait</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{statusCounts.approved_wait}</div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-[hsl(var(--status-completed))]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{statusCounts.completed}</div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-l-4 border-l-[hsl(var(--status-rejected))]">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">Rejected</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{statusCounts.rejected}</div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Monthly Report */}
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle>Finance Department Requisitions</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    View and manage Finance department requisitions
-                  </p>
-                </div>
-                <Button onClick={() => navigate('/finance/new-requisition')}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  New Requisition
-                </Button>
-              </div>
+              <CardTitle>Monthly Report Summary</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {departmentRequisitions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-8">No requisitions yet</p>
-              ) : (
-                departmentRequisitions.map(req => (
-                  <Card key={req.id} className="border-l-4 border-l-blue-500">
-                    <CardContent className="pt-6 space-y-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <p className="font-semibold text-lg">{req.title}</p>
-                          <p className="text-sm text-muted-foreground">ID: {req.id}</p>
-                        </div>
-                        <StatusBadge status={req.status} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground">Amount</p>
-                          <p className="font-semibold">${req.amount.toFixed(2)} ({req.currency})</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Supplier</p>
-                          <p className="font-medium">{req.chosenSupplier.name}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Submitted By</p>
-                          <p className="font-medium">{req.submittedBy}</p>
-                        </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Date</p>
-                          <p className="font-medium">{new Date(req.submittedDate).toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Description</p>
-                        <p className="text-sm mt-1">{req.description}</p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Requisitions</p>
+                  <p className="text-2xl font-bold">{departmentRequisitions.length}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Amount Spent</p>
+                  <p className="text-2xl font-bold">${totalAmount.toFixed(2)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Actions */}
+          <div className="flex justify-end">
+            <Button 
+              onClick={() => navigate('/finance/new-requisition')} 
+              size="lg"
+              disabled={remainingBudget <= 100}
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              {remainingBudget <= 100 ? 'Budget Exhausted' : 'Create New Requisition'}
+            </Button>
+          </div>
+
+          {/* Requisitions Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Finance Department Requisitions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Supplier</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {departmentRequisitions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        No requisitions yet
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    departmentRequisitions.map((req) => (
+                      <TableRow key={req.id}>
+                        <TableCell className="font-medium">{req.id}</TableCell>
+                        <TableCell>{req.title}</TableCell>
+                        <TableCell>{req.chosenSupplier.name}</TableCell>
+                        <TableCell>${req.amount.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={req.status} />
+                        </TableCell>
+                        <TableCell>{new Date(req.submittedDate).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {req.status === 'rejected' ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => navigate('/finance/new-requisition', { state: { editRequisition: req } })}
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit & Resubmit
+                            </Button>
+                          ) : (
+                            <Button variant="ghost" size="sm">View</Button>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
             </CardContent>
           </Card>
         </TabsContent>
