@@ -72,6 +72,11 @@ const App = () => (
                 <FinanceDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/finance/new-requisition" element={
+              <ProtectedRoute allowedRole="finance">
+                <NewRequisition />
+              </ProtectedRoute>
+            } />
             
             {/* HR Routes */}
             <Route path="/hr" element={

@@ -150,16 +150,20 @@ const NewRequisition = () => {
       description: "Your requisition has been submitted and is pending approval.",
     });
 
-    navigate('/hod');
+    // Navigate based on department
+    const route = formData.department === 'Finance' ? '/finance' : '/hod';
+    navigate(route);
   };
 
   const remainingBudget = formData.department ? getRemainingBudget(formData.department) : 0;
   const isOverBudget = parseFloat(formData.amount || '0') > remainingBudget;
 
+  const backRoute = user?.role === 'finance' ? '/finance' : '/hod';
+
   return (
     <DashboardLayout title="Create New Requisition">
       <div className="max-w-4xl mx-auto">
-        <Button variant="ghost" onClick={() => navigate('/hod')} className="mb-4">
+        <Button variant="ghost" onClick={() => navigate(backRoute)} className="mb-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Dashboard
         </Button>
@@ -205,6 +209,7 @@ const NewRequisition = () => {
                       <SelectItem value="Marketing and PR">Marketing and PR</SelectItem>
                       <SelectItem value="Technical">Technical</SelectItem>
                       <SelectItem value="HR">HR</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -414,7 +419,7 @@ const NewRequisition = () => {
                 >
                   {remainingBudget <= 100 ? 'Budget Exhausted' : isSubmitting ? 'Submitting...' : 'Submit Requisition'}
                 </Button>
-                <Button type="button" variant="destructive" onClick={() => navigate('/hod')} className="flex-1">
+                <Button type="button" variant="destructive" onClick={() => navigate(backRoute)} className="flex-1">
                   Cancel
                 </Button>
               </div>

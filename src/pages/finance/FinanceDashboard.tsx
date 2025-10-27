@@ -1,14 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, FileText, FileDown } from 'lucide-react';
+import { Download, FileText, FileDown, PlusCircle, ClipboardList } from 'lucide-react';
+import StatusBadge from '@/components/StatusBadge';
 
 const FinanceDashboard = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { requisitions, updateRequisition } = useRequisitions();
   const [comments, setComments] = useState<Record<string, string>>({});
@@ -19,6 +23,8 @@ const FinanceDashboard = () => {
     const usdAmount = r.usdConvertible || r.amount;
     return r.status === 'pending' && usdAmount <= 100;
   });
+
+  const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
@@ -144,8 +150,82 @@ const FinanceDashboard = () => {
 
   return (
     <DashboardLayout title="Finance Dashboard">
-      <div className="space-y-6">
-        <Card>
+      <Tabs defaultValue="approvals" className="space-y-6">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="department" className="flex items-center gap-2">
+            <ClipboardList className="h-4 w-4" />
+            My Department
+          </TabsTrigger>
+          <TabsTrigger value="approvals" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Finance Officer Reviews
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Department Tab */}
+        <TabsContent value="department" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>Finance Department Requisitions</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    View and manage Finance department requisitions
+                  </p>
+                </div>
+                <Button onClick={() => navigate('/finance/new-requisition')}>
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                  New Requisition
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {departmentRequisitions.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">No requisitions yet</p>
+              ) : (
+                departmentRequisitions.map(req => (
+                  <Card key={req.id} className="border-l-4 border-l-blue-500">
+                    <CardContent className="pt-6 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="font-semibold text-lg">{req.title}</p>
+                          <p className="text-sm text-muted-foreground">ID: {req.id}</p>
+                        </div>
+                        <StatusBadge status={req.status} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm text-muted-foreground">Amount</p>
+                          <p className="font-semibold">${req.amount.toFixed(2)} ({req.currency})</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Supplier</p>
+                          <p className="font-medium">{req.chosenSupplier.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Submitted By</p>
+                          <p className="font-medium">{req.submittedBy}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-muted-foreground">Date</p>
+                          <p className="font-medium">{new Date(req.submittedDate).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Description</p>
+                        <p className="text-sm mt-1">{req.description}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Finance Officer Approvals Tab */}
+        <TabsContent value="approvals" className="space-y-6">
+          <Card>
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
@@ -299,7 +379,8 @@ const FinanceDashboard = () => {
             )}
           </CardContent>
         </Card>
-      </div>
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 };
