@@ -17,19 +17,15 @@ const BudgetWarning = ({ department }: BudgetWarningProps) => {
   
   const remaining = budgetTotal - budgetUsed;
 
-  if (remaining > 0 && budgetUsed < budgetTotal) return null;
+  // Show warning when budget reaches $100 or below
+  if (remaining > 100) return null;
 
   return (
-    <Alert variant={remaining <= 0 ? 'destructive' : 'default'} className="mb-4">
+    <Alert variant="destructive" className="mb-4">
       <AlertCircle className="h-4 w-4" />
-      <AlertTitle>
-        {remaining <= 0 ? 'Budget Exhausted!' : 'Budget Warning'}
-      </AlertTitle>
+      <AlertTitle>Budget Exhausted!</AlertTitle>
       <AlertDescription>
-        {remaining <= 0 
-          ? `Department budget has been exhausted. Total budget: $${budgetTotal.toFixed(2)} | Used: $${budgetUsed.toFixed(2)} | Remaining: $${remaining.toFixed(2)}. No more requisitions can be submitted.`
-          : `Budget: $${budgetTotal.toFixed(2)} | Used: $${budgetUsed.toFixed(2)} | Remaining: $${remaining.toFixed(2)}`
-        }
+        Department budget has been exhausted (${remaining.toFixed(2)} remaining). Total budget: ${budgetTotal.toFixed(2)} | Used: ${budgetUsed.toFixed(2)}. No more requisitions can be submitted.
       </AlertDescription>
     </Alert>
   );

@@ -161,8 +161,8 @@ ${departments.map(dept => {
       .filter(r => r.department === dept && (r.status === 'approved' || r.status === 'completed'))
       .reduce((sum, r) => sum + (r.amount || 0), 0);
     const total = localBudgets[dept] || 0;
-    const percentage = total > 0 ? (used / total) * 100 : 0;
-    return { department: dept, used, total, percentage };
+    const remaining = total - used;
+    return { department: dept, used, total, remaining };
   });
 
   return (
@@ -175,21 +175,18 @@ ${departments.map(dept => {
             <p className="text-sm text-muted-foreground">Set and manage budgets for each department</p>
           </CardHeader>
           <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {departments.map(dept => {
                 const usage = departmentBudgetUsage.find(d => d.department === dept);
-                const isNearLimit = usage && usage.percentage >= 80;
-                const isExceeded = usage && usage.percentage >= 100;
+                const isExhausted = usage && usage.remaining <= 100;
                 
                 return (
                   <div key={dept} className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label htmlFor={`budget-${dept}`}>{dept}</Label>
+                      <Label htmlFor={`budget-${dept}`} className="font-medium">{dept}</Label>
                       {usage && (
-                        <span className={`text-sm font-medium ${
-                          isExceeded ? 'text-red-600' : isNearLimit ? 'text-orange-600' : 'text-green-600'
-                        }`}>
-                          ${usage.used.toFixed(2)} / ${usage.total.toFixed(2)} ({usage.percentage.toFixed(1)}%)
+                        <span className={`text-sm ${isExhausted ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                          Remaining: ${usage.remaining.toFixed(2)}
                         </span>
                       )}
                     </div>
@@ -199,23 +196,10 @@ ${departments.map(dept => {
                       step="0.01"
                       value={localBudgets[dept] || 0}
                       onChange={(e) => handleBudgetChange(dept, e.target.value)}
-                      className={isExceeded ? 'border-red-500' : isNearLimit ? 'border-orange-500' : ''}
+                      className={isExhausted ? 'border-destructive' : ''}
                     />
-                    {usage && usage.percentage > 0 && (
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all ${
-                            isExceeded ? 'bg-red-600' : isNearLimit ? 'bg-orange-600' : 'bg-green-600'
-                          }`}
-                          style={{ width: `${Math.min(usage.percentage, 100)}%` }}
-                        />
-                      </div>
-                    )}
-                    {isExceeded && (
-                      <p className="text-xs text-red-600 font-medium">⚠ Budget exceeded!</p>
-                    )}
-                    {isNearLimit && !isExceeded && (
-                      <p className="text-xs text-orange-600 font-medium">⚠ Approaching budget limit</p>
+                    {isExhausted && (
+                      <p className="text-xs text-destructive font-medium">⚠ Budget Exhausted - Cannot submit new requisitions</p>
                     )}
                   </div>
                 );

@@ -110,10 +110,10 @@ const HODDashboard = () => {
           <Button 
             onClick={() => navigate('/hod/new-requisition')} 
             size="lg"
-            disabled={remainingBudget <= 0}
+            disabled={remainingBudget <= 100}
           >
             <Plus className="mr-2 h-5 w-5" />
-            {remainingBudget <= 0 ? 'Budget Exhausted' : 'Create New Requisition'}
+            {remainingBudget <= 100 ? 'Budget Exhausted' : 'Create New Requisition'}
           </Button>
         </div>
 
