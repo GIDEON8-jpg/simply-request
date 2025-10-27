@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type UserRole = 'hod' | 'admin' | 'finance' | 'hr' | 'accountant';
+export type UserRole = 'hod' | 'admin' | 'finance' | 'hr' | 'accountant' | 'ceo' | 'technical';
 
 interface User {
   id: string;
@@ -29,6 +29,8 @@ const MOCK_USERS = [
   { id: '3', username: 'finance1', password: 'password', fullName: 'Michael Finance', firstName: 'Michael', email: 'michael@company.com', role: 'finance' as UserRole },
   { id: '4', username: 'hr1', password: 'password', fullName: 'Emily HR', firstName: 'Emily', email: 'emily@company.com', role: 'hr' as UserRole },
   { id: '5', username: 'kenny', password: 'password', fullName: 'Kenny Accountant', firstName: 'Kenny', email: 'kenny@company.com', role: 'accountant' as UserRole },
+  { id: '6', username: 'ceo1', password: 'password', fullName: 'David CEO', firstName: 'David', email: 'david@company.com', role: 'ceo' as UserRole },
+  { id: '7', username: 'technical1', password: 'password', fullName: 'Robert Technical', firstName: 'Robert', email: 'robert@company.com', role: 'technical' as UserRole },
 ];
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

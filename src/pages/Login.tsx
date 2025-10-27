@@ -82,9 +82,11 @@ const Login = () => {
                 <SelectContent>
                   <SelectItem value="hod">Head of Department</SelectItem>
                   <SelectItem value="admin">Administrator</SelectItem>
-                  <SelectItem value="finance">Finance/CEO</SelectItem>
+                  <SelectItem value="finance">Finance</SelectItem>
                   <SelectItem value="hr">HR & Admin</SelectItem>
                   <SelectItem value="accountant">Accountant</SelectItem>
+                  <SelectItem value="ceo">Chief Executive Officer</SelectItem>
+                  <SelectItem value="technical">Technical Director</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -111,7 +113,7 @@ const Login = () => {
               Sign In
             </Button>
             <div className="text-xs text-center text-muted-foreground mt-4">
-              Demo credentials: username: hod1/admin1/finance1/hr1/kenny | password: password
+              Demo credentials: username: hod1/admin1/finance1/hr1/kenny/ceo1/technical1 | password: password
             </div>
           </form>
         </CardContent>
