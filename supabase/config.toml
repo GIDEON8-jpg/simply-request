@@ -1,0 +1,4 @@
+project_id = "lhknojwrwjjsymokgpzg"
+
+[functions.summarize-requisition]
+verify_jwt = false

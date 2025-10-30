@@ -12,6 +12,8 @@ import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { Download, FileText, FileDown, PlusCircle, ClipboardList, Plus, Edit } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
+import { RequisitionSummary } from '@/components/RequisitionSummary';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -20,6 +22,7 @@ const FinanceDashboard = () => {
   const [comments, setComments] = useState<Record<string, string>>({});
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
+  const [selectedReq, setSelectedReq] = useState<any>(null);
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.usdConvertible || r.amount;
@@ -478,9 +481,17 @@ const FinanceDashboard = () => {
                         variant="destructive"
                         className="flex-1"
                       >
-                        Reject
+                      Reject
                       </Button>
                     </div>
+
+                    <Button
+                      onClick={() => setSelectedReq(req)}
+                      variant="outline"
+                      className="w-full mt-3"
+                    >
+                      View Details & Generate AI Summary
+                    </Button>
                   </CardContent>
                 </Card>
               ))
@@ -489,6 +500,66 @@ const FinanceDashboard = () => {
         </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialog for Requisition Details with AI Summary */}
+      <Dialog open={!!selectedReq} onOpenChange={() => setSelectedReq(null)}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          {selectedReq && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Requisition Details</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg">{selectedReq.title}</h3>
+                  <p className="text-sm text-muted-foreground">ID: {selectedReq.id}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium">Department</p>
+                    <p className="text-sm text-muted-foreground">{selectedReq.department}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Amount</p>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedReq.currency} {selectedReq.amount.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">USD Equivalent</p>
+                    <p className="text-sm text-muted-foreground">
+                      ${selectedReq.usdConvertible?.toLocaleString() || selectedReq.amount.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Status</p>
+                    <StatusBadge status={selectedReq.status} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Submitted By</p>
+                    <p className="text-sm text-muted-foreground">{selectedReq.submittedBy}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Submitted Date</p>
+                    <p className="text-sm text-muted-foreground">{selectedReq.submittedDate}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">Budget Code</p>
+                    <p className="text-sm text-muted-foreground">{selectedReq.budgetCode}</p>
+                  </div>
+                  {selectedReq.chosenSupplier && (
+                    <div>
+                      <p className="text-sm font-medium">Supplier</p>
+                      <p className="text-sm text-muted-foreground">{selectedReq.chosenSupplier.name}</p>
+                    </div>
+                  )}
+                </div>
+                <RequisitionSummary requisition={selectedReq} />
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
