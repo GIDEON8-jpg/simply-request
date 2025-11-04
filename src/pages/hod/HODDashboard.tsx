@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus, Edit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { Department } from '@/types/requisition';
+import { Department, Requisition } from '@/types/requisition';
 import { useToast } from '@/hooks/use-toast';
 
 const HODDashboard = () => {
@@ -17,6 +17,7 @@ const HODDashboard = () => {
   const { requisitions, getRemainingBudget } = useRequisitions();
   const { user } = useAuth();
   const { toast } = useToast();
+  const previousRequisitionsRef = useRef<Requisition[]>([]);
   
   const userDepartment: Department = (user?.department as Department) || 'IT';
 
@@ -43,6 +44,35 @@ const HODDashboard = () => {
       });
     }
   }, [remainingBudget, userDepartment, toast]);
+
+  // Monitor for rejected requisitions and show notifications
+  useEffect(() => {
+    if (previousRequisitionsRef.current.length === 0) {
+      // First load - just store the current state
+      previousRequisitionsRef.current = requisitions;
+      return;
+    }
+
+    // Check for newly rejected requisitions
+    requisitions.forEach(currentReq => {
+      const previousReq = previousRequisitionsRef.current.find(r => r.id === currentReq.id);
+      
+      // If requisition changed to rejected status
+      if (previousReq && previousReq.status !== 'rejected' && currentReq.status === 'rejected') {
+        toast({
+          title: '❌ Requisition Rejected',
+          description: currentReq.approverComments 
+            ? `Requisition ${currentReq.id} was rejected. Reason: ${currentReq.approverComments}`
+            : `Requisition ${currentReq.id} was rejected by ${currentReq.approvedBy || 'approver'}.`,
+          variant: 'destructive',
+          duration: 8000,
+        });
+      }
+    });
+
+    // Update the ref with current requisitions
+    previousRequisitionsRef.current = requisitions;
+  }, [requisitions, toast]);
 
   return (
     <DashboardLayout title="Head of Department Dashboard">
