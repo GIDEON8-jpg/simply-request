@@ -8,7 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Upload, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Upload, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { Department, RequisitionType, Currency } from '@/types/requisition';
 import { useSuppliers } from '@/contexts/SuppliersContext';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
@@ -24,6 +25,7 @@ const NewRequisition = () => {
   const { user } = useAuth();
   const editRequisition = location.state?.editRequisition;
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isShortening, setIsShortening] = useState(false);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -89,6 +91,51 @@ const NewRequisition = () => {
 
   const removeDocument = (index: number) => {
     setSupportingDocuments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleShortenDescription = async () => {
+    if (!formData.description.trim()) {
+      toast({
+        title: "No Description",
+        description: "Please enter a description first",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsShortening(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('shorten-description', {
+        body: { description: formData.description }
+      });
+
+      if (error) {
+        console.error('Error shortening description:', error);
+        toast({
+          title: "Error",
+          description: "Failed to shorten description",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (data?.shortenedDescription) {
+        setFormData({ ...formData, description: data.shortenedDescription });
+        toast({
+          title: "Description Shortened",
+          description: "AI has condensed your description while keeping key information",
+        });
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while shortening description",
+        variant: "destructive",
+      });
+    } finally {
+      setIsShortening(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -358,14 +405,40 @@ const NewRequisition = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description/Justification *</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="description">Description/Justification *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleShortenDescription}
+                    disabled={isShortening || !formData.description.trim()}
+                    className="gap-2"
+                  >
+                    {isShortening ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Shortening...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Shorten with AI
+                      </>
+                    )}
+                  </Button>
+                </div>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   required
                   rows={4}
+                  placeholder="Enter detailed description or justification for this requisition..."
                 />
+                <p className="text-xs text-muted-foreground">
+                  Write a detailed description, then use AI to shorten it while keeping key information
+                </p>
               </div>
 
               <div className="space-y-4 border-t pt-4">
