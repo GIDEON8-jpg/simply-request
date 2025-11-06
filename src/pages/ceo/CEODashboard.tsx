@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { Download, FileText, FileDown } from 'lucide-react';
+import { RequisitionSummary } from '@/components/RequisitionSummary';
 
 const CEODashboard = () => {
   const { toast } = useToast();
@@ -241,6 +242,8 @@ const CEODashboard = () => {
                         </div>
                       </div>
                     )}
+
+                    <RequisitionSummary requisition={req} />
 
                     <div className="space-y-2">
                       <Label htmlFor={`comment-${req.id}`}>Comments (Required for rejection)</Label>

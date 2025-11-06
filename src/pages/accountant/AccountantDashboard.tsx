@@ -9,6 +9,7 @@ import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { Upload, CheckCircle, Mail, FileDown, Send, Download, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { RequisitionSummary } from '@/components/RequisitionSummary';
 
 const AccountantDashboard = () => {
   const { toast } = useToast();
@@ -268,6 +269,8 @@ const AccountantDashboard = () => {
                         </div>
                       </div>
                     )}
+
+                    <RequisitionSummary requisition={req} />
 
                     <div className="space-y-2">
                       <Label htmlFor={`acc-comment-${req.id}`}>Comments (Required for rejection)</Label>
