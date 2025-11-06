@@ -198,6 +198,8 @@ const HODDashboard = () => {
                           <Edit className="mr-2 h-4 w-4" />
                           Edit & Resubmit
                         </Button>
+                      ) : req.status === 'completed' ? (
+                        <span className="text-sm text-muted-foreground">Done</span>
                       ) : (
                         <Button variant="ghost" size="sm">View</Button>
                       )}
