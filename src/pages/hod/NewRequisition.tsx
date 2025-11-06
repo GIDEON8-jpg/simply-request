@@ -41,6 +41,7 @@ const NewRequisition = () => {
     deviationReason: '',
     budgetCode: '',
     description: '',
+    resubmissionComments: '',
   });
 
   const [supportingDocuments, setSupportingDocuments] = useState<File[]>([]);
@@ -62,6 +63,7 @@ const NewRequisition = () => {
         deviationReason: editRequisition.deviationReason || '',
         budgetCode: editRequisition.budgetCode,
         description: editRequisition.description,
+        resubmissionComments: '',
       });
     }
   }, [editRequisition]);
@@ -228,6 +230,17 @@ const NewRequisition = () => {
           </CardHeader>
           <CardContent>
             {formData.department && <BudgetWarning department={formData.department} />}
+            
+            {editRequisition && editRequisition.approverComments && (
+              <div className="mb-6 p-4 bg-destructive/10 border border-destructive/30 rounded-lg">
+                <h3 className="font-semibold text-destructive mb-2">❌ Rejection Comments</h3>
+                <p className="text-sm text-foreground">{editRequisition.approverComments}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Rejected by: {editRequisition.approvedBy || 'Unknown'} on {editRequisition.approvedDate ? new Date(editRequisition.approvedDate).toLocaleDateString() : 'N/A'}
+                </p>
+              </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -440,6 +453,23 @@ const NewRequisition = () => {
                   Write a detailed description, then use AI to shorten it while keeping key information
                 </p>
               </div>
+
+              {editRequisition && (
+                <div className="space-y-2 bg-primary/5 p-4 rounded-lg border border-primary/20">
+                  <Label htmlFor="resubmissionComments">Resubmission Comments *</Label>
+                  <Textarea
+                    id="resubmissionComments"
+                    value={formData.resubmissionComments}
+                    onChange={(e) => setFormData({ ...formData, resubmissionComments: e.target.value })}
+                    required={!!editRequisition}
+                    rows={3}
+                    placeholder="Explain what changes you've made based on the rejection feedback..."
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Describe how you've addressed the rejection comments above
+                  </p>
+                </div>
+              )}
 
               <div className="space-y-4 border-t pt-4">
                 <h3 className="text-lg font-semibold">Supporting Documents (Multiple files allowed)</h3>
