@@ -14,7 +14,7 @@ interface RequisitionsContextType {
 const RequisitionsContext = createContext<RequisitionsContextType | undefined>(undefined);
 
 export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
-  const [requisitions, setRequisitions] = useState<Requisition[]>(mockRequisitions);
+  const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [budgets, setBudgetsState] = useState<Record<Department, number>>(() => {
     const saved = localStorage.getItem('departmentBudgets');
     return saved ? JSON.parse(saved) : {

@@ -13,8 +13,8 @@ interface SuppliersContextType {
 const SuppliersContext = createContext<SuppliersContextType | undefined>(undefined);
 
 export const SuppliersProvider = ({ children }: { children: ReactNode }) => {
-  const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
-  const [taxClearances, setTaxClearances] = useState<TaxClearance[]>(mockTaxClearances);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [taxClearances, setTaxClearances] = useState<TaxClearance[]>([]);
 
   const addSupplier = (supplier: Supplier) => {
     setSuppliers(prev => [...prev, supplier]);
