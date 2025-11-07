@@ -112,9 +112,6 @@ const Login = () => {
             <Button type="submit" className="w-full">
               Sign In
             </Button>
-            <div className="text-xs text-center text-muted-foreground mt-4">
-              Demo credentials: username: hod1/admin1/finance1/hr1/kenny/ceo1/technical1 | password: password
-            </div>
           </form>
         </CardContent>
       </Card>
