@@ -23,7 +23,7 @@ const Login = () => {
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<UserRole>('hod');
+  const [role, setRole] = useState<UserRole>('preparer');
   const [department, setDepartment] = useState<Department>('IT');
   
   const { login } = useAuth();
@@ -183,13 +183,14 @@ const Login = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="preparer">Preparer (Staff)</SelectItem>
                       <SelectItem value="hod">Head of Department</SelectItem>
-                      <SelectItem value="admin">Administrator</SelectItem>
-                      <SelectItem value="finance">Finance</SelectItem>
-                      <SelectItem value="hr">HR & Admin</SelectItem>
+                      <SelectItem value="finance_manager">Finance Manager</SelectItem>
+                      <SelectItem value="technical_director">Technical Director</SelectItem>
                       <SelectItem value="accountant">Accountant</SelectItem>
                       <SelectItem value="ceo">Chief Executive Officer</SelectItem>
-                      <SelectItem value="technical">Technical Director</SelectItem>
+                      <SelectItem value="admin">Administrator</SelectItem>
+                      <SelectItem value="hr">HR & Admin</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

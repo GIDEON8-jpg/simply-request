@@ -372,11 +372,13 @@ export type Database = {
     }
     Enums: {
       app_role:
+        | "preparer"
         | "hod"
-        | "ceo"
-        | "finance"
-        | "accountant"
+        | "finance_manager"
         | "technical_director"
+        | "accountant"
+        | "ceo"
+        | "admin"
         | "hr"
       currency_type: "USD" | "ZWG" | "GBP" | "EUR"
       department_type:
@@ -524,11 +526,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: [
+        "preparer",
         "hod",
-        "ceo",
-        "finance",
-        "accountant",
+        "finance_manager",
         "technical_director",
+        "accountant",
+        "ceo",
+        "admin",
         "hr",
       ],
       currency_type: ["USD", "ZWG", "GBP", "EUR"],

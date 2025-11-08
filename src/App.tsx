@@ -47,6 +47,18 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             
+            {/* Preparer Routes */}
+            <Route path="/preparer" element={
+              <ProtectedRoute allowedRole="preparer">
+                <HODDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/preparer/new-requisition" element={
+              <ProtectedRoute allowedRole="preparer">
+                <NewRequisition />
+              </ProtectedRoute>
+            } />
+            
             {/* HOD Routes */}
             <Route path="/hod" element={
               <ProtectedRoute allowedRole="hod">
@@ -59,21 +71,14 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Admin Routes */}
-            <Route path="/admin" element={
-              <ProtectedRoute allowedRole="admin">
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            
-            {/* Finance Routes */}
-            <Route path="/finance" element={
-              <ProtectedRoute allowedRole="finance">
+            {/* Finance Manager Routes */}
+            <Route path="/finance_manager" element={
+              <ProtectedRoute allowedRole="finance_manager">
                 <FinanceDashboard />
               </ProtectedRoute>
             } />
-            <Route path="/finance/new-requisition" element={
-              <ProtectedRoute allowedRole="finance">
+            <Route path="/finance_manager/new-requisition" element={
+              <ProtectedRoute allowedRole="finance_manager">
                 <NewRequisition />
               </ProtectedRoute>
             } />
@@ -93,8 +98,8 @@ const App = () => (
             } />
             
             {/* Technical Director Routes */}
-            <Route path="/technical" element={
-              <ProtectedRoute allowedRole="technical">
+            <Route path="/technical_director" element={
+              <ProtectedRoute allowedRole="technical_director">
                 <TechnicalDirectorDashboard />
               </ProtectedRoute>
             } />

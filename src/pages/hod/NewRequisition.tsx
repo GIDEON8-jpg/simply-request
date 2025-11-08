@@ -207,7 +207,7 @@ const NewRequisition = () => {
   const remainingBudget = formData.department ? getRemainingBudget(formData.department) : 0;
   const isOverBudget = parseFloat(formData.amount || '0') > remainingBudget;
 
-  const backRoute = user?.role === 'finance' ? '/finance' : '/hod';
+  const backRoute = user?.role === 'finance_manager' ? '/finance_manager' : user?.role === 'preparer' ? '/preparer' : '/hod';
 
   return (
     <DashboardLayout title="Create New Requisition">
