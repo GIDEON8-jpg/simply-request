@@ -33,9 +33,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       (event, session) => {
         setSession(session);
         if (session?.user) {
-          // Use setTimeout to prevent deadlock - critical for auth state changes
+          const u = session.user;
+          // Set a minimal user immediately to mark as authenticated
+          setUser((prev) => prev ?? {
+            id: u.id,
+            username: u.email?.split('@')[0] || '',
+            fullName: '',
+            email: u.email || '',
+            role: 'preparer',
+            department: undefined,
+          });
+          // Defer profile loading to avoid deadlocks
           setTimeout(() => {
-            loadUserProfile(session.user);
+            loadUserProfile(u);
           }, 0);
         } else {
           setUser(null);
@@ -47,8 +57,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
+        const u = session.user;
+        setUser((prev) => prev ?? {
+          id: u.id,
+          username: u.email?.split('@')[0] || '',
+          fullName: '',
+          email: u.email || '',
+          role: 'preparer',
+          department: undefined,
+        });
         setTimeout(() => {
-          loadUserProfile(session.user);
+          loadUserProfile(u);
         }, 0);
       }
     });

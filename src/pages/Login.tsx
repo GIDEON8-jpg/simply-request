@@ -33,7 +33,8 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      navigate(`/${user.role}`);
+      const role = user.role ?? 'preparer';
+      navigate(`/${role}`, { replace: true });
     }
   }, [user, navigate]);
 
