@@ -150,7 +150,10 @@ const HODDashboard = () => {
         {/* Actions */}
         <div className="flex justify-end">
           <Button 
-            onClick={() => navigate('/hod/new-requisition')} 
+            onClick={() => {
+              const route = user?.role === 'preparer' ? '/preparer/new-requisition' : '/hod/new-requisition';
+              navigate(route);
+            }} 
             size="lg"
             disabled={remainingBudget <= 100}
           >
@@ -193,7 +196,10 @@ const HODDashboard = () => {
                         <Button 
                           variant="outline" 
                           size="sm"
-                          onClick={() => navigate('/hod/new-requisition', { state: { editRequisition: req } })}
+                          onClick={() => {
+                            const route = user?.role === 'preparer' ? '/preparer/new-requisition' : '/hod/new-requisition';
+                            navigate(route, { state: { editRequisition: req } });
+                          }}
                         >
                           <Edit className="mr-2 h-4 w-4" />
                           Edit & Resubmit
