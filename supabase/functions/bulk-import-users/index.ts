@@ -26,7 +26,7 @@ const roleMapping: Record<string, string> = {
 
 const departmentMapping: Record<string, string> = {
   'Technical': 'Technical',
-  'Registry': 'IT',
+  'Registry': 'Registry',
   'Public Relations': 'Marketing and PR',
   'Administration': 'CEO',
   'Finance': 'Finance',

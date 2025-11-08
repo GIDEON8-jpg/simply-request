@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Department } from '@/types/requisition';
 
-const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Technical', 'HR', 'Finance', 'CEO'];
+const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Technical', 'HR', 'Finance', 'CEO', 'Registry'];
 
 const AdminDashboard = () => {
   const { toast } = useToast();
@@ -26,6 +26,7 @@ const AdminDashboard = () => {
     'HR': 12000,
     'Finance': 25000,
     'CEO': 100000,
+    'Registry': 10000,
   });
 
   // Sync with context budgets on mount

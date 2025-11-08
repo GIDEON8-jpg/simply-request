@@ -389,6 +389,7 @@ export type Database = {
         | "HR"
         | "Finance"
         | "CEO"
+        | "Registry"
       payment_status: "paid" | "pending"
       requisition_status:
         | "pending"
@@ -544,6 +545,7 @@ export const Constants = {
         "HR",
         "Finance",
         "CEO",
+        "Registry",
       ],
       payment_status: ["paid", "pending"],
       requisition_status: [

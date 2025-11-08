@@ -222,6 +222,7 @@ const Login = () => {
                       <SelectItem value="HR">HR</SelectItem>
                       <SelectItem value="Finance">Finance</SelectItem>
                       <SelectItem value="CEO">CEO</SelectItem>
+                      <SelectItem value="Registry">Registry</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
