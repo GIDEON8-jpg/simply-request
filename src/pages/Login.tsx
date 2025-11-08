@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -26,23 +26,30 @@ const Login = () => {
   const [role, setRole] = useState<UserRole>('preparer');
   const [department, setDepartment] = useState<Department>('IT');
   
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate(`/${user.role}`);
+    }
+  }, [user, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
-      const success = await login(loginEmail, loginPassword, role, department);
+      const success = await login(loginEmail, loginPassword, 'preparer', 'IT');
       
       if (success) {
         toast({
           title: "Login Successful",
           description: "Welcome back!",
         });
-        navigate(`/${role}`);
+        // Navigation will happen automatically via useEffect when user loads
       } else {
         toast({
           title: "Login Failed",
@@ -50,6 +57,12 @@ const Login = () => {
           variant: "destructive",
         });
       }
+    } catch (error) {
+      toast({
+        title: "Login Failed",
+        description: "An error occurred during login",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
