@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import HODDashboard from "./pages/hod/HODDashboard";
 import NewRequisition from "./pages/hod/NewRequisition";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import BulkImport from "./pages/admin/BulkImport";
 import FinanceDashboard from "./pages/finance/FinanceDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
@@ -108,6 +109,13 @@ const App = () => (
             <Route path="/ceo" element={
               <ProtectedRoute allowedRole="ceo">
                 <CEODashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/bulk-import" element={
+              <ProtectedRoute allowedRole="admin">
+                <BulkImport />
               </ProtectedRoute>
             } />
             
