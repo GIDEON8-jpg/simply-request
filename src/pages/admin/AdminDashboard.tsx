@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, Mail, FileText, Save, RotateCcw } from 'lucide-react';
+import { Download, Mail, FileText, Save, RotateCcw, Upload, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -15,6 +16,7 @@ import { Department } from '@/types/requisition';
 const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Technical', 'HR', 'Finance', 'CEO', 'Registry'];
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { requisitions, budgets, setBudgets: saveBudgets } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
@@ -182,6 +184,23 @@ ${departments.map(dept => {
   return (
     <DashboardLayout title="Administrator Dashboard">
       <div className="space-y-6">
+        {/* User Management Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              User Management
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Manage system users and import new users</p>
+          </CardHeader>
+          <CardContent>
+            <Button onClick={() => navigate('/admin/bulk-import')} className="w-full" size="lg">
+              <Upload className="mr-2 h-5 w-5" />
+              Bulk Import Users from CSV
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* Department Budgets */}
         <Card>
           <CardHeader>
