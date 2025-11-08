@@ -112,7 +112,12 @@ const App = () => (
               </ProtectedRoute>
             } />
             
-            {/* Admin Routes - accessible by admin and CEO */}
+            {/* Admin Routes */}
+            <Route path="/admin" element={
+              <ProtectedRoute allowedRole="admin">
+                <AdminDashboard />
+              </ProtectedRoute>
+            } />
             <Route path="/admin/bulk-import" element={
               <ProtectedRoute>
                 <BulkImport />
