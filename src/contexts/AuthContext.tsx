@@ -30,10 +30,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         if (session?.user) {
-          await loadUserProfile(session.user);
+          // Use setTimeout to prevent deadlock - critical for auth state changes
+          setTimeout(() => {
+            loadUserProfile(session.user);
+          }, 0);
         } else {
           setUser(null);
         }
@@ -44,7 +47,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        loadUserProfile(session.user);
+        setTimeout(() => {
+          loadUserProfile(session.user);
+        }, 0);
       }
     });
 
