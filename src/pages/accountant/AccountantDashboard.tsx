@@ -163,7 +163,11 @@ const AccountantDashboard = () => {
       processed_by: user?.id as string,
       payment_date: new Date().toISOString(),
       status: 'paid'
-    }).catch((e) => console.error('Error logging payment:', e));
+    }).then((result) => {
+      if (result.error) {
+        console.error('Error logging payment:', result.error);
+      }
+    });
   };
 
   const handleNotifyHOD = (reqId: string) => {
