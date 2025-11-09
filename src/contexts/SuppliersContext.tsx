@@ -1,13 +1,16 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Supplier, TaxClearance } from '@/types/requisition';
-import { mockSuppliers, mockTaxClearances } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface SuppliersContextType {
   suppliers: Supplier[];
   taxClearances: TaxClearance[];
-  addSupplier: (supplier: Supplier) => void;
-  addTaxClearance: (taxClearance: TaxClearance) => void;
-  deactivateSupplier: (supplierId: string) => void;
+  addSupplier: (supplier: Omit<Supplier, 'id'>) => Promise<void>;
+  addTaxClearance: (taxClearance: Omit<TaxClearance, 'id'>) => Promise<void>;
+  deactivateSupplier: (supplierId: string) => Promise<void>;
+  refreshSuppliers: () => Promise<void>;
+  refreshTaxClearances: () => Promise<void>;
 }
 
 const SuppliersContext = createContext<SuppliersContextType | undefined>(undefined);
@@ -15,19 +18,127 @@ const SuppliersContext = createContext<SuppliersContextType | undefined>(undefin
 export const SuppliersProvider = ({ children }: { children: ReactNode }) => {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [taxClearances, setTaxClearances] = useState<TaxClearance[]>([]);
+  const { toast } = useToast();
 
-  const addSupplier = (supplier: Supplier) => {
-    setSuppliers(prev => [...prev, supplier]);
+  const refreshSuppliers = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedSuppliers: Supplier[] = (data || []).map(s => ({
+        id: s.id,
+        name: s.name,
+        icazNumber: s.icaz_number,
+        contactInfo: s.contact_info,
+        status: s.status as 'active' | 'inactive',
+      }));
+
+      setSuppliers(mappedSuppliers);
+    } catch (error) {
+      console.error('Error fetching suppliers:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load suppliers",
+        variant: "destructive",
+      });
+    }
   };
 
-  const addTaxClearance = (taxClearance: TaxClearance) => {
-    setTaxClearances(prev => [...prev, taxClearance]);
+  const refreshTaxClearances = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('tax_clearances')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedTaxClearances: TaxClearance[] = (data || []).map(tc => ({
+        id: tc.id,
+        supplierId: tc.supplier_id,
+        fileName: tc.file_name,
+        validFrom: tc.valid_from,
+        validTo: tc.valid_to,
+        quarter: tc.quarter,
+        year: tc.year,
+      }));
+
+      setTaxClearances(mappedTaxClearances);
+    } catch (error) {
+      console.error('Error fetching tax clearances:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load tax clearances",
+        variant: "destructive",
+      });
+    }
   };
 
-  const deactivateSupplier = (supplierId: string) => {
-    setSuppliers(prev => 
-      prev.map(s => s.id === supplierId ? { ...s, status: 'inactive' as const } : s)
-    );
+  useEffect(() => {
+    refreshSuppliers();
+    refreshTaxClearances();
+  }, []);
+
+  const addSupplier = async (supplier: Omit<Supplier, 'id'>) => {
+    try {
+      const { error } = await supabase
+        .from('suppliers')
+        .insert([{
+          name: supplier.name,
+          icaz_number: supplier.icazNumber,
+          contact_info: supplier.contactInfo,
+          status: supplier.status,
+        }]);
+
+      if (error) throw error;
+
+      await refreshSuppliers();
+    } catch (error) {
+      console.error('Error adding supplier:', error);
+      throw error;
+    }
+  };
+
+  const addTaxClearance = async (taxClearance: Omit<TaxClearance, 'id'>) => {
+    try {
+      const { error } = await supabase
+        .from('tax_clearances')
+        .insert([{
+          supplier_id: taxClearance.supplierId,
+          file_name: taxClearance.fileName,
+          valid_from: taxClearance.validFrom,
+          valid_to: taxClearance.validTo,
+          quarter: taxClearance.quarter,
+          year: taxClearance.year,
+        }]);
+
+      if (error) throw error;
+
+      await refreshTaxClearances();
+    } catch (error) {
+      console.error('Error adding tax clearance:', error);
+      throw error;
+    }
+  };
+
+  const deactivateSupplier = async (supplierId: string) => {
+    try {
+      const { error } = await supabase
+        .from('suppliers')
+        .update({ status: 'inactive' })
+        .eq('id', supplierId);
+
+      if (error) throw error;
+
+      await refreshSuppliers();
+    } catch (error) {
+      console.error('Error deactivating supplier:', error);
+      throw error;
+    }
   };
 
   return (
@@ -37,7 +148,9 @@ export const SuppliersProvider = ({ children }: { children: ReactNode }) => {
         taxClearances, 
         addSupplier, 
         addTaxClearance, 
-        deactivateSupplier 
+        deactivateSupplier,
+        refreshSuppliers,
+        refreshTaxClearances,
       }}
     >
       {children}

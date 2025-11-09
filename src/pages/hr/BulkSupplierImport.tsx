@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Upload, FileText } from 'lucide-react';
+import { useSuppliers } from '@/contexts/SuppliersContext';
 
 interface ImportResult {
   successful: string[];
@@ -15,6 +16,7 @@ export const BulkSupplierImport = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<ImportResult | null>(null);
   const { toast } = useToast();
+  const { refreshSuppliers } = useSuppliers();
 
   const parseCSV = (text: string) => {
     const lines = text.trim().split('\n');
@@ -48,6 +50,7 @@ export const BulkSupplierImport = () => {
       if (error) throw error;
 
       setResults(data);
+      await refreshSuppliers();
       toast({
         title: "Import Complete",
         description: `Successfully imported ${data.successful.length} suppliers. ${data.failed.length} failed.`,
@@ -80,6 +83,7 @@ export const BulkSupplierImport = () => {
       if (error) throw error;
 
       setResults(data);
+      await refreshSuppliers();
       toast({
         title: "Import Complete",
         description: `Successfully imported ${data.successful.length} suppliers. ${data.failed.length} failed.`,

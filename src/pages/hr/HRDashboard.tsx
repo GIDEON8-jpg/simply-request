@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useSuppliers } from '@/contexts/SuppliersContext';
 import { BulkSupplierImport } from './BulkSupplierImport';
+import { supabase } from '@/integrations/supabase/client';
 
 const HRDashboard = () => {
   const { toast } = useToast();
@@ -24,7 +25,7 @@ const HRDashboard = () => {
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [taxClearanceFile, setTaxClearanceFile] = useState<File | null>(null);
 
-  const handleAddSupplier = (e: React.FormEvent) => {
+  const handleAddSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!newSupplierTaxFile) {
@@ -36,36 +37,51 @@ const HRDashboard = () => {
       return;
     }
 
-    // Add new supplier
-    const newSupplierId = `SUP00${suppliers.length + 1}`;
-    const newSupplierData = {
-      id: newSupplierId,
-      name: newSupplier.name,
-      icazNumber: newSupplier.icazNumber,
-      contactInfo: newSupplier.contactInfo,
-      status: 'active' as const,
-    };
-    addSupplier(newSupplierData);
+    try {
+      // Add new supplier
+      await addSupplier({
+        name: newSupplier.name,
+        icazNumber: newSupplier.icazNumber,
+        contactInfo: newSupplier.contactInfo,
+        status: 'active' as const,
+      });
 
-    // Add tax clearance to repository
-    const newTaxClearance = {
-      id: `TC00${taxClearances.length + 1}`,
-      supplierId: newSupplierId,
-      fileName: newSupplierTaxFile.name,
-      quarter: 'Q3',
-      year: '2025',
-      validFrom: '2025-09-01',
-      validTo: '2025-12-31',
-    };
-    addTaxClearance(newTaxClearance);
+      // Get the newly created supplier
+      const newSuppliers = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('name', newSupplier.name)
+        .eq('icaz_number', newSupplier.icazNumber)
+        .order('created_at', { ascending: false })
+        .limit(1);
 
-    toast({
-      title: "Supplier Added",
-      description: `${newSupplier.name} has been added with tax clearance`,
-    });
-    
-    setNewSupplier({ name: '', icazNumber: '', contactInfo: '' });
-    setNewSupplierTaxFile(null);
+      if (newSuppliers.data && newSuppliers.data.length > 0) {
+        // Add tax clearance to repository
+        await addTaxClearance({
+          supplierId: newSuppliers.data[0].id,
+          fileName: newSupplierTaxFile.name,
+          quarter: 'Q3',
+          year: '2025',
+          validFrom: '2025-09-01',
+          validTo: '2025-12-31',
+        });
+      }
+
+      toast({
+        title: "Supplier Added",
+        description: `${newSupplier.name} has been added with tax clearance`,
+      });
+      
+      setNewSupplier({ name: '', icazNumber: '', contactInfo: '' });
+      setNewSupplierTaxFile(null);
+    } catch (error) {
+      console.error('Error adding supplier:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add supplier",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleNewSupplierTaxFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,7 +122,7 @@ const HRDashboard = () => {
     }
   };
 
-  const handleUploadTaxClearance = () => {
+  const handleUploadTaxClearance = async () => {
     if (!selectedSupplierId) {
       toast({
         title: "Select Supplier",
@@ -123,15 +139,33 @@ const HRDashboard = () => {
       });
       return;
     }
-    toast({
-      title: "Tax Clearance Uploaded",
-      description: `${taxClearanceFile.name} has been added to the repository`,
-    });
-    setTaxClearanceFile(null);
-    setSelectedSupplierId('');
+
+    try {
+      await addTaxClearance({
+        supplierId: selectedSupplierId,
+        fileName: taxClearanceFile.name,
+        quarter: 'Q3',
+        year: '2025',
+        validFrom: '2025-09-01',
+        validTo: '2025-12-31',
+      });
+
+      toast({
+        title: "Tax Clearance Uploaded",
+        description: `${taxClearanceFile.name} has been added to the repository`,
+      });
+      setTaxClearanceFile(null);
+      setSelectedSupplierId('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload tax clearance",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleDeactivateSupplier = () => {
+  const handleDeactivateSupplier = async () => {
     if (!selectedSupplierId) {
       toast({
         title: "Select Supplier",
@@ -140,12 +174,21 @@ const HRDashboard = () => {
       });
       return;
     }
-    deactivateSupplier(selectedSupplierId);
-    toast({
-      title: "Supplier Deactivated",
-      description: "Supplier has been removed from the active list (history preserved)",
-    });
-    setSelectedSupplierId('');
+
+    try {
+      await deactivateSupplier(selectedSupplierId);
+      toast({
+        title: "Supplier Deactivated",
+        description: "Supplier has been removed from the active list (history preserved)",
+      });
+      setSelectedSupplierId('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to deactivate supplier",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownloadTaxClearance = (fileName: string) => {
