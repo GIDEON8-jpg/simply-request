@@ -6,6 +6,7 @@ import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
+import { format } from 'date-fns';
 
 const PreparerDashboard = () => {
   const navigate = useNavigate();
@@ -85,7 +86,12 @@ const PreparerDashboard = () => {
                         <span className="font-medium">{req.title}</span>
                       )}
                     </div>
-                    <StatusBadge status={req.status} />
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">
+                        {format(new Date(req.submittedDate), 'MMM dd, yyyy')}
+                      </span>
+                      <StatusBadge status={req.status} />
+                    </div>
                   </div>
                 ))}
               </div>
