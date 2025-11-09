@@ -10,6 +10,7 @@ import { Plus, Upload, Trash2, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useSuppliers } from '@/contexts/SuppliersContext';
+import { BulkSupplierImport } from './BulkSupplierImport';
 
 const HRDashboard = () => {
   const { toast } = useToast();
@@ -157,6 +158,9 @@ const HRDashboard = () => {
   return (
     <DashboardLayout title="HR & Admin Dashboard">
       <div className="space-y-6">
+        {/* Bulk Import Suppliers */}
+        <BulkSupplierImport />
+
         {/* Add New Supplier */}
         <Card>
           <CardHeader>
