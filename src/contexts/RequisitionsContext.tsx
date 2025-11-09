@@ -89,17 +89,17 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         // HODs see all requisitions in their department
         query = query.eq('department', user.department as any);
       } else if (user.role === 'technical_director') {
-        // Technical Directors see requisitions between $100-$500
-        query = query.gte('usd_convertible', 100).lte('usd_convertible', 500);
+        // Technical Directors: fetch all; component-level filters (status + amount) will apply
+        // No additional DB filter to avoid excluding USD-only rows where usd_convertible is null
       } else if (user.role === 'finance_manager') {
-        // Finance Managers see requisitions over $500
-        query = query.gte('usd_convertible', 500);
+        // Finance Managers: fetch all; component-level filters will apply (< $100 after HOD approval)
+        // No DB amount filter to include records with null usd_convertible
       } else if (user.role === 'accountant') {
         // Accountants see approved requisitions for payment processing
         query = query.in('status', ['approved', 'approved_wait', 'completed']);
       } else if (user.role === 'ceo') {
-        // CEO sees requisitions over $1000 or those needing CEO approval
-        query = query.gte('usd_convertible', 1000);
+        // CEO: fetch all; component-level filters will apply (> $500 after HOD approval)
+        // No additional filter
       } else if (user.role === 'admin' || user.role === 'hr') {
         // Admins and HR see all requisitions
         // No additional filter
