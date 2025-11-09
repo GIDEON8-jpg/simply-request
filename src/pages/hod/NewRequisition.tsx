@@ -68,6 +68,13 @@ const NewRequisition = () => {
     }
   }, [editRequisition]);
 
+  // Auto-select user's department for preparers to avoid $0 remaining budget before selection
+  useEffect(() => {
+    if (!formData.department && user?.department) {
+      setFormData((prev) => ({ ...prev, department: user.department as Department }));
+    }
+  }, [user]);
+
   const selectedSupplier = suppliers.find(s => s.id === formData.chosenSupplier);
   const taxClearance = taxClearances.find(tc => tc.supplierId === formData.chosenSupplier);
 
@@ -204,8 +211,9 @@ const NewRequisition = () => {
     navigate(route);
   };
 
-  const remainingBudget = formData.department ? getRemainingBudget(formData.department) : 0;
-  const isOverBudget = parseFloat(formData.amount || '0') > remainingBudget;
+  const hasDepartment = !!formData.department;
+  const remainingBudget = hasDepartment ? getRemainingBudget(formData.department) : 0;
+  const isOverBudget = hasDepartment ? parseFloat(formData.amount || '0') > remainingBudget : false;
 
   const backRoute = user?.role === 'finance_manager' ? '/finance_manager' : user?.role === 'preparer' ? '/preparer' : '/hod';
 
