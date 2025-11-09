@@ -309,7 +309,11 @@ const AccountantDashboard = () => {
                     )}
 
                     {/* Proof of Payment Upload */}
-                    <div className="space-y-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="space-y-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 text-sm text-blue-700 bg-blue-100 p-2 rounded">
+                        <Mail className="h-4 w-4" />
+                        <span>Upon approval, POP will be sent to the {req.department} HOD via email</span>
+                      </div>
                       <Label htmlFor={`pop-upload-${req.id}`}>Proof of Payment (Required for Approval) *</Label>
                       <input
                         type="file"

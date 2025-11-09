@@ -257,7 +257,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   const getRemainingBudget = (department: Department) => {
     const total = budgets[department] || 0;
     const used = requisitions
-      .filter(r => r.department === department && r.status === 'completed')
+      .filter(r => r.department === department && (r.status === 'completed' || r.paymentDate))
       .reduce((sum, r) => sum + (r.amount || 0), 0);
     return total - used;
   };
