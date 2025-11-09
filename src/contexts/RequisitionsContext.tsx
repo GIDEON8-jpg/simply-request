@@ -150,6 +150,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         budgetCode: req.budget_code,
         description: req.description,
         status: req.status,
+        submittedById: req.submitted_by,
         submittedBy: req.submitted_by_profile?.full_name || '',
         submittedDate: req.submitted_date,
         approverComments: req.approver_comments,

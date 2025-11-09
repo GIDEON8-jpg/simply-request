@@ -39,6 +39,7 @@ export interface Requisition {
   budgetCode: string;
   description: string;
   status: RequisitionStatus;
+  submittedById?: string;
   submittedBy: string;
   submittedDate: string;
   taxClearanceAttached?: TaxClearance;

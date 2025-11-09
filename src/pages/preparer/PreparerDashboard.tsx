@@ -16,7 +16,7 @@ const PreparerDashboard = () => {
   const { user } = useAuth();
 
   const myRequisitions = requisitions.filter(
-    r => r.department === user?.department && r.submittedBy === (user?.firstName || user?.fullName)
+    r => r.submittedById === user?.id
   );
 
   const pendingCount = myRequisitions.filter(r => r.status === 'pending').length;
