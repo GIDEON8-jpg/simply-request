@@ -46,6 +46,7 @@ const TechnicalDirectorDashboard = () => {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: action !== 'reject' ? 'Technical Director' : undefined,
+      approvedById: action !== 'reject' ? user?.id : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
     };
 
@@ -275,8 +276,9 @@ const TechnicalDirectorDashboard = () => {
                       <Button
                         onClick={() => handleAction(req.id, 'approve')}
                         className="flex-1 bg-green-600 hover:bg-green-700"
+                        disabled={req.approvedById === user?.id}
                       >
-                        Approve
+                        {req.approvedById === user?.id ? 'Already Approved' : 'Approve'}
                       </Button>
                       <Button
                         onClick={() => {
@@ -287,6 +289,7 @@ const TechnicalDirectorDashboard = () => {
                           }
                         }}
                         className="flex-1 bg-orange-600 hover:bg-orange-700"
+                        disabled={req.approvedById === user?.id}
                       >
                         {showWaitField[req.id] ? 'Submit Wait' : 'Approve but Wait'}
                       </Button>
@@ -294,6 +297,7 @@ const TechnicalDirectorDashboard = () => {
                         onClick={() => handleAction(req.id, 'reject')}
                         variant="destructive"
                         className="flex-1"
+                        disabled={req.approvedById === user?.id}
                       >
                         Reject
                       </Button>

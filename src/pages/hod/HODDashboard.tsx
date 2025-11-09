@@ -69,6 +69,7 @@ const HODDashboard = () => {
       status: action === 'approve' ? 'approved' : 'rejected',
       approverComments: action === 'reject' ? comments[reqId] : undefined,
       approvedBy: action === 'approve' ? `${user?.firstName || user?.fullName} (HOD)` : undefined,
+      approvedById: action === 'approve' ? user?.id : undefined,
       approvedDate: action === 'approve' ? new Date().toISOString() : undefined,
     };
 
@@ -339,18 +340,20 @@ const HODDashboard = () => {
                         />
                       </div>
 
-                      <div className="flex gap-2 justify-end">
+                       <div className="flex gap-2 justify-end">
                         <Button
                           variant="destructive"
                           onClick={() => handleAction(req.id, 'reject')}
+                          disabled={req.approvedById === user?.id}
                         >
                           Reject
                         </Button>
                         <Button
                           variant="default"
                           onClick={() => handleAction(req.id, 'approve')}
+                          disabled={req.approvedById === user?.id}
                         >
-                          Approve
+                          {req.approvedById === user?.id ? 'Already Approved' : 'Approve'}
                         </Button>
                       </div>
                     </CardContent>

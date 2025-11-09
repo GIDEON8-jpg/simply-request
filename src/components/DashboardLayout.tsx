@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react';
+import { LogOut, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface DashboardLayoutProps {
@@ -40,6 +40,12 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
             <span className="text-sm text-muted-foreground">
               {user?.email} ({user?.role})
             </span>
+            {(user?.role === 'finance_manager' || user?.role === 'accountant' || user?.role === 'ceo') && (
+              <Button variant="ghost" size="sm" onClick={() => navigate('/payment-schedule')}>
+                <FileText className="mr-2 h-4 w-4" />
+                Payment Schedule
+              </Button>
+            )}
             <Button variant="outline" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
               Logout

@@ -18,6 +18,7 @@ import HRDashboard from "./pages/hr/HRDashboard";
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import TechnicalDirectorDashboard from "./pages/technical/TechnicalDirectorDashboard";
 import CEODashboard from "./pages/ceo/CEODashboard";
+import PaymentSchedule from "./pages/payment/PaymentSchedule";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -127,6 +128,13 @@ const App = () => (
             <Route path="/admin/bulk-import" element={
               <ProtectedRoute>
                 <BulkImport />
+              </ProtectedRoute>
+            } />
+            
+            {/* Payment Schedule - Accessible by Finance, Accountant, CEO */}
+            <Route path="/payment-schedule" element={
+              <ProtectedRoute>
+                <PaymentSchedule />
               </ProtectedRoute>
             } />
             

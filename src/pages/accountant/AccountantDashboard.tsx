@@ -11,9 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AccountantDashboard = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const { requisitions, updateRequisition } = useRequisitions();
   const [uploadedPOP, setUploadedPOP] = useState<{ [key: string]: File[] }>({});
   const [comments, setComments] = useState<Record<string, string>>({});
@@ -63,6 +65,7 @@ const AccountantDashboard = () => {
       status: action === 'approve' ? 'completed' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: action !== 'reject' ? 'Accountant' : undefined,
+      approvedById: action !== 'reject' ? user?.id : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
       paymentDate: action === 'approve' ? new Date().toISOString() : undefined,
     };
@@ -354,8 +357,9 @@ const AccountantDashboard = () => {
                       <Button
                         onClick={() => handleAction(req.id, 'approve')}
                         className="flex-1 bg-green-600 hover:bg-green-700"
+                        disabled={req.approvedById === user?.id}
                       >
-                        Approve
+                        {req.approvedById === user?.id ? 'Already Processed' : 'Approve'}
                       </Button>
                       <Button
                         onClick={() => {
@@ -366,6 +370,7 @@ const AccountantDashboard = () => {
                           }
                         }}
                         className="flex-1 bg-orange-600 hover:bg-orange-700"
+                        disabled={req.approvedById === user?.id}
                       >
                         {showWaitField[req.id] ? 'Submit Wait' : 'Approve but Wait'}
                       </Button>
@@ -373,6 +378,7 @@ const AccountantDashboard = () => {
                         onClick={() => handleAction(req.id, 'reject')}
                         variant="destructive"
                         className="flex-1"
+                        disabled={req.approvedById === user?.id}
                       >
                         Reject
                       </Button>
