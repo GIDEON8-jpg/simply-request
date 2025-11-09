@@ -8,6 +8,7 @@ import { SuppliersProvider } from "./contexts/SuppliersContext";
 import { RequisitionsProvider } from "./contexts/RequisitionsContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import PreparerDashboard from "./pages/preparer/PreparerDashboard";
 import HODDashboard from "./pages/hod/HODDashboard";
 import NewRequisition from "./pages/hod/NewRequisition";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -51,7 +52,7 @@ const App = () => (
             {/* Preparer Routes */}
             <Route path="/preparer" element={
               <ProtectedRoute allowedRole="preparer">
-                <HODDashboard />
+                <PreparerDashboard />
               </ProtectedRoute>
             } />
             <Route path="/preparer/new-requisition" element={
