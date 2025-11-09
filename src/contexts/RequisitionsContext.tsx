@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { Requisition, Department, Supplier } from '@/types/requisition';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface RequisitionsContextType {
   requisitions: Requisition[];
@@ -18,6 +19,7 @@ const RequisitionsContext = createContext<RequisitionsContextType | undefined>(u
 export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth();
   const [budgets, setBudgetsState] = useState<Record<Department, number>>({
     'Education': 10000,
     'IT': 20000,
@@ -55,11 +57,18 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     fetchBudgets();
   }, []);
 
-  // Fetch requisitions with suppliers
+  // Fetch requisitions with suppliers - filtered by role
   useEffect(() => {
+    if (!user) {
+      setRequisitions([]);
+      setLoading(false);
+      return;
+    }
+
     const fetchRequisitions = async () => {
       setLoading(true);
-      const { data: reqData, error } = await supabase
+      
+      let query = supabase
         .from('requisitions')
         .select(`
           *,
@@ -68,8 +77,37 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
           other_supplier_2:suppliers!requisitions_other_supplier_2_id_fkey(*),
           submitted_by_profile:profiles!requisitions_submitted_by_fkey(full_name),
           approved_by_profile:profiles!requisitions_approved_by_fkey(full_name)
-        `)
-        .order('created_at', { ascending: false });
+        `);
+
+      // Filter based on user role
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      
+      if (user.role === 'preparer') {
+        // Preparers only see their own requisitions
+        query = query.eq('submitted_by', authUser?.id);
+      } else if (user.role === 'hod' && user.department) {
+        // HODs see all requisitions in their department
+        query = query.eq('department', user.department as any);
+      } else if (user.role === 'technical_director') {
+        // Technical Directors see requisitions between $100-$500
+        query = query.gte('usd_convertible', 100).lte('usd_convertible', 500);
+      } else if (user.role === 'finance_manager') {
+        // Finance Managers see requisitions over $500
+        query = query.gte('usd_convertible', 500);
+      } else if (user.role === 'accountant') {
+        // Accountants see approved requisitions for payment processing
+        query = query.in('status', ['approved', 'approved_wait', 'completed']);
+      } else if (user.role === 'ceo') {
+        // CEO sees requisitions over $1000 or those needing CEO approval
+        query = query.gte('usd_convertible', 1000);
+      } else if (user.role === 'admin' || user.role === 'hr') {
+        // Admins and HR see all requisitions
+        // No additional filter
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      const { data: reqData, error } = await query;
 
       if (error) {
         console.error('Error fetching requisitions:', error);
@@ -145,7 +183,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [user]);
 
   const addRequisition = async (requisition: Requisition) => {
     const { data: { user } } = await supabase.auth.getUser();
