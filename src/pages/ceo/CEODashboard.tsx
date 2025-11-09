@@ -19,8 +19,8 @@ const CEODashboard = () => {
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
 
   const pendingRequisitions = requisitions.filter(r => {
-    const usdAmount = r.usdConvertible || r.amount;
-    return r.status === 'approved' && usdAmount > 500;
+    const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
+    return r.status === 'approved' && usdAmount > 1000 && r.approvedBy !== 'CEO';
   });
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
@@ -43,7 +43,7 @@ const CEODashboard = () => {
     }
 
     const updates: Partial<typeof requisitions[0]> = {
-      status: action === 'approve' ? 'completed' : action === 'reject' ? 'rejected' : 'approved_wait',
+      status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: action !== 'reject' ? 'CEO' : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
@@ -163,9 +163,9 @@ const CEODashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Requisitions for CEO Approval</CardTitle>
+                <CardTitle>Requisitions for CEO Approval (&gt; $1,000)</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  HOD-approved requisitions requiring your approval (&gt; $500 USD)
+                  HOD-approved requisitions requiring your approval (&gt; $1,000 USD)
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">

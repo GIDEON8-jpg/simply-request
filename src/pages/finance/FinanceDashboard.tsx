@@ -25,8 +25,8 @@ const FinanceDashboard = () => {
   const [selectedReq, setSelectedReq] = useState<any>(null);
 
   const pendingRequisitions = requisitions.filter(r => {
-    const usdAmount = r.usdConvertible || r.amount;
-    return r.status === 'approved' && usdAmount < 100;
+    const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
+    return r.status === 'approved' && usdAmount < 100 && r.approvedBy !== 'Finance Manager';
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
@@ -75,9 +75,9 @@ const FinanceDashboard = () => {
     }
 
     const updates: Partial<typeof requisitions[0]> = {
-      status: action === 'approve' ? 'completed' : action === 'reject' ? 'rejected' : 'approved_wait',
+      status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
-      approvedBy: action !== 'reject' ? 'Finance Officer' : undefined,
+      approvedBy: action !== 'reject' ? 'Finance Manager' : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
     };
 

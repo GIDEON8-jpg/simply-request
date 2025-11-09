@@ -12,7 +12,7 @@ const BudgetWarning = ({ department }: BudgetWarningProps) => {
   
   const budgetTotal = budgets[department] || 0;
   const budgetUsed = requisitions
-    .filter(r => r.department === department && (r.status === 'approved' || r.status === 'completed'))
+    .filter(r => r.department === department && r.status === 'completed')
     .reduce((sum, r) => sum + r.amount, 0);
   
   const remaining = budgetTotal - budgetUsed;

@@ -6,10 +6,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Upload, CheckCircle, Mail, FileDown, Send, Download, FileText } from 'lucide-react';
+import { Upload, CheckCircle, Mail, FileDown, Send, Download, FileText, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
+import { supabase } from '@/integrations/supabase/client';
 
 const AccountantDashboard = () => {
   const { toast } = useToast();
@@ -23,7 +24,7 @@ const AccountantDashboard = () => {
     r.status === 'approved' && 
     !r.paymentDate && 
     r.approvedBy && 
-    (r.approvedBy === 'Technical Director' || r.approvedBy === 'CEO')
+    (r.approvedBy === 'Technical Director' || r.approvedBy === 'CEO' || r.approvedBy === 'Finance Manager')
   );
 
   const approvedForPayment = requisitions.filter(r => 
@@ -42,7 +43,7 @@ const AccountantDashboard = () => {
   const paidAmount = paymentSchedule.filter(item => item.status === 'Paid').reduce((sum, item) => sum + item.amount, 0);
   const pendingAmount = totalAmount - paidAmount;
 
-  const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
+  const handleAction = async (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
       toast({
         title: "Comment Required",
@@ -61,23 +62,59 @@ const AccountantDashboard = () => {
       return;
     }
 
+    if (action === 'approve' && (!uploadedPOP[reqId] || uploadedPOP[reqId].length === 0)) {
+      toast({
+        title: "Proof of Payment Required",
+        description: "Please upload proof of payment before approving",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const updates: Partial<typeof requisitions[0]> = {
-      status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
+      status: action === 'approve' ? 'completed' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: action !== 'reject' ? 'Accountant' : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
+      paymentDate: action === 'approve' ? new Date().toISOString() : undefined,
     };
 
-    updateRequisition(reqId, updates);
+    await updateRequisition(reqId, updates);
+
+    // Send email to HOD if approved
+    if (action === 'approve') {
+      const req = requisitions.find(r => r.id === reqId);
+      if (req) {
+        try {
+          await supabase.functions.invoke('notify-hod-payment', {
+            body: { 
+              requisitionId: reqId,
+              department: req.department,
+              title: req.title,
+              amount: req.amount,
+              currency: req.currency,
+            }
+          });
+          
+          toast({
+            title: "Email Sent",
+            description: "HOD has been notified of payment completion",
+          });
+        } catch (error) {
+          console.error('Error sending email:', error);
+        }
+      }
+    }
 
     toast({
-      title: action === 'approve' ? "Requisition Approved" : action === 'reject' ? "Requisition Rejected" : "Approved with Wait Status",
-      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved for payment processing' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
+      title: action === 'approve' ? "Requisition Approved & Paid" : action === 'reject' ? "Requisition Rejected" : "Approved with Wait Status",
+      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and payment completed' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
     });
 
     setComments(prev => ({ ...prev, [reqId]: '' }));
     setWaitReasons(prev => ({ ...prev, [reqId]: '' }));
     setShowWaitField(prev => ({ ...prev, [reqId]: false }));
+    setUploadedPOP(prev => ({ ...prev, [reqId]: [] }));
   };
 
   const handleWaitClick = (reqId: string) => {
@@ -295,6 +332,44 @@ const AccountantDashboard = () => {
                         />
                       </div>
                     )}
+
+                    {/* Proof of Payment Upload */}
+                    <div className="space-y-2 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                      <Label htmlFor={`pop-upload-${req.id}`}>Proof of Payment (Required for Approval) *</Label>
+                      <input
+                        type="file"
+                        id={`pop-upload-${req.id}`}
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        multiple
+                        onChange={(e) => handleUploadPOP(req.id, e)}
+                        className="hidden"
+                      />
+                      <label
+                        htmlFor={`pop-upload-${req.id}`}
+                        className="border-2 border-dashed border-blue-300 rounded-lg p-4 text-center hover:border-blue-500 transition-colors cursor-pointer flex flex-col items-center"
+                      >
+                        <Upload className="h-6 w-6 text-blue-400" />
+                        <p className="mt-2 text-sm text-gray-600">Click to upload proof of payment</p>
+                        <p className="text-xs text-gray-500">PDF, PNG, JPG (max 10MB each)</p>
+                      </label>
+                      {uploadedPOP[req.id] && uploadedPOP[req.id].length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {uploadedPOP[req.id].map((file, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-white p-2 rounded border border-blue-200">
+                              <span className="text-sm truncate flex-1">{file.name}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removePOPFile(req.id, idx)}
+                                className="ml-2"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
 
                     <div className="flex gap-3">
                       <Button

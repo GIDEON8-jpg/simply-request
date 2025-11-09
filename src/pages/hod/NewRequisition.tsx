@@ -270,6 +270,8 @@ const NewRequisition = () => {
                       <SelectItem value="Technical">Technical</SelectItem>
                       <SelectItem value="HR">HR</SelectItem>
                       <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="Registry">Registry</SelectItem>
+                      <SelectItem value="CEO">CEO</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
