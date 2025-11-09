@@ -27,7 +27,6 @@ const HRDashboard = () => {
   
   // Tax clearance date fields
   const [taxClearanceData, setTaxClearanceData] = useState({
-    quarter: 'Q1',
     year: new Date().getFullYear().toString(),
     validFrom: '',
     validTo: '',
@@ -80,7 +79,7 @@ const HRDashboard = () => {
           supplierId,
           fileName: newSupplierTaxFile.name,
           filePath: filePath,
-          quarter: 'Q1',
+          quarter: 'N/A',
           year: new Date().getFullYear().toString(),
           validFrom: new Date().toISOString().split('T')[0],
           validTo: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0],
@@ -184,7 +183,7 @@ const HRDashboard = () => {
         supplierId: selectedSupplierId,
         fileName: taxClearanceFile.name,
         filePath: filePath,
-        quarter: taxClearanceData.quarter,
+        quarter: 'N/A',
         year: taxClearanceData.year,
         validFrom: taxClearanceData.validFrom,
         validTo: taxClearanceData.validTo,
@@ -197,7 +196,6 @@ const HRDashboard = () => {
       setTaxClearanceFile(null);
       setSelectedSupplierId('');
       setTaxClearanceData({
-        quarter: 'Q1',
         year: new Date().getFullYear().toString(),
         validFrom: '',
         validTo: '',
@@ -407,25 +405,7 @@ const HRDashboard = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="quarter">Quarter</Label>
-                <Select 
-                  value={taxClearanceData.quarter} 
-                  onValueChange={(value) => setTaxClearanceData({ ...taxClearanceData, quarter: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select quarter" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Q1">Q1 (Jan-Mar)</SelectItem>
-                    <SelectItem value="Q2">Q2 (Apr-Jun)</SelectItem>
-                    <SelectItem value="Q3">Q3 (Jul-Sep)</SelectItem>
-                    <SelectItem value="Q4">Q4 (Oct-Dec)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="year">Year</Label>
                 <Input
@@ -438,9 +418,7 @@ const HRDashboard = () => {
                   placeholder="2025"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="validFrom">Valid From</Label>
                 <Input
