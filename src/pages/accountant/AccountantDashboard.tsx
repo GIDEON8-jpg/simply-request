@@ -72,7 +72,7 @@ const AccountantDashboard = () => {
 
     await updateRequisition(reqId, updates);
 
-    // Send email to HOD if approved
+    // Send email to HOD and log payment if approved
     if (action === 'approve') {
       const req = requisitions.find(r => r.id === reqId);
       if (req) {
@@ -86,13 +86,23 @@ const AccountantDashboard = () => {
               currency: req.currency,
             }
           });
-          
+
+          // Log payment in payments table for the schedule report
+          const popFileName = uploadedPOP[reqId]?.[0]?.name || 'N/A';
+          await supabase.from('payments').insert({
+            requisition_id: reqId,
+            pop_file_name: popFileName,
+            processed_by: user?.id as string,
+            payment_date: new Date().toISOString(),
+            status: 'paid'
+          });
+
           toast({
-            title: "Email Sent",
-            description: "HOD has been notified of payment completion",
+            title: "Payment Logged",
+            description: "Payment recorded and HOD notified",
           });
         } catch (error) {
-          console.error('Error sending email:', error);
+          console.error('Error in approval flow (email/log):', error);
         }
       }
     }
@@ -145,10 +155,15 @@ const AccountantDashboard = () => {
       paymentDate: new Date().toISOString() 
     });
 
-    toast({
-      title: "Status Synced",
-      description: "Requisition status updated to Completed and synced with system",
-    });
+    // Log payment in payments table
+    const popFileName = uploadedPOP[reqId]?.[0]?.name || 'N/A';
+    supabase.from('payments').insert({
+      requisition_id: reqId,
+      pop_file_name: popFileName,
+      processed_by: user?.id as string,
+      payment_date: new Date().toISOString(),
+      status: 'paid'
+    }).catch((e) => console.error('Error logging payment:', e));
   };
 
   const handleNotifyHOD = (reqId: string) => {

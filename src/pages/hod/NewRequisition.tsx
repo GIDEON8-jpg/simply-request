@@ -39,7 +39,7 @@ const NewRequisition = () => {
     chosenRequisition: '',
     type: 'standard' as RequisitionType,
     deviationReason: '',
-    budgetCode: '',
+    budgetCode: 'AUTO',
     description: '',
     resubmissionComments: '',
   });
@@ -61,7 +61,7 @@ const NewRequisition = () => {
         chosenRequisition: '',
         type: editRequisition.type,
         deviationReason: editRequisition.deviationReason || '',
-        budgetCode: editRequisition.budgetCode,
+        budgetCode: editRequisition.budgetCode || 'AUTO',
         description: editRequisition.description,
         resubmissionComments: '',
       });
@@ -333,15 +333,6 @@ const NewRequisition = () => {
                   </div>
                 )}
 
-                <div className="space-y-2">
-                  <Label htmlFor="budgetCode">Budget Code *</Label>
-                  <Input
-                    id="budgetCode"
-                    value={formData.budgetCode}
-                    onChange={(e) => setFormData({ ...formData, budgetCode: e.target.value })}
-                    required
-                  />
-                </div>
               </div>
 
               {/* Supplier Section */}

@@ -312,10 +312,6 @@ const HODDashboard = () => {
                           <p className="text-sm text-muted-foreground">Submitted By</p>
                           <p className="font-medium">{req.submittedBy}</p>
                         </div>
-                        <div>
-                          <p className="text-sm text-muted-foreground">Budget Code</p>
-                          <p className="font-medium">{req.budgetCode}</p>
-                        </div>
                       </div>
 
                       <div>

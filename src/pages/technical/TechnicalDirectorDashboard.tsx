@@ -109,7 +109,7 @@ const TechnicalDirectorDashboard = () => {
       return;
     }
 
-    const headers = ['ID', 'Title', 'Department', 'Amount', 'Currency', 'USD Equivalent', 'Status', 'Submitted By', 'Submitted Date', 'Supplier', 'Budget Code'];
+    const headers = ['ID', 'Title', 'Department', 'Amount', 'Currency', 'USD Equivalent', 'Status', 'Submitted By', 'Submitted Date', 'Supplier'];
     const csvRows = [headers.join(',')];
 
     pendingRequisitions.forEach(req => {
@@ -123,8 +123,7 @@ const TechnicalDirectorDashboard = () => {
         req.status,
         `"${req.submittedBy}"`,
         req.submittedDate,
-        `"${req.chosenSupplier.name}"`,
-        req.budgetCode
+        `"${req.chosenSupplier.name}"`
       ];
       csvRows.push(row.join(','));
     });
