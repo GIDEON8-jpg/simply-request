@@ -18,7 +18,7 @@ const TechnicalDirectorDashboard = () => {
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
-    return r.status === 'approved' && usdAmount >= 10000 && r.approvedBy !== 'Technical Director';
+    return r.status === 'approved' && usdAmount >= 100 && usdAmount <= 500 && r.approvedBy !== 'Technical Director';
   });
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
@@ -150,9 +150,9 @@ const TechnicalDirectorDashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Requisitions for Technical Director Approval (&gt;= $10,000)</CardTitle>
+                <CardTitle>Requisitions for Technical Director Approval ($100 - $500)</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  HOD-approved requisitions requiring your approval (&gt;= $10,000 USD)
+                  HOD-approved requisitions requiring your approval ($100 - $500 USD)
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">

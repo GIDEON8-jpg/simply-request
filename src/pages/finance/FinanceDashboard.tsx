@@ -26,7 +26,7 @@ const FinanceDashboard = () => {
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
-    return r.status === 'approved' && usdAmount < 100 && r.approvedBy !== 'Finance Manager';
+    return r.status === 'approved' && usdAmount <= 100 && r.approvedBy !== 'Finance Manager';
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
