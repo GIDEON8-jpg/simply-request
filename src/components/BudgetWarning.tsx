@@ -25,7 +25,7 @@ const BudgetWarning = ({ department }: BudgetWarningProps) => {
       <AlertCircle className="h-4 w-4" />
       <AlertTitle>Budget Exhausted!</AlertTitle>
       <AlertDescription>
-        Department budget has been exhausted (${remaining.toFixed(2)} remaining). Total budget: ${budgetTotal.toFixed(2)} | Used: ${budgetUsed.toFixed(2)}. No more requisitions can be submitted.
+        Department budget is critically low (${remaining.toFixed(2)} remaining). Total budget: ${budgetTotal.toFixed(2)} | Used: ${budgetUsed.toFixed(2)}. Please proceed carefully and ensure amount does not exceed remaining funds.
       </AlertDescription>
     </Alert>
   );

@@ -520,15 +520,15 @@ const NewRequisition = () => {
                 <Button 
                   type="submit" 
                   className="flex-1 bg-green-600 hover:bg-green-700"
-                  disabled={isSubmitting || remainingBudget <= 100 || isOverBudget}
+                  disabled={isSubmitting || !formData.department || isOverBudget}
                 >
-                  {remainingBudget <= 100 ? 'Budget Exhausted' : isSubmitting ? 'Submitting...' : 'Submit Requisition'}
+                  {isSubmitting ? 'Submitting...' : 'Submit Requisition'}
                 </Button>
                 <Button type="button" variant="destructive" onClick={() => navigate(backRoute)} className="flex-1">
                   Cancel
                 </Button>
               </div>
-              {isOverBudget && remainingBudget > 100 && (
+              {isOverBudget && (
                 <p className="text-sm text-red-600 font-medium">
                   This amount exceeds the remaining budget of ${remainingBudget.toFixed(2)}
                 </p>
