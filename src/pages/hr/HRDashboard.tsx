@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Upload, Trash2, Download } from 'lucide-react';
+import { Plus, Upload, Trash2, Download, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useSuppliers } from '@/contexts/SuppliersContext';
@@ -15,7 +15,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const HRDashboard = () => {
   const { toast } = useToast();
-  const { suppliers, taxClearances, addSupplier, addTaxClearance, deactivateSupplier } = useSuppliers();
+  const { suppliers, taxClearances, addSupplier, addTaxClearance, deactivateSupplier, refreshSuppliers, refreshTaxClearances } = useSuppliers();
   const [newSupplier, setNewSupplier] = useState({
     name: '',
     icazNumber: '',
@@ -24,6 +24,14 @@ const HRDashboard = () => {
   const [newSupplierTaxFile, setNewSupplierTaxFile] = useState<File | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [taxClearanceFile, setTaxClearanceFile] = useState<File | null>(null);
+  
+  // Tax clearance date fields
+  const [taxClearanceData, setTaxClearanceData] = useState({
+    quarter: 'Q1',
+    year: new Date().getFullYear().toString(),
+    validFrom: '',
+    validTo: '',
+  });
 
   const handleAddSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,10 +80,10 @@ const HRDashboard = () => {
           supplierId,
           fileName: newSupplierTaxFile.name,
           filePath: filePath,
-          quarter: 'Q3',
-          year: '2025',
-          validFrom: '2025-09-01',
-          validTo: '2025-12-31',
+          quarter: 'Q1',
+          year: new Date().getFullYear().toString(),
+          validFrom: new Date().toISOString().split('T')[0],
+          validTo: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0],
         });
       }
 
@@ -151,6 +159,14 @@ const HRDashboard = () => {
       });
       return;
     }
+    if (!taxClearanceData.validFrom || !taxClearanceData.validTo) {
+      toast({
+        title: "Missing Dates",
+        description: "Please enter valid from and valid to dates",
+        variant: "destructive",
+      });
+      return;
+    }
 
     try {
       const fileExt = taxClearanceFile.name.split('.').pop();
@@ -168,10 +184,10 @@ const HRDashboard = () => {
         supplierId: selectedSupplierId,
         fileName: taxClearanceFile.name,
         filePath: filePath,
-        quarter: 'Q3',
-        year: '2025',
-        validFrom: '2025-09-01',
-        validTo: '2025-12-31',
+        quarter: taxClearanceData.quarter,
+        year: taxClearanceData.year,
+        validFrom: taxClearanceData.validFrom,
+        validTo: taxClearanceData.validTo,
       });
 
       toast({
@@ -180,6 +196,12 @@ const HRDashboard = () => {
       });
       setTaxClearanceFile(null);
       setSelectedSupplierId('');
+      setTaxClearanceData({
+        quarter: 'Q1',
+        year: new Date().getFullYear().toString(),
+        validFrom: '',
+        validTo: '',
+      });
     } catch (error) {
       console.error('Upload error:', error);
       toast({
@@ -328,8 +350,22 @@ const HRDashboard = () => {
 
         {/* Upload Tax Clearance */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Upload Tax Clearance for Supplier</CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await refreshSuppliers();
+                toast({
+                  title: "Refreshed",
+                  description: "Supplier list has been updated",
+                });
+              }}
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Refresh Suppliers
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -346,6 +382,9 @@ const HRDashboard = () => {
                   ))}
                 </SelectContent>
               </Select>
+              {suppliers.length === 0 && (
+                <p className="text-sm text-muted-foreground">No suppliers found. Click refresh or add a new supplier.</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -364,8 +403,64 @@ const HRDashboard = () => {
                     {taxClearanceFile ? taxClearanceFile.name : 'Click to upload Tax Clearance Certificate'}
                   </p>
                   <p className="text-xs text-gray-500">PDF format only</p>
-                  <p className="text-xs text-green-600 mt-2">Valid: Q3 2025 (Sep-Dec) - Quarterly validation</p>
                 </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="quarter">Quarter</Label>
+                <Select 
+                  value={taxClearanceData.quarter} 
+                  onValueChange={(value) => setTaxClearanceData({ ...taxClearanceData, quarter: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select quarter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Q1">Q1 (Jan-Mar)</SelectItem>
+                    <SelectItem value="Q2">Q2 (Apr-Jun)</SelectItem>
+                    <SelectItem value="Q3">Q3 (Jul-Sep)</SelectItem>
+                    <SelectItem value="Q4">Q4 (Oct-Dec)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="year">Year</Label>
+                <Input
+                  id="year"
+                  type="number"
+                  min="2020"
+                  max="2030"
+                  value={taxClearanceData.year}
+                  onChange={(e) => setTaxClearanceData({ ...taxClearanceData, year: e.target.value })}
+                  placeholder="2025"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="validFrom">Valid From</Label>
+                <Input
+                  id="validFrom"
+                  type="date"
+                  value={taxClearanceData.validFrom}
+                  onChange={(e) => setTaxClearanceData({ ...taxClearanceData, validFrom: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="validTo">Valid To</Label>
+                <Input
+                  id="validTo"
+                  type="date"
+                  value={taxClearanceData.validTo}
+                  onChange={(e) => setTaxClearanceData({ ...taxClearanceData, validTo: e.target.value })}
+                  required
+                />
               </div>
             </div>
 
