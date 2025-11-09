@@ -31,14 +31,13 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     'Registry': 10000,
   });
 
-  // Fetch budgets
+  // Fetch budgets (latest per department) and subscribe to changes
   useEffect(() => {
     const fetchBudgets = async () => {
       const { data, error } = await supabase
         .from('department_budgets')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(8);
+        .select('department,total_budget,created_at')
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching budgets:', error);
@@ -46,15 +45,35 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (data && data.length > 0) {
-        const budgetMap: Record<Department, number> = {} as Record<Department, number>;
-        data.forEach(budget => {
-          budgetMap[budget.department as Department] = Number(budget.total_budget);
-        });
-        setBudgetsState(budgetMap);
+        const latestByDept: Record<Department, number> = {} as Record<Department, number>;
+        for (const row of data) {
+          const dept = row.department as Department;
+          if (latestByDept[dept] === undefined) {
+            latestByDept[dept] = Number(row.total_budget);
+          }
+        }
+        // Merge to avoid dropping departments that aren't in the latest response
+        setBudgetsState(prev => ({ ...prev, ...latestByDept }));
       }
     };
 
     fetchBudgets();
+
+    // Realtime updates for budgets
+    const channel = supabase
+      .channel('department-budgets-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'department_budgets' },
+        () => {
+          fetchBudgets();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Fetch requisitions with suppliers - filtered by role
@@ -251,7 +270,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setBudgets = (newBudgets: Record<Department, number>) => {
-    setBudgetsState(newBudgets);
+    setBudgetsState((prev) => ({ ...prev, ...newBudgets }));
   };
 
   const getRemainingBudget = (department: Department) => {
