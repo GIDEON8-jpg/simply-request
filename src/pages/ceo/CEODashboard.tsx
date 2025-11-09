@@ -6,11 +6,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, FileText, FileDown } from 'lucide-react';
+import { Download, FileText, FileDown, Plus } from 'lucide-react';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
+import { useNavigate } from 'react-router-dom';
 
 const CEODashboard = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const { requisitions, updateRequisition } = useRequisitions();
   const [comments, setComments] = useState<Record<string, string>>({});
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
@@ -146,6 +148,17 @@ const CEODashboard = () => {
   return (
     <DashboardLayout title="Chief Executive Officer Dashboard">
       <div className="space-y-6">
+        {/* Create Requisition Button */}
+        <div className="flex justify-end">
+          <Button 
+            onClick={() => navigate('/ceo/new-requisition')} 
+            size="lg"
+          >
+            <Plus className="mr-2 h-5 w-5" />
+            Create New Requisition
+          </Button>
+        </div>
+
         <Card>
           <CardHeader>
             <div className="flex justify-between items-start">

@@ -111,6 +111,11 @@ const App = () => (
                 <CEODashboard />
               </ProtectedRoute>
             } />
+            <Route path="/ceo/new-requisition" element={
+              <ProtectedRoute allowedRole="ceo">
+                <NewRequisition />
+              </ProtectedRoute>
+            } />
             
             {/* Admin Routes */}
             <Route path="/admin" element={
