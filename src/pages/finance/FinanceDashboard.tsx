@@ -14,11 +14,13 @@ import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useAuth } from '@/contexts/AuthContext';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { requisitions, updateRequisition, getRemainingBudget } = useRequisitions();
+  const { user } = useAuth();
   const [comments, setComments] = useState<Record<string, string>>({});
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
@@ -26,7 +28,7 @@ const FinanceDashboard = () => {
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
-    return r.status === 'approved' && usdAmount <= 100 && r.approvedBy !== 'Finance Manager';
+    return r.status === 'approved' && usdAmount <= 100 && r.approvedById !== user?.id;
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');

@@ -155,6 +155,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         submittedDate: req.submitted_date,
         approverComments: req.approver_comments,
         approvedBy: req.approved_by_profile?.full_name,
+        approvedById: req.approved_by,
         approvedDate: req.approved_date,
         documents: [],
       }));

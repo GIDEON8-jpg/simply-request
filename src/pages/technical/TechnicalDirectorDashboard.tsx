@@ -8,17 +8,19 @@ import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { Download, FileText, FileDown } from 'lucide-react';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
+import { useAuth } from '@/contexts/AuthContext';
 
 const TechnicalDirectorDashboard = () => {
   const { toast } = useToast();
   const { requisitions, updateRequisition } = useRequisitions();
+  const { user } = useAuth();
   const [comments, setComments] = useState<Record<string, string>>({});
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
-    return r.status === 'approved' && usdAmount >= 100 && usdAmount <= 500 && r.approvedBy !== 'Technical Director';
+    return r.status === 'approved' && usdAmount >= 100 && usdAmount <= 500 && r.approvedById !== user?.id;
   });
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {

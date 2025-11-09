@@ -2,11 +2,11 @@ import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Upload, CheckCircle, Mail, FileDown, Send, Download, FileText, X } from 'lucide-react';
+import { Upload, CheckCircle, Mail, Download, FileText, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
@@ -22,9 +22,7 @@ const AccountantDashboard = () => {
 
   const pendingApprovals = requisitions.filter(r => 
     r.status === 'approved' && 
-    !r.paymentDate && 
-    r.approvedBy && 
-    (r.approvedBy === 'Technical Director' || r.approvedBy === 'CEO' || r.approvedBy === 'Finance Manager')
+    !r.paymentDate
   );
 
   const approvedForPayment = requisitions.filter(r => 
@@ -32,16 +30,6 @@ const AccountantDashboard = () => {
     r.approvedBy === 'Accountant'
   );
   
-  const paymentSchedule = [
-    { id: 'REQ-001', description: 'ICT Accessories', supplier: 'MultiChoice', amount: 510.00, date: '21/09/25', status: 'Paid' },
-    { id: 'REQ-002', description: 'Multicopy Paper', supplier: 'ABC', amount: 255.00, date: '21/09/25', status: 'Paid' },
-    { id: 'REQ-003', description: 'Servicing', supplier: 'TelOne', amount: 109.00, date: '21/09/25', status: 'Paid' },
-    { id: 'REQ-008', description: 'IT Equipment', supplier: 'Tech Solutions', amount: 2300.00, date: '05/10/25', status: 'Pending' },
-  ];
-
-  const totalAmount = paymentSchedule.reduce((sum, item) => sum + item.amount, 0);
-  const paidAmount = paymentSchedule.filter(item => item.status === 'Paid').reduce((sum, item) => sum + item.amount, 0);
-  const pendingAmount = totalAmount - paidAmount;
 
   const handleAction = async (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
@@ -167,19 +155,6 @@ const AccountantDashboard = () => {
     });
   };
 
-  const handleExportPDF = () => {
-    toast({
-      title: "Exporting to PDF",
-      description: "Payment schedule report is being generated",
-    });
-  };
-
-  const handleEmailReport = () => {
-    toast({
-      title: "Email Sent",
-      description: "Payment schedule report has been emailed",
-    });
-  };
 
   const handleDownloadDocument = (fileName: string) => {
     // Create a blob with sample content
@@ -222,7 +197,7 @@ const AccountantDashboard = () => {
           <CardHeader>
             <CardTitle>Pending Requisitions for Final Review</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Requisitions approved by Technical Director or CEO awaiting your final decision
+              Requisitions approved by final approvers awaiting your payment processing
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -558,61 +533,6 @@ const AccountantDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Payment Schedule Report */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Payment Schedule Report</CardTitle>
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleExportPDF}>
-                  <FileDown className="mr-2 h-4 w-4" />
-                  📊 EXPORT TO PDF
-                </Button>
-                <Button variant="outline" onClick={handleEmailReport}>
-                  <Send className="mr-2 h-4 w-4" />
-                  📧 EMAIL SCHEDULE REPORT
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Req ID</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Supplier</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Payment Date</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paymentSchedule.map((item) => (
-                  <TableRow key={item.id} className={item.status === 'Pending' ? 'bg-yellow-50' : 'bg-gray-50'}>
-                    <TableCell className="font-medium">{item.id}</TableCell>
-                    <TableCell>{item.description}</TableCell>
-                    <TableCell>{item.supplier}</TableCell>
-                    <TableCell>${item.amount.toFixed(2)}</TableCell>
-                    <TableCell>{item.date}</TableCell>
-                    <TableCell>
-                      <Badge className={item.status === 'Paid' ? 'bg-gray-500' : 'bg-yellow-500'}>
-                        {item.status}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="font-bold bg-gray-100">
-                  <TableCell colSpan={3}>TOTAL</TableCell>
-                  <TableCell>${totalAmount.toFixed(2)}</TableCell>
-                  <TableCell colSpan={2}>
-                    Paid: ${paidAmount.toFixed(2)} | Pending: ${pendingAmount.toFixed(2)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
       </div>
     </DashboardLayout>
   );
