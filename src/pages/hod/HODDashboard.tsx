@@ -20,16 +20,19 @@ const HODDashboard = () => {
   const previousRequisitionsRef = useRef<Requisition[]>([]);
   
   const userDepartment: Department = (user?.department as Department) || 'IT';
+  
+  // Filter requisitions to only show those from HOD's department
+  const departmentRequisitions = requisitions.filter(r => r.department === userDepartment);
 
   const statusCounts = {
-    pending: requisitions.filter(r => r.status === 'pending').length,
-    approved: requisitions.filter(r => r.status === 'approved').length,
-    approved_wait: requisitions.filter(r => r.status === 'approved_wait').length,
-    completed: requisitions.filter(r => r.status === 'completed').length,
-    rejected: requisitions.filter(r => r.status === 'rejected').length,
+    pending: departmentRequisitions.filter(r => r.status === 'pending').length,
+    approved: departmentRequisitions.filter(r => r.status === 'approved').length,
+    approved_wait: departmentRequisitions.filter(r => r.status === 'approved_wait').length,
+    completed: departmentRequisitions.filter(r => r.status === 'completed').length,
+    rejected: departmentRequisitions.filter(r => r.status === 'rejected').length,
   };
 
-  const totalAmount = requisitions
+  const totalAmount = departmentRequisitions
     .filter(r => r.status === 'completed')
     .reduce((sum, r) => sum + r.amount, 0);
 
@@ -137,7 +140,7 @@ const HODDashboard = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Total Requisitions</p>
-                <p className="text-2xl font-bold">{requisitions.length}</p>
+                <p className="text-2xl font-bold">{departmentRequisitions.length}</p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Total Amount Spent</p>
@@ -165,7 +168,7 @@ const HODDashboard = () => {
         {/* Requisitions Table */}
         <Card>
           <CardHeader>
-            <CardTitle>My Requisitions</CardTitle>
+            <CardTitle>{userDepartment} Department Requisitions</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -181,7 +184,14 @@ const HODDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requisitions.map((req) => (
+                {departmentRequisitions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      No requisitions yet
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  departmentRequisitions.map((req) => (
                   <TableRow key={req.id}>
                     <TableCell className="font-medium">{req.id}</TableCell>
                     <TableCell>{req.title}</TableCell>
@@ -211,7 +221,8 @@ const HODDashboard = () => {
                       )}
                     </TableCell>
                   </TableRow>
-                ))}
+                ))
+                )}
               </TableBody>
             </Table>
           </CardContent>
