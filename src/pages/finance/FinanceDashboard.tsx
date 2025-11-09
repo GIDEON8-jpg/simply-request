@@ -26,7 +26,7 @@ const FinanceDashboard = () => {
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.usdConvertible || r.amount;
-    return r.status === 'pending' && usdAmount <= 100;
+    return r.status === 'approved' && usdAmount < 100;
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
@@ -75,7 +75,7 @@ const FinanceDashboard = () => {
     }
 
     const updates: Partial<typeof requisitions[0]> = {
-      status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
+      status: action === 'approve' ? 'completed' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: action !== 'reject' ? 'Finance Officer' : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
@@ -340,9 +340,9 @@ const FinanceDashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Pending Requisitions for Review (≤ $100)</CardTitle>
+                <CardTitle>Requisitions for Review (&lt; $100)</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Requisitions requiring your approval (Amount ≤ $100 USD)
+                  HOD-approved requisitions requiring your approval (Amount &lt; $100 USD)
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">

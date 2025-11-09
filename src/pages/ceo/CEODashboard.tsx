@@ -20,7 +20,7 @@ const CEODashboard = () => {
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.usdConvertible || r.amount;
-    return r.status === 'pending' && usdAmount >= 500;
+    return r.status === 'approved' && usdAmount > 500;
   });
 
   const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
@@ -43,7 +43,7 @@ const CEODashboard = () => {
     }
 
     const updates: Partial<typeof requisitions[0]> = {
-      status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
+      status: action === 'approve' ? 'completed' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: action !== 'reject' ? 'CEO' : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
@@ -163,9 +163,9 @@ const CEODashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Pending Requisitions for Review (≥ $500)</CardTitle>
+                <CardTitle>Requisitions for CEO Approval</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Requisitions requiring CEO approval (Amount ≥ $500 USD)
+                  HOD-approved requisitions requiring your approval (&gt; $500 USD)
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">
