@@ -1,14 +1,10 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus } from 'lucide-react';
-import StatusBadge from '@/components/StatusBadge';
-import { format } from 'date-fns';
 
 const PreparerDashboard = () => {
   const navigate = useNavigate();
@@ -73,46 +69,23 @@ const PreparerDashboard = () => {
                 No requisitions yet. Click "New Requisition" to create your first one.
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Submitted</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {myRequisitions.map((req) => (
-                    <TableRow key={req.id}>
-                      <TableCell className="font-medium">{req.id}</TableCell>
-                      <TableCell>{req.title}</TableCell>
-                      <TableCell>
-                        {req.currency} {req.amount.toLocaleString()}
-                      </TableCell>
-                      <TableCell>
-                        <StatusBadge status={req.status} />
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(req.submittedDate), 'MMM dd, yyyy')}
-                      </TableCell>
-                      <TableCell>
-                        {req.status === 'rejected' && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate('/preparer/new-requisition', { state: { editRequisition: req } })}
-                          >
-                            Resubmit
-                          </Button>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="space-y-2">
+                {myRequisitions.map((req) => (
+                  <div key={req.id} className="flex items-center justify-between py-2 border-b">
+                    {req.status === 'rejected' ? (
+                      <button
+                        className="text-primary hover:underline"
+                        onClick={() => navigate('/preparer/new-requisition', { state: { editRequisition: req } })}
+                        aria-label={`Edit ${req.title}`}
+                      >
+                        {req.title}
+                      </button>
+                    ) : (
+                      <span>{req.title}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
