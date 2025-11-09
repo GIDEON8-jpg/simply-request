@@ -61,6 +61,7 @@ export const SuppliersProvider = ({ children }: { children: ReactNode }) => {
         id: tc.id,
         supplierId: tc.supplier_id,
         fileName: tc.file_name,
+        filePath: tc.file_path,
         validFrom: tc.valid_from,
         validTo: tc.valid_to,
         quarter: tc.quarter,
@@ -110,6 +111,7 @@ export const SuppliersProvider = ({ children }: { children: ReactNode }) => {
         .insert([{
           supplier_id: taxClearance.supplierId,
           file_name: taxClearance.fileName,
+          file_path: taxClearance.filePath,
           valid_from: taxClearance.validFrom,
           valid_to: taxClearance.validTo,
           quarter: taxClearance.quarter,

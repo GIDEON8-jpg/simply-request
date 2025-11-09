@@ -16,6 +16,7 @@ export interface TaxClearance {
   id: string;
   supplierId: string;
   fileName: string;
+  filePath: string;
   validFrom: string;
   validTo: string;
   quarter: string;

@@ -70,7 +70,8 @@ const HRDashboard = () => {
         // Add tax clearance record to database
         await addTaxClearance({
           supplierId,
-          fileName: filePath,
+          fileName: newSupplierTaxFile.name,
+          filePath: filePath,
           quarter: 'Q3',
           year: '2025',
           validFrom: '2025-09-01',
@@ -165,7 +166,8 @@ const HRDashboard = () => {
       // Add tax clearance record to database
       await addTaxClearance({
         supplierId: selectedSupplierId,
-        fileName: filePath,
+        fileName: taxClearanceFile.name,
+        filePath: filePath,
         quarter: 'Q3',
         year: '2025',
         validFrom: '2025-09-01',
@@ -214,11 +216,17 @@ const HRDashboard = () => {
     }
   };
 
-  const handleDownloadTaxClearance = async (filePath: string) => {
+  const handleDownloadTaxClearance = async (fileName: string) => {
     try {
+      // Find the tax clearance record to get the file_path
+      const taxClearance = taxClearances.find(tc => tc.fileName === fileName);
+      if (!taxClearance?.filePath) {
+        throw new Error('File path not found');
+      }
+
       const { data, error } = await supabase.storage
         .from('tax-clearances')
-        .download(filePath);
+        .download(taxClearance.filePath);
 
       if (error) throw error;
 
@@ -226,7 +234,7 @@ const HRDashboard = () => {
       const url = window.URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
-      a.download = filePath.split('/').pop() || 'tax-clearance.pdf';
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
