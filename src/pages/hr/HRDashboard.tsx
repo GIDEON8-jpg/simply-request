@@ -56,10 +56,21 @@ const HRDashboard = () => {
         .limit(1);
 
       if (newSuppliers.data && newSuppliers.data.length > 0) {
-        // Add tax clearance to repository
+        const supplierId = newSuppliers.data[0].id;
+        const fileExt = newSupplierTaxFile.name.split('.').pop();
+        const filePath = `${supplierId}/${Date.now()}.${fileExt}`;
+
+        // Upload file to storage
+        const { error: uploadError } = await supabase.storage
+          .from('tax-clearances')
+          .upload(filePath, newSupplierTaxFile);
+
+        if (uploadError) throw uploadError;
+
+        // Add tax clearance record to database
         await addTaxClearance({
-          supplierId: newSuppliers.data[0].id,
-          fileName: newSupplierTaxFile.name,
+          supplierId,
+          fileName: filePath,
           quarter: 'Q3',
           year: '2025',
           validFrom: '2025-09-01',
@@ -141,9 +152,20 @@ const HRDashboard = () => {
     }
 
     try {
+      const fileExt = taxClearanceFile.name.split('.').pop();
+      const filePath = `${selectedSupplierId}/${Date.now()}.${fileExt}`;
+
+      // Upload file to storage
+      const { error: uploadError } = await supabase.storage
+        .from('tax-clearances')
+        .upload(filePath, taxClearanceFile);
+
+      if (uploadError) throw uploadError;
+
+      // Add tax clearance record to database
       await addTaxClearance({
         supplierId: selectedSupplierId,
-        fileName: taxClearanceFile.name,
+        fileName: filePath,
         quarter: 'Q3',
         year: '2025',
         validFrom: '2025-09-01',
@@ -157,6 +179,7 @@ const HRDashboard = () => {
       setTaxClearanceFile(null);
       setSelectedSupplierId('');
     } catch (error) {
+      console.error('Upload error:', error);
       toast({
         title: "Error",
         description: "Failed to upload tax clearance",
@@ -191,11 +214,36 @@ const HRDashboard = () => {
     }
   };
 
-  const handleDownloadTaxClearance = (fileName: string) => {
-    toast({
-      title: "Downloading",
-      description: `${fileName} is being downloaded`,
-    });
+  const handleDownloadTaxClearance = async (filePath: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from('tax-clearances')
+        .download(filePath);
+
+      if (error) throw error;
+
+      // Create a download link
+      const url = window.URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filePath.split('/').pop() || 'tax-clearance.pdf';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Downloaded",
+        description: "Tax clearance downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to download tax clearance",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
