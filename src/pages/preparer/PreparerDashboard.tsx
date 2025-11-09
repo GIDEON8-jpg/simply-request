@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus } from 'lucide-react';
+import StatusBadge from '@/components/StatusBadge';
 
 const PreparerDashboard = () => {
   const navigate = useNavigate();
@@ -69,20 +70,22 @@ const PreparerDashboard = () => {
                 No requisitions yet. Click "New Requisition" to create your first one.
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {myRequisitions.map((req) => (
-                  <div key={req.id} className="flex items-center justify-between py-2 border-b">
-                    {req.status === 'rejected' ? (
-                      <button
-                        className="text-primary hover:underline"
-                        onClick={() => navigate('/preparer/new-requisition', { state: { editRequisition: req } })}
-                        aria-label={`Edit ${req.title}`}
-                      >
-                        {req.title}
-                      </button>
-                    ) : (
-                      <span>{req.title}</span>
-                    )}
+                  <div key={req.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                    <div className="flex-1">
+                      {req.status === 'rejected' ? (
+                        <button
+                          className="text-primary hover:underline font-medium text-left"
+                          onClick={() => navigate('/preparer/new-requisition', { state: { editRequisition: req } })}
+                        >
+                          {req.title}
+                        </button>
+                      ) : (
+                        <span className="font-medium">{req.title}</span>
+                      )}
+                    </div>
+                    <StatusBadge status={req.status} />
                   </div>
                 ))}
               </div>
