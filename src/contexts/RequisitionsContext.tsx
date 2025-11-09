@@ -83,8 +83,8 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       
       if (user.role === 'preparer') {
-        // Preparers only see rejected requisitions they can resubmit
-        query = query.eq('submitted_by', authUser?.id).eq('status', 'rejected');
+        // Preparers see all their own requisitions
+        query = query.eq('submitted_by', authUser?.id);
       } else if (user.role === 'hod' && user.department) {
         // HODs see all requisitions in their department
         query = query.eq('department', user.department as any);
