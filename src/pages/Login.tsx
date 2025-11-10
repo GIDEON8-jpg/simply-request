@@ -81,7 +81,7 @@ const Login = () => {
           data: {
             full_name: fullName,
             department: department,
-            role: role,
+            role: 'preparer', // Always default to preparer role for security
           },
           emailRedirectTo: `${window.location.origin}/`,
         }
@@ -91,7 +91,7 @@ const Login = () => {
 
       toast({
         title: "Sign Up Successful",
-        description: "You can now sign in with your credentials.",
+        description: "You can now sign in with your credentials. Contact your administrator to assign roles.",
       });
       
       // Switch to login tab
@@ -189,24 +189,6 @@ const Login = () => {
                     onChange={(e) => setSignupPassword(e.target.value)}
                     required
                   />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-role">Role</Label>
-                  <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="preparer">Preparer (Staff)</SelectItem>
-                      <SelectItem value="hod">Head of Department</SelectItem>
-                      <SelectItem value="finance_manager">Finance Manager</SelectItem>
-                      <SelectItem value="technical_director">Technical Director</SelectItem>
-                      <SelectItem value="accountant">Accountant</SelectItem>
-                      <SelectItem value="ceo">Chief Executive Officer</SelectItem>
-                      <SelectItem value="admin">Administrator</SelectItem>
-                      <SelectItem value="hr">HR & Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="signup-department">Department</Label>
