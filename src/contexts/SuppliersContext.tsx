@@ -84,6 +84,34 @@ export const SuppliersProvider = ({ children }: { children: ReactNode }) => {
     refreshTaxClearances();
   }, []);
 
+  // Refresh when auth state changes to ensure RLS visibility after login
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      refreshSuppliers();
+      refreshTaxClearances();
+    });
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Realtime updates for suppliers and tax clearances
+  useEffect(() => {
+    const channel = supabase
+      .channel('suppliers-taxclearances-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'suppliers' }, () => {
+        refreshSuppliers();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tax_clearances' }, () => {
+        refreshTaxClearances();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const addSupplier = async (supplier: Omit<Supplier, 'id'>) => {
     try {
       const { error } = await supabase

@@ -18,7 +18,7 @@ const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Techn
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { requisitions, budgets, setBudgets: saveBudgets } = useRequisitions();
+  const { requisitions, budgets, saveBudgetsToBackend } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [localBudgets, setLocalBudgets] = useState<Record<Department, number>>({
     'Education': 10000,
@@ -58,7 +58,7 @@ const AdminDashboard = () => {
     });
 
     const totalSpent = reportData
-      .filter(r => r.status === 'approved' || r.status === 'completed')
+      .filter(r => r.status === 'completed')
       .reduce((sum, r) => sum + (r.amount || 0), 0);
 
     const reportText = `
@@ -145,25 +145,33 @@ ${departments.map(dept => {
     });
   };
 
-  const handleSaveBudgets = () => {
-    saveBudgets(localBudgets);
-    toast({
-      title: "Budgets Saved",
-      description: "Department budgets have been updated successfully",
-    });
+  const handleSaveBudgets = async () => {
+    try {
+      await saveBudgetsToBackend(localBudgets);
+      toast({
+        title: "Budgets Saved",
+        description: "Department budgets have been updated and synced to the backend",
+      });
+    } catch (e) {
+      toast({ title: "Save Failed", description: "You may not have permission to save budgets.", variant: "destructive" });
+    }
   };
 
-  const handleResetBudgets = () => {
+  const handleResetBudgets = async () => {
     const zeros = departments.reduce((acc, dept) => {
       acc[dept] = 0;
       return acc;
     }, {} as Record<Department, number>);
     setLocalBudgets(zeros);
-    saveBudgets(zeros);
-    toast({
-      title: 'Budgets Reset',
-      description: 'All department budgets set to $0. Assign new amounts as needed.',
-    });
+    try {
+      await saveBudgetsToBackend(zeros);
+      toast({
+        title: 'Budgets Reset',
+        description: 'All department budgets set to $0 and synced to backend.',
+      });
+    } catch (e) {
+      toast({ title: 'Reset Failed', description: 'You may not have permission to reset budgets.', variant: 'destructive' });
+    }
   };
 
   const handleBudgetChange = (dept: Department, value: string) => {
@@ -174,7 +182,7 @@ ${departments.map(dept => {
   // Calculate budget usage per department
   const departmentBudgetUsage = departments.map(dept => {
     const used = requisitions
-      .filter(r => r.department === dept && (r.status === 'approved' || r.status === 'completed'))
+      .filter(r => r.department === dept && (r.status === 'completed' || r.paymentDate))
       .reduce((sum, r) => sum + (r.amount || 0), 0);
     const total = localBudgets[dept] || 0;
     const remaining = total - used;

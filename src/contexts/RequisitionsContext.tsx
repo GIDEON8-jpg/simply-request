@@ -10,6 +10,7 @@ interface RequisitionsContextType {
   loading: boolean;
   addRequisition: (requisition: Requisition) => Promise<void>;
   updateRequisition: (id: string, updates: Partial<Requisition>) => Promise<void>;
+  saveBudgetsToBackend: (budgets: Record<Department, number>) => Promise<void>;
   setBudgets: (budgets: Record<Department, number>) => void;
   getRemainingBudget: (department: Department) => number;
 }
@@ -269,6 +270,23 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     toast.success('Requisition updated successfully');
   };
 
+  const saveBudgetsToBackend = async (newBudgets: Record<Department, number>) => {
+    const fiscalYear = new Date().getFullYear();
+    const rows = Object.entries(newBudgets).map(([department, total]) => ({
+      department: department as Department,
+      fiscal_year: fiscalYear,
+      total_budget: total
+    }));
+    const { error } = await supabase.from('department_budgets').insert(rows);
+    if (error) {
+      console.error('Error saving budgets:', error);
+      toast.error('Failed to save budgets');
+      throw error;
+    }
+    // Optimistic update so UI reflects immediately
+    setBudgetsState((prev) => ({ ...prev, ...newBudgets }));
+  };
+
   const setBudgets = (newBudgets: Record<Department, number>) => {
     setBudgetsState((prev) => ({ ...prev, ...newBudgets }));
   };
@@ -288,6 +306,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       loading,
       addRequisition, 
       updateRequisition,
+      saveBudgetsToBackend,
       setBudgets,
       getRemainingBudget
     }}>

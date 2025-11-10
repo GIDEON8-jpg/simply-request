@@ -22,6 +22,7 @@ const HODDashboard = () => {
   const { toast } = useToast();
   const previousRequisitionsRef = useRef<Requisition[]>([]);
   const [comments, setComments] = useState<Record<string, string>>({});
+  const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
   
   const userDepartment: Department = (user?.department as Department) || 'IT';
   
@@ -55,7 +56,7 @@ const HODDashboard = () => {
     }
   }, [remainingBudget, userDepartment, toast]);
 
-  const handleAction = (reqId: string, action: 'approve' | 'reject') => {
+  const handleAction = async (reqId: string, action: 'approve' | 'reject') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
       toast({
         title: "Comment Required",
@@ -65,6 +66,8 @@ const HODDashboard = () => {
       return;
     }
 
+    setActionedIds(prev => new Set(prev).add(reqId));
+
     const updates: Partial<Requisition> = {
       status: action === 'approve' ? 'approved' : 'rejected',
       approverComments: action === 'reject' ? comments[reqId] : undefined,
@@ -73,14 +76,22 @@ const HODDashboard = () => {
       approvedDate: action === 'approve' ? new Date().toISOString() : undefined,
     };
 
-    updateRequisition(reqId, updates);
-
-    toast({
-      title: action === 'approve' ? "Requisition Approved" : "Requisition Rejected",
-      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to Finance' : 'rejected'}.`,
-    });
-
-    setComments(prev => ({ ...prev, [reqId]: '' }));
+    try {
+      await updateRequisition(reqId, updates);
+      toast({
+        title: action === 'approve' ? "Requisition Approved" : "Requisition Rejected",
+        description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to next approver' : 'rejected'}.`,
+      });
+    } catch (e) {
+      // Re-enable on failure
+      setActionedIds(prev => {
+        const next = new Set(prev);
+        next.delete(reqId);
+        return next;
+      });
+    } finally {
+      setComments(prev => ({ ...prev, [reqId]: '' }));
+    }
   };
 
   // Monitor for rejected requisitions and show notifications
@@ -336,20 +347,22 @@ const HODDashboard = () => {
                         />
                       </div>
 
-                       <div className="flex gap-2 justify-end">
+                      <div className="flex gap-2 justify-end">
                         <Button
                           variant="destructive"
                           onClick={() => handleAction(req.id, 'reject')}
-                          disabled={req.approvedById === user?.id}
+                          disabled={req.approvedById === user?.id || actionedIds.has(req.id)}
+                          className={actionedIds.has(req.id) ? 'opacity-50 cursor-not-allowed' : ''}
                         >
                           Reject
                         </Button>
                         <Button
                           variant="default"
                           onClick={() => handleAction(req.id, 'approve')}
-                          disabled={req.approvedById === user?.id}
+                          disabled={req.approvedById === user?.id || actionedIds.has(req.id)}
+                          className={actionedIds.has(req.id) ? 'opacity-50 cursor-not-allowed' : ''}
                         >
-                          {req.approvedById === user?.id ? 'Already Approved' : 'Approve'}
+                          {req.approvedById === user?.id ? 'Already Approved' : actionedIds.has(req.id) ? 'Processing...' : 'Approve'}
                         </Button>
                       </div>
                     </CardContent>
