@@ -22,14 +22,14 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const [budgets, setBudgetsState] = useState<Record<Department, number>>({
-    Education:,
-    IT: ,
-    "Marketing and PR": ,
-    Technical: ,
-    HR: ,
-    Finance: ,
-    CEO: ,
-    Registry: ,
+    Education: 1_000_000_000,
+    IT: 1_000_000_000,
+    "Marketing and PR": 1_000_000_000,
+    Technical: 1_000_000_000,
+    HR: 1_000_000_000,
+    Finance: 1_000_000_000,
+    CEO: 1_000_000_000,
+    Registry: 1_000_000_000,
   });
 
   // Fetch budgets (latest per department) and subscribe to changes
@@ -276,18 +276,18 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       fiscal_year: fiscalYear,
       total_budget: total,
     }));
-    
+
     // Use UPSERT to update existing budgets or insert new ones
     const { error } = await supabase.from("department_budgets").upsert(rows, {
       onConflict: "department,fiscal_year",
     });
-    
+
     if (error) {
       console.error("Error saving budgets:", error);
       toast.error("Failed to save budgets");
       throw error;
     }
-    
+
     toast.success("Budgets saved successfully");
   };
 
