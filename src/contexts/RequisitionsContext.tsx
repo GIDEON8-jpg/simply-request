@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Requisition, Department, Supplier } from '@/types/requisition';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { Requisition, Department, Supplier } from "@/types/requisition";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface RequisitionsContextType {
   requisitions: Requisition[];
@@ -17,31 +17,44 @@ interface RequisitionsContextType {
 
 const RequisitionsContext = createContext<RequisitionsContextType | undefined>(undefined);
 
+const departments: Department[] = [
+  "Education",
+  "IT",
+  "Marketing and PR",
+  "Technical",
+  "HR",
+  "Finance",
+  "CEO",
+  "Registry",
+];
+
 export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
+
+  // ✅ FIXED: Changed default budgets from 1 billion to reasonable amounts
   const [budgets, setBudgetsState] = useState<Record<Department, number>>({
-    'Education': 1_000_000_000,
-    'IT': 1_000_000_000,
-    'Marketing and PR': 1_000_000_000,
-    'Technical': 1_000_000_000,
-    'HR': 1_000_000_000,
-    'Finance': 1_000_000_000,
-    'CEO': 1_000_000_000,
-    'Registry': 1_000_000_000,
+    Education: 10000,
+    IT: 20000,
+    "Marketing and PR": 15000,
+    Technical: 18000,
+    HR: 12000,
+    Finance: 25000,
+    CEO: 100000,
+    Registry: 10000,
   });
 
   // Fetch budgets (latest per department) and subscribe to changes
   useEffect(() => {
     const fetchBudgets = async () => {
       const { data, error } = await supabase
-        .from('department_budgets')
-        .select('department,total_budget,created_at')
-        .order('created_at', { ascending: false });
+        .from("department_budgets")
+        .select("department,total_budget,created_at")
+        .order("created_at", { ascending: false });
 
       if (error) {
-        console.error('Error fetching budgets:', error);
+        console.error("Error fetching budgets:", error);
         return;
       }
 
@@ -54,7 +67,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
           }
         }
         // Merge to avoid dropping departments that aren't in the latest response
-        setBudgetsState(prev => ({ ...prev, ...latestByDept }));
+        setBudgetsState((prev) => ({ ...prev, ...latestByDept }));
       }
     };
 
@@ -62,14 +75,10 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
 
     // Realtime updates for budgets
     const channel = supabase
-      .channel('department-budgets-changes')
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'department_budgets' },
-        () => {
-          fetchBudgets();
-        }
-      )
+      .channel("department-budgets-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "department_budgets" }, () => {
+        fetchBudgets();
+      })
       .subscribe();
 
     return () => {
@@ -87,10 +96,8 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchRequisitions = async () => {
       setLoading(true);
-      
-      let query = supabase
-        .from('requisitions')
-        .select(`
+
+      let query = supabase.from("requisitions").select(`
           *,
           chosen_supplier:suppliers!requisitions_chosen_supplier_id_fkey(*),
           other_supplier_1:suppliers!requisitions_other_supplier_1_id_fkey(*),
@@ -100,38 +107,40 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         `);
 
       // Filter based on user role
-      const { data: { user: authUser } } = await supabase.auth.getUser();
-      
-      if (user.role === 'preparer') {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+
+      if (user.role === "preparer") {
         // Preparers see all their own requisitions
-        query = query.eq('submitted_by', authUser?.id);
-      } else if (user.role === 'hod' && user.department) {
+        query = query.eq("submitted_by", authUser?.id);
+      } else if (user.role === "hod" && user.department) {
         // HODs see all requisitions in their department
-        query = query.eq('department', user.department as any);
-      } else if (user.role === 'technical_director') {
+        query = query.eq("department", user.department as any);
+      } else if (user.role === "technical_director") {
         // Technical Directors: fetch all; component-level filters (status + amount) will apply
         // No additional DB filter to avoid excluding USD-only rows where usd_convertible is null
-      } else if (user.role === 'finance_manager') {
+      } else if (user.role === "finance_manager") {
         // Finance Managers: fetch all; component-level filters will apply (< $100 after HOD approval)
         // No DB amount filter to include records with null usd_convertible
-      } else if (user.role === 'accountant') {
+      } else if (user.role === "accountant") {
         // Accountants see approved requisitions for payment processing
-        query = query.in('status', ['approved', 'approved_wait', 'completed']);
-      } else if (user.role === 'ceo') {
+        query = query.in("status", ["approved", "approved_wait", "completed"]);
+      } else if (user.role === "ceo") {
         // CEO: fetch all; component-level filters will apply (> $500 after HOD approval)
         // No additional filter
-      } else if (user.role === 'admin' || user.role === 'hr') {
+      } else if (user.role === "admin" || user.role === "hr") {
         // Admins and HR see all requisitions
         // No additional filter
       }
 
-      query = query.order('created_at', { ascending: false });
+      query = query.order("created_at", { ascending: false });
 
       const { data: reqData, error } = await query;
 
       if (error) {
-        console.error('Error fetching requisitions:', error);
-        toast.error('Failed to load requisitions');
+        console.error("Error fetching requisitions:", error);
+        toast.error("Failed to load requisitions");
         setLoading(false);
         return;
       }
@@ -144,26 +153,30 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         currency: req.currency,
         usdConvertible: req.usd_convertible ? Number(req.usd_convertible) : undefined,
         chosenSupplier: {
-          id: req.chosen_supplier?.id || '',
-          name: req.chosen_supplier?.name || '',
-          icazNumber: req.chosen_supplier?.icaz_number || '',
-          contactInfo: req.chosen_supplier?.contact_info || '',
-          status: req.chosen_supplier?.status || 'active',
+          id: req.chosen_supplier?.id || "",
+          name: req.chosen_supplier?.name || "",
+          icazNumber: req.chosen_supplier?.icaz_number || "",
+          contactInfo: req.chosen_supplier?.contact_info || "",
+          status: req.chosen_supplier?.status || "active",
         } as Supplier,
-        otherSupplier1: req.other_supplier_1 ? {
-          id: req.other_supplier_1.id,
-          name: req.other_supplier_1.name,
-          icazNumber: req.other_supplier_1.icaz_number,
-          contactInfo: req.other_supplier_1.contact_info,
-          status: req.other_supplier_1.status,
-        } as Supplier : undefined,
-        otherSupplier2: req.other_supplier_2 ? {
-          id: req.other_supplier_2.id,
-          name: req.other_supplier_2.name,
-          icazNumber: req.other_supplier_2.icaz_number,
-          contactInfo: req.other_supplier_2.contact_info,
-          status: req.other_supplier_2.status,
-        } as Supplier : undefined,
+        otherSupplier1: req.other_supplier_1
+          ? ({
+              id: req.other_supplier_1.id,
+              name: req.other_supplier_1.name,
+              icazNumber: req.other_supplier_1.icaz_number,
+              contactInfo: req.other_supplier_1.contact_info,
+              status: req.other_supplier_1.status,
+            } as Supplier)
+          : undefined,
+        otherSupplier2: req.other_supplier_2
+          ? ({
+              id: req.other_supplier_2.id,
+              name: req.other_supplier_2.name,
+              icazNumber: req.other_supplier_2.icaz_number,
+              contactInfo: req.other_supplier_2.contact_info,
+              status: req.other_supplier_2.status,
+            } as Supplier)
+          : undefined,
         chosenRequisition: req.chosen_requisition,
         type: req.type,
         deviationReason: req.deviation_reason,
@@ -171,7 +184,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         description: req.description,
         status: req.status,
         submittedById: req.submitted_by,
-        submittedBy: req.submitted_by_profile?.full_name || '',
+        submittedBy: req.submitted_by_profile?.full_name || "",
         submittedDate: req.submitted_date,
         approverComments: req.approver_comments,
         approvedBy: req.approved_by_profile?.full_name,
@@ -188,17 +201,17 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
 
     // Subscribe to real-time changes
     const channel = supabase
-      .channel('requisitions-changes')
+      .channel("requisitions-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'requisitions'
+          event: "*",
+          schema: "public",
+          table: "requisitions",
         },
         () => {
           fetchRequisitions();
-        }
+        },
       )
       .subscribe();
 
@@ -208,45 +221,47 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
   const addRequisition = async (requisition: Requisition) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
-      toast.error('You must be logged in to create requisitions');
+      toast.error("You must be logged in to create requisitions");
       return;
     }
 
-    const { error } = await supabase
-      .from('requisitions')
-      .insert({
-        title: requisition.title,
-        department: requisition.department,
-        amount: requisition.amount,
-        currency: requisition.currency,
-        usd_convertible: requisition.usdConvertible,
-        chosen_supplier_id: requisition.chosenSupplier.id,
-        other_supplier_1_id: requisition.otherSupplier1?.id,
-        other_supplier_2_id: requisition.otherSupplier2?.id,
-        chosen_requisition: requisition.chosenRequisition,
-        type: requisition.type,
-        deviation_reason: requisition.deviationReason,
-        budget_code: requisition.budgetCode,
-        description: requisition.description,
-        status: requisition.status,
-        submitted_by: user.id,
-      });
+    const { error } = await supabase.from("requisitions").insert({
+      title: requisition.title,
+      department: requisition.department,
+      amount: requisition.amount,
+      currency: requisition.currency,
+      usd_convertible: requisition.usdConvertible,
+      chosen_supplier_id: requisition.chosenSupplier.id,
+      other_supplier_1_id: requisition.otherSupplier1?.id,
+      other_supplier_2_id: requisition.otherSupplier2?.id,
+      chosen_requisition: requisition.chosenRequisition,
+      type: requisition.type,
+      deviation_reason: requisition.deviationReason,
+      budget_code: requisition.budgetCode,
+      description: requisition.description,
+      status: requisition.status,
+      submitted_by: user.id,
+    });
 
     if (error) {
-      console.error('Error adding requisition:', error);
-      toast.error('Failed to create requisition');
+      console.error("Error adding requisition:", error);
+      toast.error("Failed to create requisition");
       throw error;
     }
 
-    toast.success('Requisition created successfully');
+    toast.success("Requisition created successfully");
   };
 
   const updateRequisition = async (id: string, updates: Partial<Requisition>) => {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     if (!user) {
-      toast.error('You must be logged in');
+      toast.error("You must be logged in");
       return;
     }
 
@@ -256,35 +271,42 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     if (updates.approvedDate) dbUpdates.approved_date = updates.approvedDate;
     if (updates.approvedBy) dbUpdates.approved_by = user.id;
 
-    const { error } = await supabase
-      .from('requisitions')
-      .update(dbUpdates)
-      .eq('id', id);
+    const { error } = await supabase.from("requisitions").update(dbUpdates).eq("id", id);
 
     if (error) {
-      console.error('Error updating requisition:', error);
-      toast.error('Failed to update requisition');
+      console.error("Error updating requisition:", error);
+      toast.error("Failed to update requisition");
       throw error;
     }
 
-    toast.success('Requisition updated successfully');
+    toast.success("Requisition updated successfully");
   };
 
+  // ✅ FIXED: Changed from INSERT to UPSERT to handle existing departments
   const saveBudgetsToBackend = async (newBudgets: Record<Department, number>) => {
-    const fiscalYear = new Date().getFullYear();
-    const rows = Object.entries(newBudgets).map(([department, total]) => ({
-      department: department as Department,
-      fiscal_year: fiscalYear,
-      total_budget: total
-    }));
-    const { error } = await supabase.from('department_budgets').insert(rows);
-    if (error) {
-      console.error('Error saving budgets:', error);
-      toast.error('Failed to save budgets');
+    try {
+      // Prepare data in correct format
+      const budgetEntries = departments.map((dept) => ({
+        department: dept,
+        total_budget: newBudgets[dept] || 0,
+      }));
+
+      // ✅ Use UPSERT instead of INSERT to update existing rows
+      const { error } = await supabase.from("department_budgets").upsert(budgetEntries, {
+        onConflict: "department", // Resolve conflicts based on department column
+      });
+
+      if (error) {
+        console.error("Error saving budgets:", error);
+        throw error;
+      }
+
+      // ✅ Update local state after successful save
+      setBudgetsState(newBudgets);
+    } catch (error) {
+      console.error("Error saving budgets:", error);
       throw error;
     }
-    // Optimistic update so UI reflects immediately
-    setBudgetsState((prev) => ({ ...prev, ...newBudgets }));
   };
 
   const setBudgets = (newBudgets: Record<Department, number>) => {
@@ -294,22 +316,24 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   const getRemainingBudget = (department: Department) => {
     const total = budgets[department] || 0;
     const used = requisitions
-      .filter(r => r.department === department && (r.status === 'completed' || r.paymentDate))
+      .filter((r) => r.department === department && (r.status === "completed" || r.paymentDate))
       .reduce((sum, r) => sum + (r.amount || 0), 0);
     return total - used;
   };
 
   return (
-    <RequisitionsContext.Provider value={{ 
-      requisitions, 
-      budgets,
-      loading,
-      addRequisition, 
-      updateRequisition,
-      saveBudgetsToBackend,
-      setBudgets,
-      getRemainingBudget
-    }}>
+    <RequisitionsContext.Provider
+      value={{
+        requisitions,
+        budgets,
+        loading,
+        addRequisition,
+        updateRequisition,
+        saveBudgetsToBackend,
+        setBudgets,
+        getRemainingBudget,
+      }}
+    >
       {children}
     </RequisitionsContext.Provider>
   );
@@ -318,7 +342,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
 export const useRequisitions = () => {
   const context = useContext(RequisitionsContext);
   if (context === undefined) {
-    throw new Error('useRequisitions must be used within a RequisitionsProvider');
+    throw new Error("useRequisitions must be used within a RequisitionsProvider");
   }
   return context;
 };
