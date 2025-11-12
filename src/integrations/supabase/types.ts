@@ -12,6 +12,7 @@ export type Database = {
         Row: {
           created_at: string | null;
           department: Database["public"]["Enums"]["department_type"];
+          fiscal_year: number;
           id: string;
           total_budget: number;
           updated_at: string | null;

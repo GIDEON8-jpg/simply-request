@@ -17,32 +17,19 @@ interface RequisitionsContextType {
 
 const RequisitionsContext = createContext<RequisitionsContextType | undefined>(undefined);
 
-const departments: Department[] = [
-  "Education",
-  "IT",
-  "Marketing and PR",
-  "Technical",
-  "HR",
-  "Finance",
-  "CEO",
-  "Registry",
-];
-
 export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-
-  // ✅ FIXED: Changed default budgets from 1 billion to reasonable amounts
   const [budgets, setBudgetsState] = useState<Record<Department, number>>({
-    Education: 10000,
-    IT: 20000,
-    "Marketing and PR": 15000,
-    Technical: 18000,
-    HR: 12000,
-    Finance: 25000,
-    CEO: 100000,
-    Registry: 10000,
+    Education: 1_000_000_000,
+    IT: 1_000_000_000,
+    "Marketing and PR": 1_000_000_000,
+    Technical: 1_000_000_000,
+    HR: 1_000_000_000,
+    Finance: 1_000_000_000,
+    CEO: 1_000_000_000,
+    Registry: 1_000_000_000,
   });
 
   // Fetch budgets (latest per department) and subscribe to changes
@@ -282,31 +269,21 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     toast.success("Requisition updated successfully");
   };
 
-  // ✅ FIXED: Changed from INSERT to UPSERT to handle existing departments
   const saveBudgetsToBackend = async (newBudgets: Record<Department, number>) => {
-    try {
-      // Prepare data in correct format
-      const budgetEntries = departments.map((dept) => ({
-        department: dept,
-        total_budget: newBudgets[dept] || 0,
-      }));
-
-      // ✅ Use UPSERT instead of INSERT to update existing rows
-      const { error } = await supabase.from("department_budgets").upsert(budgetEntries, {
-        onConflict: "department", // Resolve conflicts based on department column
-      });
-
-      if (error) {
-        console.error("Error saving budgets:", error);
-        throw error;
-      }
-
-      // ✅ Update local state after successful save
-      setBudgetsState(newBudgets);
-    } catch (error) {
+    const fiscalYear = new Date().getFullYear();
+    const rows = Object.entries(newBudgets).map(([department, total]) => ({
+      department: department as Department,
+      fiscal_year: fiscalYear,
+      total_budget: total,
+    }));
+    const { error } = await supabase.from("department_budgets").insert(rows);
+    if (error) {
       console.error("Error saving budgets:", error);
+      toast.error("Failed to save budgets");
       throw error;
     }
+    // Optimistic update so UI reflects immediately
+    setBudgetsState((prev) => ({ ...prev, ...newBudgets }));
   };
 
   const setBudgets = (newBudgets: Record<Department, number>) => {
