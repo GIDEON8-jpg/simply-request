@@ -155,6 +155,16 @@ const NewRequisition = () => {
     const reqAmount = parseFloat(formData.amount);
     const remaining = getRemainingBudget(formData.department);
     
+    // Check if budget is exhausted
+    if (remaining <= 100) {
+      toast({
+        title: "Budget Exhausted",
+        description: "Department budget is exhausted. Cannot submit new requisitions.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (reqAmount > remaining) {
       toast({
         title: "Insufficient Budget",
@@ -214,6 +224,7 @@ const NewRequisition = () => {
   const hasDepartment = !!formData.department;
   const remainingBudget = hasDepartment ? getRemainingBudget(formData.department) : 0;
   const isOverBudget = hasDepartment ? parseFloat(formData.amount || '0') > remainingBudget : false;
+  const isBudgetExhausted = hasDepartment && remainingBudget <= 100;
 
   const backRoute = user?.role === 'finance_manager' ? '/finance_manager' : user?.role === 'preparer' ? '/preparer' : '/hod';
 
@@ -519,7 +530,7 @@ const NewRequisition = () => {
                 <Button 
                   type="submit" 
                   className="flex-1 bg-green-600 hover:bg-green-700"
-                  disabled={isSubmitting || !formData.department || isOverBudget}
+                  disabled={isSubmitting || !formData.department || isOverBudget || isBudgetExhausted}
                 >
                   {isSubmitting ? 'Submitting...' : 'Submit Requisition'}
                 </Button>
@@ -527,7 +538,12 @@ const NewRequisition = () => {
                   Cancel
                 </Button>
               </div>
-              {isOverBudget && (
+              {isBudgetExhausted && (
+                <p className="text-sm text-red-600 font-medium">
+                  Budget Exhausted: Remaining budget is ${remainingBudget.toFixed(2)}. Cannot submit new requisitions.
+                </p>
+              )}
+              {isOverBudget && !isBudgetExhausted && (
                 <p className="text-sm text-red-600 font-medium">
                   This amount exceeds the remaining budget of ${remainingBudget.toFixed(2)}
                 </p>
