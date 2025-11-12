@@ -22,14 +22,14 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const [budgets, setBudgetsState] = useState<Record<Department, number>>({
-    Education: 1_000_000_000,
-    IT: 1_000_000_000,
-    "Marketing and PR": 1_000_000_000,
-    Technical: 1_000_000_000,
-    HR: 1_000_000_000,
-    Finance: 1_000_000_000,
-    CEO: 1_000_000_000,
-    Registry: 1_000_000_000,
+    Education:,
+    IT: ,
+    "Marketing and PR": ,
+    Technical: ,
+    HR: ,
+    Finance: ,
+    CEO: ,
+    Registry: ,
   });
 
   // Fetch budgets (latest per department) and subscribe to changes
