@@ -276,14 +276,19 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       fiscal_year: fiscalYear,
       total_budget: total,
     }));
-    const { error } = await supabase.from("department_budgets").insert(rows);
+    
+    // Use UPSERT to update existing budgets or insert new ones
+    const { error } = await supabase.from("department_budgets").upsert(rows, {
+      onConflict: "department,fiscal_year",
+    });
+    
     if (error) {
       console.error("Error saving budgets:", error);
       toast.error("Failed to save budgets");
       throw error;
     }
-    // Optimistic update so UI reflects immediately
-    setBudgetsState((prev) => ({ ...prev, ...newBudgets }));
+    
+    toast.success("Budgets saved successfully");
   };
 
   const setBudgets = (newBudgets: Record<Department, number>) => {
