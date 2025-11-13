@@ -19,6 +19,7 @@ const CEODashboard = () => {
   const [comments, setComments] = useState<Record<string, string>>({});
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
+  const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
@@ -59,6 +60,7 @@ const CEODashboard = () => {
       description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to Accountant' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
     });
 
+    setActionedIds(prev => new Set(prev).add(reqId));
     setComments(prev => ({ ...prev, [reqId]: '' }));
     setWaitReasons(prev => ({ ...prev, [reqId]: '' }));
     setShowWaitField(prev => ({ ...prev, [reqId]: false }));
@@ -183,6 +185,13 @@ const CEODashboard = () => {
               pendingRequisitions.map(req => (
                 <Card key={req.id} className="border-l-4 border-l-red-500">
                   <CardContent className="pt-6 space-y-4">
+                    {/* Created By Header */}
+                    <div className="bg-primary/10 p-3 rounded-lg border border-primary/20 mb-4">
+                      <p className="text-sm font-semibold text-primary">
+                        Created By: <span className="font-bold">{req.submittedBy}</span>
+                      </p>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-muted-foreground">Requisition ID</p>
@@ -288,9 +297,9 @@ const CEODashboard = () => {
                       <Button
                         onClick={() => handleAction(req.id, 'approve')}
                         className="flex-1 bg-green-600 hover:bg-green-700"
-                        disabled={req.approvedById === user?.id}
+                        disabled={actionedIds.has(req.id)}
                       >
-                        {req.approvedById === user?.id ? 'Already Approved' : 'Approve'}
+                        {actionedIds.has(req.id) ? 'Action Taken' : 'Approve'}
                       </Button>
                       <Button
                         onClick={() => {
@@ -301,7 +310,7 @@ const CEODashboard = () => {
                           }
                         }}
                         className="flex-1 bg-orange-600 hover:bg-orange-700"
-                        disabled={req.approvedById === user?.id}
+                        disabled={actionedIds.has(req.id)}
                       >
                         {showWaitField[req.id] ? 'Submit Wait' : 'Approve but Wait'}
                       </Button>
@@ -309,7 +318,7 @@ const CEODashboard = () => {
                         onClick={() => handleAction(req.id, 'reject')}
                         variant="destructive"
                         className="flex-1"
-                        disabled={req.approvedById === user?.id}
+                        disabled={actionedIds.has(req.id)}
                       >
                         Reject
                       </Button>

@@ -106,6 +106,11 @@ const App = () => (
                 <TechnicalDirectorDashboard />
               </ProtectedRoute>
             } />
+            <Route path="/technical_director/new-requisition" element={
+              <ProtectedRoute allowedRole="technical_director">
+                <NewRequisition />
+              </ProtectedRoute>
+            } />
             
             {/* CEO Routes */}
             <Route path="/ceo" element={
