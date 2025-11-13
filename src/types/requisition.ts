@@ -10,6 +10,7 @@ export interface Supplier {
   icazNumber: string;
   contactInfo: string;
   status: 'active' | 'inactive';
+  department: Department;
 }
 
 export interface TaxClearance {

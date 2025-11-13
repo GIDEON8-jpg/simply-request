@@ -264,6 +264,7 @@ export type Database = {
         Row: {
           contact_info: string
           created_at: string | null
+          department: Database["public"]["Enums"]["department_type"]
           icaz_number: string
           id: string
           name: string
@@ -272,6 +273,7 @@ export type Database = {
         Insert: {
           contact_info: string
           created_at?: string | null
+          department?: Database["public"]["Enums"]["department_type"]
           icaz_number: string
           id?: string
           name: string
@@ -280,6 +282,7 @@ export type Database = {
         Update: {
           contact_info?: string
           created_at?: string | null
+          department?: Database["public"]["Enums"]["department_type"]
           icaz_number?: string
           id?: string
           name?: string

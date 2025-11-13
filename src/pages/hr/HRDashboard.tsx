@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { useSuppliers } from '@/contexts/SuppliersContext';
 import { BulkSupplierImport } from './BulkSupplierImport';
 import { supabase } from '@/integrations/supabase/client';
+import { Department } from '@/types/requisition';
 
 const HRDashboard = () => {
   const { toast } = useToast();
@@ -20,6 +21,7 @@ const HRDashboard = () => {
     name: '',
     icazNumber: '',
     contactInfo: '',
+    department: '' as Department,
   });
   const [newSupplierTaxFile, setNewSupplierTaxFile] = useState<File | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
@@ -34,6 +36,15 @@ const HRDashboard = () => {
 
   const handleAddSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!newSupplier.department) {
+      toast({
+        title: "Department Required",
+        description: "Please select a department for the supplier",
+        variant: "destructive",
+      });
+      return;
+    }
     
     if (!newSupplierTaxFile) {
       toast({
@@ -51,6 +62,7 @@ const HRDashboard = () => {
         icazNumber: newSupplier.icazNumber,
         contactInfo: newSupplier.contactInfo,
         status: 'active' as const,
+        department: newSupplier.department,
       });
 
       // Get the newly created supplier
@@ -91,7 +103,7 @@ const HRDashboard = () => {
         description: `${newSupplier.name} has been added with tax clearance`,
       });
       
-      setNewSupplier({ name: '', icazNumber: '', contactInfo: '' });
+      setNewSupplier({ name: '', icazNumber: '', contactInfo: '', department: '' as Department });
       setNewSupplierTaxFile(null);
     } catch (error) {
       console.error('Error adding supplier:', error);
@@ -315,6 +327,25 @@ const HRDashboard = () => {
                     required
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="supplierDepartment">Department *</Label>
+                <Select value={newSupplier.department} onValueChange={(value) => setNewSupplier({ ...newSupplier, department: value as Department })}>
+                  <SelectTrigger className="bg-background">
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="Education">Education</SelectItem>
+                    <SelectItem value="IT">IT</SelectItem>
+                    <SelectItem value="Marketing and PR">Marketing and PR</SelectItem>
+                    <SelectItem value="Technical">Technical</SelectItem>
+                    <SelectItem value="HR">HR</SelectItem>
+                    <SelectItem value="Finance">Finance</SelectItem>
+                    <SelectItem value="CEO">CEO</SelectItem>
+                    <SelectItem value="Registry">Registry</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

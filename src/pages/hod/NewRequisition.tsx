@@ -30,6 +30,7 @@ const NewRequisition = () => {
   const [formData, setFormData] = useState({
     title: '',
     department: '' as Department,
+    selectedDepartmentForSupplier: '' as Department,
     amount: '',
     currency: 'USD' as Currency,
     usdConvertible: '',
@@ -52,6 +53,7 @@ const NewRequisition = () => {
       setFormData({
         title: editRequisition.title,
         department: editRequisition.department,
+        selectedDepartmentForSupplier: editRequisition.chosenSupplier?.department || '' as Department,
         amount: editRequisition.amount.toString(),
         currency: editRequisition.currency || 'USD',
         usdConvertible: editRequisition.usdConvertible?.toString() || '',
@@ -351,17 +353,49 @@ const NewRequisition = () => {
                 <h3 className="text-lg font-semibold">Supplier & Documents</h3>
                 
                 <div className="space-y-2">
+                  <Label htmlFor="departmentForSupplier">Select Department for Suppliers *</Label>
+                  <Select
+                    value={formData.selectedDepartmentForSupplier}
+                    onValueChange={(value) => {
+                      setFormData({ 
+                        ...formData, 
+                        selectedDepartmentForSupplier: value as Department,
+                        chosenSupplier: '', // Reset supplier when department changes
+                        otherSupplier1: '',
+                        otherSupplier2: ''
+                      });
+                    }}
+                    required
+                  >
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder="Select department to view suppliers" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      <SelectItem value="Education">Education</SelectItem>
+                      <SelectItem value="IT">IT</SelectItem>
+                      <SelectItem value="Marketing and PR">Marketing and PR</SelectItem>
+                      <SelectItem value="Technical">Technical</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="CEO">CEO</SelectItem>
+                      <SelectItem value="Registry">Registry</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
                   <Label htmlFor="chosenSupplier">Chosen Supplier *</Label>
                   <Select
                     value={formData.chosenSupplier}
                     onValueChange={(value) => setFormData({ ...formData, chosenSupplier: value })}
                     required
+                    disabled={!formData.selectedDepartmentForSupplier}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select supplier" />
+                    <SelectTrigger className="bg-background">
+                      <SelectValue placeholder={formData.selectedDepartmentForSupplier ? "Select supplier" : "First select a department"} />
                     </SelectTrigger>
-                    <SelectContent>
-                      {suppliers.filter(s => s.status === 'active').map(supplier => (
+                    <SelectContent className="bg-popover z-50">
+                      {suppliers.filter(s => s.status === 'active' && s.department === formData.selectedDepartmentForSupplier).map(supplier => (
                         <SelectItem key={supplier.id} value={supplier.id}>
                           {supplier.name} - {supplier.icazNumber}
                         </SelectItem>
