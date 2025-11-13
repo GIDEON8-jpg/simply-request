@@ -15,6 +15,7 @@ import BudgetWarning from '@/components/BudgetWarning';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
+import { Badge } from '@/components/ui/badge';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -362,6 +363,16 @@ const FinanceDashboard = () => {
               pendingRequisitions.map(req => (
                 <Card key={req.id} className="border-l-4 border-l-blue-500">
                   <CardContent className="pt-6 space-y-4">
+                    {/* Requisition Type Badge */}
+                    <div className="mb-2">
+                      <Badge 
+                        variant={req.type === 'deviation' ? 'destructive' : 'default'}
+                        className={req.type === 'deviation' ? 'bg-red-900 text-white font-bold' : 'bg-gray-700 text-white'}
+                      >
+                        {req.type === 'deviation' ? 'DEVIATION' : 'STANDARD'}
+                      </Badge>
+                    </div>
+
                     {/* Created By Header */}
                     <div className="bg-primary/10 p-3 rounded-lg border border-primary/20 mb-4">
                       <p className="text-sm font-semibold text-primary">
