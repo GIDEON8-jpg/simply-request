@@ -323,7 +323,7 @@ const CEODashboard = () => {
                         className="flex-1 bg-orange-600 hover:bg-orange-700"
                         disabled={actionedIds.has(req.id)}
                       >
-                        {showWaitField[req.id] ? 'Submit Wait' : 'Approve but Wait'}
+                        {showWaitField[req.id] ? 'Submit Wait' : 'On Hold'}
                       </Button>
                       <Button
                         onClick={() => handleAction(req.id, 'reject')}
