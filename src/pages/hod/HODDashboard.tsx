@@ -307,7 +307,7 @@ const HODDashboard = () => {
                       <div className="mb-2">
                         <Badge 
                           variant={req.type === 'deviation' ? 'destructive' : 'default'}
-                          className={req.type === 'deviation' ? 'bg-red-900 text-white font-bold' : 'bg-gray-700 text-white'}
+                          className={req.type === 'deviation' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'}
                         >
                           {req.type === 'deviation' ? 'DEVIATION' : 'STANDARD'}
                         </Badge>
@@ -345,6 +345,46 @@ const HODDashboard = () => {
                         <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border border-yellow-200 dark:border-yellow-800">
                           <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Deviation Request</p>
                           <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">{req.deviationReason}</p>
+                        </div>
+                      )}
+
+                      {/* Documents Section */}
+                      {(req.chosenRequisition || req.documents.length > 0 || req.taxClearanceAttached) && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium text-muted-foreground">Supporting Documents</p>
+                          <div className="flex flex-wrap gap-2">
+                            {req.chosenRequisition && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(req.chosenRequisition, '_blank')}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                Chosen Requisition
+                              </Button>
+                            )}
+                            {req.documents.map((doc, idx) => (
+                              <Button
+                                key={idx}
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(doc, '_blank')}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                {doc}
+                              </Button>
+                            ))}
+                            {req.taxClearanceAttached && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => window.open(req.taxClearanceAttached!.filePath, '_blank')}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                Tax Clearance: {req.taxClearanceAttached.fileName}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
 

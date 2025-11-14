@@ -235,7 +235,7 @@ const AccountantDashboard = () => {
                     <div className="mb-2">
                       <Badge 
                         variant={req.type === 'deviation' ? 'destructive' : 'default'}
-                        className={req.type === 'deviation' ? 'bg-red-900 text-white font-bold' : 'bg-gray-700 text-white'}
+                        className={req.type === 'deviation' ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100' : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100'}
                       >
                         {req.type === 'deviation' ? 'DEVIATION' : 'STANDARD'}
                       </Badge>
