@@ -26,6 +26,7 @@ const HRDashboard = () => {
   const [newSupplierTaxFile, setNewSupplierTaxFile] = useState<File | null>(null);
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [taxClearanceFile, setTaxClearanceFile] = useState<File | null>(null);
+  const [isAddingSupplier, setIsAddingSupplier] = useState(false);
   
   // Tax clearance date fields
   const [taxClearanceData, setTaxClearanceData] = useState({
@@ -56,6 +57,7 @@ const HRDashboard = () => {
     }
 
     try {
+      setIsAddingSupplier(true);
       // Add new supplier
       await addSupplier({
         name: newSupplier.name,
@@ -76,20 +78,20 @@ const HRDashboard = () => {
 
       if (newSuppliers.data && newSuppliers.data.length > 0) {
         const supplierId = newSuppliers.data[0].id;
-        const fileExt = newSupplierTaxFile.name.split('.').pop();
+        const fileExt = newSupplierTaxFile!.name.split('.').pop();
         const filePath = `${supplierId}/${Date.now()}.${fileExt}`;
 
         // Upload file to storage
         const { error: uploadError } = await supabase.storage
           .from('tax-clearances')
-          .upload(filePath, newSupplierTaxFile);
+          .upload(filePath, newSupplierTaxFile!);
 
         if (uploadError) throw uploadError;
 
         // Add tax clearance record to database
         await addTaxClearance({
           supplierId,
-          fileName: newSupplierTaxFile.name,
+          fileName: newSupplierTaxFile!.name,
           filePath: filePath,
           quarter: 'N/A',
           year: new Date().getFullYear().toString(),
@@ -99,7 +101,7 @@ const HRDashboard = () => {
       }
 
       toast({
-        title: "Supplier Added",
+        title: 'Supplier Added',
         description: `${newSupplier.name} has been added with tax clearance`,
       });
       
@@ -108,10 +110,12 @@ const HRDashboard = () => {
     } catch (error) {
       console.error('Error adding supplier:', error);
       toast({
-        title: "Error",
-        description: "Failed to add supplier",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to add supplier',
+        variant: 'destructive',
       });
+    } finally {
+      setIsAddingSupplier(false);
     }
   };
 
@@ -369,9 +373,9 @@ const HRDashboard = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="bg-purple-600 hover:bg-purple-700" disabled={!newSupplierTaxFile}>
+              <Button type="submit" className="bg-purple-600 hover:bg-purple-700" disabled={isAddingSupplier || !newSupplierTaxFile}>
                 <Plus className="mr-2 h-4 w-4" />
-                ADD SUPPLIER
+                {isAddingSupplier ? 'ADDING...' : 'ADD SUPPLIER'}
               </Button>
             </form>
           </CardContent>
