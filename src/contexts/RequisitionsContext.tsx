@@ -132,53 +132,75 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const formatted: Requisition[] = (reqData || []).map((req: any) => ({
-        id: req.id,
-        title: req.title,
-        department: req.department as Department,
-        amount: Number(req.amount),
-        currency: req.currency,
-        usdConvertible: req.usd_convertible ? Number(req.usd_convertible) : undefined,
-        chosenSupplier: {
-          id: req.chosen_supplier?.id || "",
-          name: req.chosen_supplier?.name || "",
-          icazNumber: req.chosen_supplier?.icaz_number || "",
-          contactInfo: req.chosen_supplier?.contact_info || "",
-          status: req.chosen_supplier?.status || "active",
-        } as Supplier,
-        otherSupplier1: req.other_supplier_1
-          ? ({
-              id: req.other_supplier_1.id,
-              name: req.other_supplier_1.name,
-              icazNumber: req.other_supplier_1.icaz_number,
-              contactInfo: req.other_supplier_1.contact_info,
-              status: req.other_supplier_1.status,
-            } as Supplier)
-          : undefined,
-        otherSupplier2: req.other_supplier_2
-          ? ({
-              id: req.other_supplier_2.id,
-              name: req.other_supplier_2.name,
-              icazNumber: req.other_supplier_2.icaz_number,
-              contactInfo: req.other_supplier_2.contact_info,
-              status: req.other_supplier_2.status,
-            } as Supplier)
-          : undefined,
-        chosenRequisition: req.chosen_requisition,
-        type: req.type,
-        deviationReason: req.deviation_reason,
-        budgetCode: req.budget_code,
-        description: req.description,
-        status: req.status,
-        submittedById: req.submitted_by,
-        submittedBy: req.submitted_by_profile?.full_name || "",
-        submittedDate: req.submitted_date,
-        approverComments: req.approver_comments,
-        approvedBy: req.approved_by_profile?.full_name,
-        approvedById: req.approved_by,
-        approvedDate: req.approved_date,
-        documents: [],
-      }));
+      // Build a map of documents for these requisitions
+      const reqIds = (reqData || []).map((r: any) => r.id);
+      let docsMap: Record<string, { id: string; file_name: string; file_url: string; uploaded_at: string | null }[]> = {};
+      if (reqIds.length > 0) {
+        const { data: docs, error: docsError } = await supabase
+          .from('requisition_documents')
+          .select('id,file_name,file_url,uploaded_at,requisition_id')
+          .in('requisition_id', reqIds);
+        if (docsError) {
+          console.error('Error fetching requisition documents:', docsError);
+        } else {
+          docsMap = (docs || []).reduce((acc: typeof docsMap, d: any) => {
+            (acc[d.requisition_id] ||= []).push(d);
+            return acc;
+          }, {} as typeof docsMap);
+        }
+      }
+
+      const formatted: Requisition[] = (reqData || []).map((req: any) => {
+        const reqDocs = docsMap[req.id] || [];
+        return {
+          id: req.id,
+          title: req.title,
+          department: req.department as Department,
+          amount: Number(req.amount),
+          currency: req.currency,
+          usdConvertible: req.usd_convertible ? Number(req.usd_convertible) : undefined,
+          chosenSupplier: {
+            id: req.chosen_supplier?.id || "",
+            name: req.chosen_supplier?.name || "",
+            icazNumber: req.chosen_supplier?.icaz_number || "",
+            contactInfo: req.chosen_supplier?.contact_info || "",
+            status: req.chosen_supplier?.status || "active",
+          } as Supplier,
+          otherSupplier1: req.other_supplier_1
+            ? ({
+                id: req.other_supplier_1.id,
+                name: req.other_supplier_1.name,
+                icazNumber: req.other_supplier_1.icaz_number,
+                contactInfo: req.other_supplier_1.contact_info,
+                status: req.other_supplier_1.status,
+              } as Supplier)
+            : undefined,
+          otherSupplier2: req.other_supplier_2
+            ? ({
+                id: req.other_supplier_2.id,
+                name: req.other_supplier_2.name,
+                icazNumber: req.other_supplier_2.icaz_number,
+                contactInfo: req.other_supplier_2.contact_info,
+                status: req.other_supplier_2.status,
+              } as Supplier)
+            : undefined,
+          chosenRequisition: req.chosen_requisition,
+          type: req.type,
+          deviationReason: req.deviation_reason,
+          budgetCode: req.budget_code,
+          description: req.description,
+          status: req.status,
+          submittedById: req.submitted_by,
+          submittedBy: req.submitted_by_profile?.full_name || "",
+          submittedDate: req.submitted_date,
+          approverComments: req.approver_comments,
+          approvedBy: req.approved_by_profile?.full_name,
+          approvedById: req.approved_by,
+          approvedDate: req.approved_date,
+          documents: reqDocs.map((d) => d.file_name),
+          attachments: reqDocs.map((d) => ({ id: d.id, fileName: d.file_name, fileUrl: d.file_url, uploadedAt: d.uploaded_at || undefined })),
+        };
+      });
 
       setRequisitions(formatted);
       setLoading(false);
@@ -202,8 +224,24 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       )
       .subscribe();
 
+    const docsChannel = supabase
+      .channel("requisition-documents-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "requisition_documents",
+        },
+        () => {
+          fetchRequisitions();
+        },
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(docsChannel);
     };
   }, [user]);
 

@@ -45,6 +45,7 @@ export interface Requisition {
   submittedDate: string;
   taxClearanceAttached?: TaxClearance;
   documents: string[];
+  attachments?: { id: string; fileName: string; fileUrl: string; uploadedAt?: string }[];
   approverComments?: string;
   approvedBy?: string;
   approvedById?: string;

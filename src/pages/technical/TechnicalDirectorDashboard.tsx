@@ -226,7 +226,7 @@ const TechnicalDirectorDashboard = () => {
                     </div>
 
                     {/* Documents Section */}
-                    {(req.chosenRequisition || req.documents.length > 0 || req.taxClearanceAttached) && (
+                    {(req.chosenRequisition || (req.attachments && req.attachments.length > 0) || req.taxClearanceAttached) && (
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-muted-foreground">Supporting Documents</p>
                         <div className="flex flex-wrap gap-2">
@@ -240,15 +240,12 @@ const TechnicalDirectorDashboard = () => {
                               Chosen Requisition
                             </Button>
                           )}
-                          {req.documents.map((doc, idx) => (
-                            <Button
-                              key={idx}
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownloadDocument(doc)}
-                            >
-                              <Download className="mr-2 h-4 w-4" />
-                              {doc}
+                          {req.attachments?.map((att) => (
+                            <Button asChild key={att.id} variant="outline" size="sm">
+                              <a href={att.fileUrl} target="_blank" rel="noopener noreferrer" download>
+                                <Download className="mr-2 h-4 w-4" />
+                                {att.fileName}
+                              </a>
                             </Button>
                           ))}
                           {req.taxClearanceAttached && (

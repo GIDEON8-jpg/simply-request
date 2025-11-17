@@ -72,25 +72,10 @@ const CEODashboard = () => {
   };
 
   const handleDownloadDocument = (fileName: string) => {
-    // Create a blob with sample content
-    const content = `Sample Document: ${fileName}\n\nThis is a placeholder for the actual document.\nIn production, this would be the actual file from your server.`;
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    
-    // Create a temporary link and trigger download
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    
-    // Cleanup
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
-    
+    // Deprecated placeholder. Downloads now handled via direct links.
     toast({
-      title: "Downloaded",
-      description: `${fileName} has been downloaded`,
+      title: 'Download',
+      description: `${fileName} is downloading...`,
     });
   };
 
@@ -239,7 +224,7 @@ const CEODashboard = () => {
                     </div>
 
                     {/* Documents Section */}
-                    {(req.chosenRequisition || req.documents.length > 0 || req.taxClearanceAttached) && (
+                    {(req.chosenRequisition || (req.attachments && req.attachments.length > 0) || req.taxClearanceAttached) && (
                       <div className="space-y-2">
                         <p className="text-sm font-medium text-muted-foreground">Supporting Documents</p>
                         <div className="flex flex-wrap gap-2">
@@ -253,15 +238,12 @@ const CEODashboard = () => {
                               Chosen Requisition
                             </Button>
                           )}
-                          {req.documents.map((doc, idx) => (
-                            <Button
-                              key={idx}
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownloadDocument(doc)}
-                            >
-                              <Download className="mr-2 h-4 w-4" />
-                              {doc}
+                          {req.attachments?.map((att) => (
+                            <Button asChild key={att.id} variant="outline" size="sm">
+                              <a href={att.fileUrl} target="_blank" rel="noopener noreferrer" download>
+                                <Download className="mr-2 h-4 w-4" />
+                                {att.fileName}
+                              </a>
                             </Button>
                           ))}
                           {req.taxClearanceAttached && (
