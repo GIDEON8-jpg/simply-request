@@ -35,8 +35,6 @@ const NewRequisition = () => {
     currency: 'USD' as Currency,
     usdConvertible: '',
     chosenSupplier: '',
-    otherSupplier1: '',
-    otherSupplier2: '',
     chosenRequisition: '',
     type: 'standard' as RequisitionType,
     deviationReason: '',
@@ -58,8 +56,6 @@ const NewRequisition = () => {
         currency: editRequisition.currency || 'USD',
         usdConvertible: editRequisition.usdConvertible?.toString() || '',
         chosenSupplier: editRequisition.chosenSupplier.id,
-        otherSupplier1: '',
-        otherSupplier2: '',
         chosenRequisition: '',
         type: editRequisition.type,
         deviationReason: editRequisition.deviationReason || '',
@@ -360,9 +356,7 @@ const NewRequisition = () => {
                       setFormData({ 
                         ...formData, 
                         selectedDepartmentForSupplier: value as Department,
-                        chosenSupplier: '', // Reset supplier when department changes
-                        otherSupplier1: '',
-                        otherSupplier2: ''
+                        chosenSupplier: '' // Reset supplier when department changes
                       });
                     }}
                     required

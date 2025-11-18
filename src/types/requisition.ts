@@ -32,8 +32,6 @@ export interface Requisition {
   currency: Currency;
   usdConvertible?: number;
   chosenSupplier: Supplier;
-  otherSupplier1?: Supplier;
-  otherSupplier2?: Supplier;
   chosenRequisition: string;
   type: RequisitionType;
   deviationReason?: string;

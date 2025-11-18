@@ -87,8 +87,6 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       let query = supabase.from("requisitions").select(`
           *,
           chosen_supplier:suppliers!requisitions_chosen_supplier_id_fkey(*),
-          other_supplier_1:suppliers!requisitions_other_supplier_1_id_fkey(*),
-          other_supplier_2:suppliers!requisitions_other_supplier_2_id_fkey(*),
           submitted_by_profile:profiles!requisitions_submitted_by_fkey(full_name),
           approved_by_profile:profiles!requisitions_approved_by_fkey(full_name)
         `);
@@ -166,24 +164,6 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
             contactInfo: req.chosen_supplier?.contact_info || "",
             status: req.chosen_supplier?.status || "active",
           } as Supplier,
-          otherSupplier1: req.other_supplier_1
-            ? ({
-                id: req.other_supplier_1.id,
-                name: req.other_supplier_1.name,
-                icazNumber: req.other_supplier_1.icaz_number,
-                contactInfo: req.other_supplier_1.contact_info,
-                status: req.other_supplier_1.status,
-              } as Supplier)
-            : undefined,
-          otherSupplier2: req.other_supplier_2
-            ? ({
-                id: req.other_supplier_2.id,
-                name: req.other_supplier_2.name,
-                icazNumber: req.other_supplier_2.icaz_number,
-                contactInfo: req.other_supplier_2.contact_info,
-                status: req.other_supplier_2.status,
-              } as Supplier)
-            : undefined,
           chosenRequisition: req.chosen_requisition,
           type: req.type,
           deviationReason: req.deviation_reason,
@@ -261,8 +241,6 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       currency: requisition.currency,
       usd_convertible: requisition.usdConvertible,
       chosen_supplier_id: requisition.chosenSupplier.id,
-      other_supplier_1_id: requisition.otherSupplier1?.id,
-      other_supplier_2_id: requisition.otherSupplier2?.id,
       chosen_requisition: requisition.chosenRequisition,
       type: requisition.type,
       deviation_reason: requisition.deviationReason,
