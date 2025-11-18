@@ -16,6 +16,7 @@ import { RequisitionSummary } from '@/components/RequisitionSummary';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
+import { forceDownload } from '@/lib/utils';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -424,25 +425,23 @@ const FinanceDashboard = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDownloadDocument(req.chosenRequisition!)}
+                              onClick={() => forceDownload(req.chosenRequisition!, 'chosen-requisition.pdf')}
                             >
                               <FileText className="mr-2 h-4 w-4" />
                               Chosen Requisition
                             </Button>
                           )}
                           {req.attachments?.map((att) => (
-                            <Button asChild key={att.id} variant="outline" size="sm">
-                              <a href={att.fileUrl} target="_blank" rel="noopener noreferrer" download>
-                                <Download className="mr-2 h-4 w-4" />
-                                {att.fileName}
-                              </a>
+                            <Button key={att.id} variant="outline" size="sm" onClick={() => forceDownload(att.fileUrl, att.fileName)}>
+                              <Download className="mr-2 h-4 w-4" />
+                              {att.fileName}
                             </Button>
                           ))}
                           {req.taxClearanceAttached && (
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDownloadDocument(req.taxClearanceAttached!.fileName)}
+                              onClick={() => req.taxClearanceAttached && forceDownload(req.taxClearanceAttached.filePath, req.taxClearanceAttached.fileName)}
                             >
                               <Download className="mr-2 h-4 w-4" />
                               Tax Clearance: {req.taxClearanceAttached.fileName}

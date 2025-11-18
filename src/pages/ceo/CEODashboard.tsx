@@ -11,6 +11,7 @@ import { RequisitionSummary } from '@/components/RequisitionSummary';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Badge } from '@/components/ui/badge';
+import { forceDownload } from '@/lib/utils';
 
 const CEODashboard = () => {
   const { toast } = useToast();
@@ -232,20 +233,18 @@ const CEODashboard = () => {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => handleDownloadDocument(req.chosenRequisition!)}
+                              onClick={() => forceDownload(req.chosenRequisition!, 'chosen-requisition.pdf')}
                             >
                               <FileText className="mr-2 h-4 w-4" />
                               Chosen Requisition
                             </Button>
                           )}
-                          {req.attachments?.map((att) => (
-                            <Button asChild key={att.id} variant="outline" size="sm">
-                              <a href={att.fileUrl} target="_blank" rel="noopener noreferrer" download>
+                            {req.attachments?.map((att) => (
+                              <Button key={att.id} variant="outline" size="sm" onClick={() => forceDownload(att.fileUrl, att.fileName)}>
                                 <Download className="mr-2 h-4 w-4" />
                                 {att.fileName}
-                              </a>
-                            </Button>
-                          ))}
+                              </Button>
+                            ))}
                           {req.taxClearanceAttached && (
                             <Button
                               variant="outline"
