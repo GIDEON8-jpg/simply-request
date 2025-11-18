@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { Department, Requisition } from '@/types/requisition';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { forceDownload } from '@/lib/utils';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
@@ -357,25 +358,23 @@ const HODDashboard = () => {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.open(req.chosenRequisition, '_blank')}
+                                onClick={() => forceDownload(req.chosenRequisition, 'chosen-requisition.pdf')}
                               >
                                 <FileText className="mr-2 h-4 w-4" />
                                 Chosen Requisition
                               </Button>
                             )}
                             {req.attachments?.map((att) => (
-                              <Button asChild key={att.id} variant="outline" size="sm">
-                                <a href={att.fileUrl} target="_blank" rel="noopener noreferrer" download>
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  {att.fileName}
-                                </a>
+                              <Button key={att.id} variant="outline" size="sm" onClick={() => forceDownload(att.fileUrl, att.fileName)}>
+                                <FileText className="mr-2 h-4 w-4" />
+                                {att.fileName}
                               </Button>
                             ))}
                             {req.taxClearanceAttached && (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => window.open(req.taxClearanceAttached!.filePath, '_blank')}
+                                onClick={() => req.taxClearanceAttached && forceDownload(req.taxClearanceAttached.filePath, req.taxClearanceAttached.fileName)}
                               >
                                 <FileText className="mr-2 h-4 w-4" />
                                 Tax Clearance: {req.taxClearanceAttached.fileName}
