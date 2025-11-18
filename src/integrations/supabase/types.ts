@@ -157,8 +157,6 @@ export type Database = {
           description: string
           deviation_reason: string | null
           id: string
-          other_supplier_1_id: string | null
-          other_supplier_2_id: string | null
           status: Database["public"]["Enums"]["requisition_status"]
           submitted_by: string
           submitted_date: string | null
@@ -181,8 +179,6 @@ export type Database = {
           description: string
           deviation_reason?: string | null
           id?: string
-          other_supplier_1_id?: string | null
-          other_supplier_2_id?: string | null
           status?: Database["public"]["Enums"]["requisition_status"]
           submitted_by: string
           submitted_date?: string | null
@@ -205,8 +201,6 @@ export type Database = {
           description?: string
           deviation_reason?: string | null
           id?: string
-          other_supplier_1_id?: string | null
-          other_supplier_2_id?: string | null
           status?: Database["public"]["Enums"]["requisition_status"]
           submitted_by?: string
           submitted_date?: string | null
@@ -226,20 +220,6 @@ export type Database = {
           {
             foreignKeyName: "requisitions_chosen_supplier_id_fkey"
             columns: ["chosen_supplier_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "requisitions_other_supplier_1_id_fkey"
-            columns: ["other_supplier_1_id"]
-            isOneToOne: false
-            referencedRelation: "suppliers"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "requisitions_other_supplier_2_id_fkey"
-            columns: ["other_supplier_2_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
             referencedColumns: ["id"]
