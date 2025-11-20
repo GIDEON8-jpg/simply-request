@@ -225,39 +225,49 @@ const CEODashboard = () => {
                     </div>
 
                     {/* Documents Section */}
-                    {(req.chosenRequisition || (req.attachments && req.attachments.length > 0) || req.taxClearanceAttached) && (
+                    <div className="space-y-4">
                       <div className="space-y-2">
-                        <p className="text-sm font-medium text-muted-foreground">Supporting Documents</p>
-                        <div className="flex flex-wrap gap-2">
-                          {req.chosenRequisition && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => forceDownload(req.chosenRequisition!, 'chosen-requisition.pdf')}
-                            >
-                              <FileText className="mr-2 h-4 w-4" />
-                              Chosen Requisition
-                            </Button>
-                          )}
-                            {req.attachments?.map((att) => (
+                        <p className="text-sm font-medium">Chosen Requisition:</p>
+                        {req.chosenRequisition && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => forceDownload(req.chosenRequisition!, 'chosen-requisition.pdf')}
+                          >
+                            <FileText className="mr-2 h-4 w-4" />
+                            Download Chosen Requisition
+                          </Button>
+                        )}
+                      </div>
+
+                      {req.attachments && req.attachments.length > 0 && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Supporting Documents:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {req.attachments.map((att) => (
                               <Button key={att.id} variant="outline" size="sm" onClick={() => forceDownload(att.fileUrl, att.fileName)}>
                                 <Download className="mr-2 h-4 w-4" />
                                 {att.fileName}
                               </Button>
                             ))}
-                          {req.taxClearanceAttached && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDownloadDocument(req.taxClearanceAttached!.fileName)}
-                            >
-                              <Download className="mr-2 h-4 w-4" />
-                              Tax Clearance: {req.taxClearanceAttached.fileName}
-                            </Button>
-                          )}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+
+                      {req.taxClearanceAttached && (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Tax Clearance:</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => forceDownload(req.taxClearanceAttached!.filePath, req.taxClearanceAttached!.fileName)}
+                          >
+                            <Download className="mr-2 h-4 w-4" />
+                            Tax Clearance: {req.taxClearanceAttached.fileName}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
 
                     <RequisitionSummary requisition={req} />
 
