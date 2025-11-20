@@ -145,7 +145,7 @@ const NewRequisition = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (isSubmitting) return;
@@ -187,36 +187,115 @@ const NewRequisition = () => {
       return;
     }
 
-    const newRequisition = {
-      id: `REQ-${Date.now()}`,
-      title: formData.title,
-      department: formData.department,
-      amount: parseFloat(formData.amount),
-      currency: formData.currency,
-      usdConvertible: formData.currency !== 'USD' && formData.usdConvertible ? parseFloat(formData.usdConvertible) : undefined,
-      chosenSupplier: selectedSupplierData,
-      chosenRequisition: chosenRequisitionFile?.name || '',
-      type: formData.type,
-      deviationReason: formData.deviationReason,
-      budgetCode: formData.budgetCode,
-      description: formData.description,
-      status: 'pending' as const,
-      submittedBy: user?.username || 'Unknown',
-      submittedDate: new Date().toISOString(),
-      taxClearanceAttached: taxClearanceData,
-      documents: supportingDocuments.map(f => f.name),
-    };
+    try {
+      // Upload chosen requisition file to storage
+      let chosenRequisitionUrl = '';
+      if (chosenRequisitionFile) {
+        const chosenFileExt = chosenRequisitionFile.name.split('.').pop();
+        const chosenFilePath = `${Date.now()}_chosen.${chosenFileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('requisition-documents')
+          .upload(chosenFilePath, chosenRequisitionFile);
 
-    addRequisition(newRequisition);
+        if (uploadError) {
+          console.error('Error uploading chosen requisition:', uploadError);
+          toast({
+            title: "Upload Error",
+            description: "Failed to upload chosen requisition file",
+            variant: "destructive",
+          });
+          setIsSubmitting(false);
+          return;
+        }
 
-    toast({
-      title: "Requisition Submitted Successfully",
-      description: "Your requisition has been submitted and is pending approval.",
-    });
+        const { data: { publicUrl } } = supabase.storage
+          .from('requisition-documents')
+          .getPublicUrl(chosenFilePath);
+        
+        chosenRequisitionUrl = publicUrl;
+      }
 
-    // Navigate based on department
-    const route = formData.department === 'Finance' ? '/finance' : '/hod';
-    navigate(route);
+      // Create requisition in database
+      const requisitionId = crypto.randomUUID();
+      const { error: reqError } = await supabase
+        .from('requisitions')
+        .insert({
+          id: requisitionId,
+          title: formData.title,
+          department: formData.department,
+          amount: parseFloat(formData.amount),
+          currency: formData.currency,
+          usd_convertible: formData.currency !== 'USD' && formData.usdConvertible ? parseFloat(formData.usdConvertible) : null,
+          chosen_supplier_id: selectedSupplierData.id,
+          chosen_requisition: chosenRequisitionUrl,
+          type: formData.type,
+          deviation_reason: formData.deviationReason || null,
+          budget_code: formData.budgetCode,
+          description: formData.description,
+          status: 'pending',
+          submitted_by: user?.id || '',
+          tax_clearance_id: taxClearanceData?.id || null,
+        });
+
+      if (reqError) {
+        console.error('Error creating requisition:', reqError);
+        toast({
+          title: "Error",
+          description: "Failed to create requisition",
+          variant: "destructive",
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Upload supporting documents and save to requisition_documents table
+      if (supportingDocuments.length > 0) {
+        for (const file of supportingDocuments) {
+          const fileExt = file.name.split('.').pop();
+          const filePath = `${requisitionId}/${Date.now()}_${file.name}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('requisition-documents')
+            .upload(filePath, file);
+
+          if (uploadError) {
+            console.error('Error uploading supporting document:', uploadError);
+            continue;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('requisition-documents')
+            .getPublicUrl(filePath);
+
+          // Save to requisition_documents table
+          await supabase
+            .from('requisition_documents')
+            .insert({
+              requisition_id: requisitionId,
+              file_name: file.name,
+              file_url: publicUrl,
+            });
+        }
+      }
+
+      toast({
+        title: "Requisition Submitted Successfully",
+        description: "Your requisition has been submitted and is pending approval.",
+      });
+
+      // Navigate based on department
+      const route = formData.department === 'Finance' ? '/finance' : '/hod';
+      navigate(route);
+    } catch (error) {
+      console.error('Error submitting requisition:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while submitting the requisition",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   const hasDepartment = !!formData.department;
