@@ -11,3 +11,6 @@ verify_jwt = true
 
 [functions.bulk-import-suppliers]
 verify_jwt = true
+
+[functions.notify-requisition-submitted]
+verify_jwt = false

@@ -279,6 +279,28 @@ const NewRequisition = () => {
         }
       }
 
+      // Send email notifications
+      try {
+        const { data: submitterProfile } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user?.id || '')
+          .single();
+
+        await supabase.functions.invoke('notify-requisition-submitted', {
+          body: {
+            requisitionId,
+            requisitionTitle: formData.title,
+            department: formData.department,
+            submitterName: submitterProfile?.full_name || 'Unknown User',
+          },
+        });
+        console.log('Email notifications sent successfully');
+      } catch (emailError) {
+        console.error('Error sending email notifications:', emailError);
+        // Don't block submission if email fails
+      }
+
       toast({
         title: "Requisition Submitted Successfully",
         description: "Your requisition has been submitted and is pending approval.",
