@@ -80,6 +80,30 @@ const HODDashboard = () => {
 
     try {
       await updateRequisition(reqId, updates);
+      
+      // If approved, send notification to next approver
+      if (action === 'approve') {
+        const requisition = requisitions.find(r => r.id === reqId);
+        if (requisition) {
+          try {
+            const { supabase } = await import('@/integrations/supabase/client');
+            await supabase.functions.invoke('notify-hod-approval', {
+              body: {
+                requisitionId: reqId,
+                requisitionTitle: requisition.title,
+                department: requisition.department,
+                amount: requisition.amount,
+                currency: requisition.currency,
+                hodName: user?.fullName || 'HOD',
+              }
+            });
+            console.log('Notification sent to next approver');
+          } catch (notifError) {
+            console.error('Failed to send notification:', notifError);
+          }
+        }
+      }
+      
       toast({
         title: action === 'approve' ? "Requisition Approved" : "Requisition Rejected",
         description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to next approver' : 'rejected'}.`,
