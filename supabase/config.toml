@@ -14,3 +14,6 @@ verify_jwt = true
 
 [functions.notify-requisition-submitted]
 verify_jwt = false
+
+[functions.notify-hod-approval]
+verify_jwt = false

@@ -16,7 +16,9 @@ interface NotificationRequest {
   requisitionId: string;
   requisitionTitle: string;
   department: string;
-  submitterName: string;
+  amount: number;
+  currency: string;
+  hodName: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -26,18 +28,31 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { requisitionId, requisitionTitle, department, submitterName }: NotificationRequest = await req.json();
+    const { requisitionId, requisitionTitle, department, amount, currency, hodName }: NotificationRequest = await req.json();
     
-    console.log('Processing notification for requisition:', requisitionId);
+    console.log('Processing HOD approval notification for requisition:', requisitionId);
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get HOD users for the department to notify them first
+    // Determine next approver based on amount (authorization matrix)
+    let nextRole: string;
+    const usdAmount = currency === 'USD' ? amount : amount; // Simplified, should convert
+    
+    if (usdAmount <= 100) {
+      nextRole = 'finance_manager';
+    } else if (usdAmount <= 1000) {
+      nextRole = 'technical_director';
+    } else {
+      nextRole = 'ceo';
+    }
+
+    console.log(`Amount: ${usdAmount} USD, Next approver role: ${nextRole}`);
+
+    // Get users with the next approver role
     const { data: userRoles, error: rolesError } = await supabase
       .from('user_roles')
-      .select('user_id, role, profiles!inner(email, full_name, department)')
-      .eq('role', 'hod')
-      .eq('profiles.department', department);
+      .select('user_id, role, profiles!inner(email, full_name)')
+      .eq('role', nextRole);
 
     if (rolesError) {
       console.error('Error fetching user roles:', rolesError);
@@ -49,11 +64,11 @@ const handler = async (req: Request): Promise<Response> => {
     const appUrl = 'https://ca65c39b-c714-453d-accf-abcbcda568ac.lovableproject.com';
     const emailsSent = [];
 
-    // Send email to each HOD
+    // Send email to each user
     for (const userRole of userRoles || []) {
       const profile = userRole.profiles as unknown as { email: string; full_name: string };
       
-      console.log(`Sending email to HOD ${profile.email}`);
+      console.log(`Sending email to ${profile.email} (${userRole.role})`);
 
       try {
         const emailResponse = await fetch('https://api.resend.com/emails', {
@@ -65,22 +80,23 @@ const handler = async (req: Request): Promise<Response> => {
           body: JSON.stringify({
             from: "ICAZ Procurement <onboarding@resend.dev>",
             to: [profile.email],
-            subject: `New Requisition Submitted: ${requisitionTitle}`,
+            subject: `HOD Approved Requisition - Your Review Required: ${requisitionTitle}`,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h1 style="color: #2563eb;">New Requisition - HOD Approval Required</h1>
+                <h1 style="color: #2563eb;">Requisition Approved by HOD - Your Review Required</h1>
                 <p>Dear ${profile.full_name},</p>
                 
-                <p>A new requisition has been submitted to your department and requires your approval as Head of Department:</p>
+                <p>The HOD has approved a requisition that now requires your review and approval:</p>
                 
                 <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
                   <p><strong>Title:</strong> ${requisitionTitle}</p>
                   <p><strong>Department:</strong> ${department}</p>
-                  <p><strong>Submitted by:</strong> ${submitterName}</p>
+                  <p><strong>Amount:</strong> ${currency} ${amount.toFixed(2)}</p>
                   <p><strong>Requisition ID:</strong> ${requisitionId}</p>
+                  <p><strong>Approved by:</strong> ${hodName} (HOD)</p>
                 </div>
                 
-                <p>As the HOD, you are the first approver in the workflow. Please review and approve/reject this requisition.</p>
+                <p>Based on the authorization matrix, this requisition requires your approval.</p>
                 
                 <a href="${appUrl}" 
                    style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; 
@@ -125,6 +141,7 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ 
         success: true, 
         message: 'Notifications processed',
+        nextRole,
         emailsSent 
       }),
       {
@@ -136,7 +153,7 @@ const handler = async (req: Request): Promise<Response> => {
       }
     );
   } catch (error: any) {
-    console.error("Error in notify-requisition-submitted function:", error);
+    console.error("Error in notify-hod-approval function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
