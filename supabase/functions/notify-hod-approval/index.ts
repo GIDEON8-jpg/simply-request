@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: "ICAZ Procurement <onboarding@resend.dev>",
+            from: "onboarding@resend.dev",
             to: [profile.email],
             subject: `HOD Approved Requisition - Your Review Required: ${requisitionTitle}`,
             html: `
