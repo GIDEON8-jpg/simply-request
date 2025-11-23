@@ -143,7 +143,7 @@ const AccountantDashboard = () => {
     }));
   };
 
-  const handleMarkComplete = (reqId: string) => {
+  const handleMarkComplete = async (reqId: string) => {
     if (!uploadedPOP[reqId] || uploadedPOP[reqId].length === 0) {
       toast({
         title: "Upload Required",
@@ -153,6 +153,9 @@ const AccountantDashboard = () => {
       return;
     }
 
+    const requisition = requisitions.find(r => r.id === reqId);
+    if (!requisition) return;
+
     updateRequisition(reqId, { 
       status: 'completed', 
       paymentDate: new Date().toISOString() 
@@ -160,17 +163,42 @@ const AccountantDashboard = () => {
 
     // Log payment in payments table
     const popFileName = uploadedPOP[reqId]?.[0]?.name || 'N/A';
-    supabase.from('payments').insert({
+    const { error: paymentError } = await supabase.from('payments').insert({
       requisition_id: reqId,
       pop_file_name: popFileName,
       processed_by: user?.id as string,
       payment_date: new Date().toISOString(),
       status: 'paid'
-    }).then((result) => {
-      if (result.error) {
-        console.error('Error logging payment:', result.error);
-      }
     });
+
+    if (paymentError) {
+      console.error('Error logging payment:', paymentError);
+      return;
+    }
+
+    // Send email notification to HOD and submitter
+    try {
+      const { error: notifyError } = await supabase.functions.invoke('notify-hod-payment', {
+        body: {
+          requisitionId: reqId,
+          department: requisition.department,
+          title: requisition.title,
+          amount: requisition.amount,
+          currency: requisition.currency,
+        }
+      });
+
+      if (notifyError) {
+        console.error('Error sending payment notification:', notifyError);
+      } else {
+        toast({
+          title: "Payment Complete",
+          description: "HOD and submitter have been notified",
+        });
+      }
+    } catch (error) {
+      console.error('Error invoking notification function:', error);
+    }
   };
 
   const handleNotifyHOD = (reqId: string) => {

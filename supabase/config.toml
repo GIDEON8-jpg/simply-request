@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.notify-hod-approval]
 verify_jwt = false
+
+[functions.notify-hod-payment]
+verify_jwt = false
