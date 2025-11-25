@@ -24,22 +24,30 @@ serve(async (req) => {
 
     console.log('Generating summary for requisition:', requisition.id);
 
+    const supplierInfo = requisition.chosenSupplier 
+      ? `${requisition.chosenSupplier.name} (ICAZ: ${requisition.chosenSupplier.icazNumber})`
+      : 'Not specified';
+
     const prompt = `You are a procurement analyst. Generate a concise executive summary for this requisition approval.
 
 Requisition Details:
 - Title: ${requisition.title}
 - Department: ${requisition.department}
-- Amount: ${requisition.currency} ${requisition.amount} (USD ${requisition.usdAmount})
+- Amount: ${requisition.currency} ${requisition.amount}${requisition.usdConvertible ? ` (USD ${requisition.usdConvertible})` : ''}
 - Submitted by: ${requisition.submittedBy}
 - Date: ${requisition.submittedDate}
 - Budget Code: ${requisition.budgetCode}
-- Supplier: ${requisition.supplier || 'Not specified'}
+- Chosen Supplier: ${supplierInfo}
+- Type: ${requisition.type}
 - Status: ${requisition.status}
+${requisition.deviationReason ? `- Deviation Reason: ${requisition.deviationReason}` : ''}
+
+Description: ${requisition.description}
 
 Generate a professional 2-3 sentence summary that:
-1. Explains what is being requested
-2. Highlights why this requisition was approved (focus on cost-effectiveness and pricing if applicable)
-3. Notes any important context
+1. Explains what is being requested and from which supplier
+2. Highlights the key details (amount, supplier, type)
+3. Notes any important context or deviation reasons
 
 Keep it concise and professional.`;
 
