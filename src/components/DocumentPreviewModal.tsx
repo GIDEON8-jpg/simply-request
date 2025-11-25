@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, X } from 'lucide-react';
 import { useState } from 'react';
@@ -24,7 +24,10 @@ export const DocumentPreviewModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
         <DialogHeader className="flex flex-row items-center justify-between">
-          <DialogTitle className="truncate flex-1">{fileName}</DialogTitle>
+          <div>
+            <DialogTitle className="truncate">{fileName}</DialogTitle>
+            <DialogDescription>Preview of the tax clearance document</DialogDescription>
+          </div>
           <div className="flex gap-2">
             {onDownload && (
               <Button variant="outline" size="sm" onClick={onDownload}>
