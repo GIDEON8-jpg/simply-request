@@ -279,11 +279,14 @@ const HRDashboard = () => {
         throw new Error('File path not found');
       }
 
-      const { data } = await supabase.storage
+      // Use signed URL for private bucket (expires in 1 hour)
+      const { data, error } = await supabase.storage
         .from('tax-clearances')
-        .getPublicUrl(taxClearance.filePath);
+        .createSignedUrl(taxClearance.filePath, 3600);
 
-      setPreviewUrl(data.publicUrl);
+      if (error) throw error;
+
+      setPreviewUrl(data.signedUrl);
       setPreviewFileName(fileName);
       setIsPreviewOpen(true);
     } catch (error) {
