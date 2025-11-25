@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Upload, Trash2, Download, RefreshCw } from 'lucide-react';
+import { Plus, Upload, Trash2, Download, RefreshCw, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useSuppliers } from '@/contexts/SuppliersContext';
 import { BulkSupplierImport } from './BulkSupplierImport';
 import { supabase } from '@/integrations/supabase/client';
 import { Department } from '@/types/requisition';
+import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 
 const HRDashboard = () => {
   const { toast } = useToast();
@@ -26,6 +27,9 @@ const HRDashboard = () => {
   const [selectedSupplierId, setSelectedSupplierId] = useState('');
   const [taxClearanceFile, setTaxClearanceFile] = useState<File | null>(null);
   const [isAddingSupplier, setIsAddingSupplier] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewFileName, setPreviewFileName] = useState<string>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   // Tax clearance date fields
   const [taxClearanceData, setTaxClearanceData] = useState({
@@ -33,6 +37,8 @@ const HRDashboard = () => {
     validFrom: '',
     validTo: '',
   });
+
+  const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB in bytes
 
   const handleAddSupplier = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,10 +134,18 @@ const HRDashboard = () => {
         });
         return;
       }
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "File Too Large",
+          description: `File size must be less than 3MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+          variant: "destructive",
+        });
+        return;
+      }
       setNewSupplierTaxFile(file);
       toast({
         title: "File Selected",
-        description: `${file.name} is ready to upload`,
+        description: `${file.name} is ready to upload (${(file.size / (1024 * 1024)).toFixed(2)}MB)`,
       });
     }
   };
@@ -147,10 +161,18 @@ const HRDashboard = () => {
         });
         return;
       }
+      if (file.size > MAX_FILE_SIZE) {
+        toast({
+          title: "File Too Large",
+          description: `File size must be less than 3MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+          variant: "destructive",
+        });
+        return;
+      }
       setTaxClearanceFile(file);
       toast({
         title: "File Selected",
-        description: `${file.name} is ready to upload`,
+        description: `${file.name} is ready to upload (${(file.size / (1024 * 1024)).toFixed(2)}MB)`,
       });
     }
   };
@@ -250,9 +272,32 @@ const HRDashboard = () => {
     }
   };
 
+  const handlePreviewTaxClearance = async (fileName: string) => {
+    try {
+      const taxClearance = taxClearances.find(tc => tc.fileName === fileName);
+      if (!taxClearance?.filePath) {
+        throw new Error('File path not found');
+      }
+
+      const { data } = await supabase.storage
+        .from('tax-clearances')
+        .getPublicUrl(taxClearance.filePath);
+
+      setPreviewUrl(data.publicUrl);
+      setPreviewFileName(fileName);
+      setIsPreviewOpen(true);
+    } catch (error) {
+      console.error('Preview error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to preview tax clearance",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleDownloadTaxClearance = async (fileName: string) => {
     try {
-      // Find the tax clearance record to get the file_path
       const taxClearance = taxClearances.find(tc => tc.fileName === fileName);
       if (!taxClearance?.filePath) {
         throw new Error('File path not found');
@@ -264,7 +309,6 @@ const HRDashboard = () => {
 
       if (error) throw error;
 
-      // Create a download link
       const url = window.URL.createObjectURL(data);
       const a = document.createElement('a');
       a.href = url;
@@ -361,7 +405,7 @@ const HRDashboard = () => {
                     <p className="mt-2 text-sm text-gray-600">
                       {newSupplierTaxFile ? newSupplierTaxFile.name : 'Click to upload Tax Clearance Certificate'}
                     </p>
-                    <p className="text-xs text-gray-500">PDF format only - Required before adding supplier</p>
+                    <p className="text-xs text-gray-500">PDF format only - Max 3MB</p>
                     <p className="text-xs text-green-600 mt-2">Valid: Q3 2025 (Sep-Dec) - Quarterly validation</p>
                   </label>
                 </div>
@@ -429,7 +473,7 @@ const HRDashboard = () => {
                   <p className="mt-2 text-sm text-gray-600">
                     {taxClearanceFile ? taxClearanceFile.name : 'Click to upload Tax Clearance Certificate'}
                   </p>
-                  <p className="text-xs text-gray-500">PDF format only</p>
+                  <p className="text-xs text-gray-500">PDF format only - Max 3MB</p>
                 </label>
               </div>
             </div>
@@ -548,14 +592,24 @@ const HRDashboard = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleDownloadTaxClearance(tc.fileName)}
-                        >
-                          <Download className="mr-2 h-4 w-4" />
-                          Download
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handlePreviewTaxClearance(tc.fileName)}
+                          >
+                            <Eye className="mr-2 h-4 w-4" />
+                            Preview
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleDownloadTaxClearance(tc.fileName)}
+                          >
+                            <Download className="mr-2 h-4 w-4" />
+                            Download
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -580,6 +634,14 @@ const HRDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      <DocumentPreviewModal 
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        fileUrl={previewUrl}
+        fileName={previewFileName}
+        onDownload={() => handleDownloadTaxClearance(previewFileName)}
+      />
     </DashboardLayout>
   );
 };
