@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, FileText, FileDown, PlusCircle, ClipboardList, Plus, Edit } from 'lucide-react';
+import { Download, FileText, FileDown, PlusCircle, ClipboardList, Plus, Edit, Eye } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { forceDownload } from '@/lib/utils';
+import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
+import { supabase } from '@/integrations/supabase/client';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -28,6 +30,9 @@ const FinanceDashboard = () => {
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
   const [selectedReq, setSelectedReq] = useState<any>(null);
   const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewFileName, setPreviewFileName] = useState<string>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
@@ -101,6 +106,39 @@ const FinanceDashboard = () => {
 
   const handleWaitClick = (reqId: string) => {
     setShowWaitField(prev => ({ ...prev, [reqId]: !prev[reqId] }));
+  };
+
+  const handlePreviewDocument = async (fileUrl: string, fileName: string) => {
+    try {
+      if (fileUrl.includes('requisition-documents')) {
+        setPreviewUrl(fileUrl);
+      } else {
+        const pathMatch = fileUrl.match(/\/storage\/v1\/object\/[^/]+\/[^/]+\/(.+)$/);
+        if (pathMatch) {
+          const filePath = pathMatch[1];
+          const bucketName = fileUrl.includes('tax-clearances') ? 'tax-clearances' : 'requisition-documents';
+          
+          const { data, error } = await supabase.storage
+            .from(bucketName)
+            .createSignedUrl(filePath, 3600);
+
+          if (error) throw error;
+          setPreviewUrl(data.signedUrl);
+        } else {
+          setPreviewUrl(fileUrl);
+        }
+      }
+      
+      setPreviewFileName(fileName);
+      setIsPreviewOpen(true);
+    } catch (error) {
+      console.error('Error creating preview:', error);
+      toast({
+        title: 'Preview Error',
+        description: 'Unable to preview document. Try downloading instead.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDownloadDocument = (fileName: string) => {
@@ -437,10 +475,24 @@ const FinanceDashboard = () => {
                           <p className="text-sm font-medium">Supporting Documents:</p>
                           <div className="flex flex-wrap gap-2">
                             {req.attachments.map((att) => (
-                              <Button key={att.id} variant="outline" size="sm" onClick={() => forceDownload(att.fileUrl, att.fileName)}>
-                                <Download className="mr-2 h-4 w-4" />
-                                {att.fileName}
-                              </Button>
+                              <div key={att.id} className="flex gap-1">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => handlePreviewDocument(att.fileUrl, att.fileName)}
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Preview
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => forceDownload(att.fileUrl, att.fileName)}
+                                >
+                                  <Download className="mr-2 h-4 w-4" />
+                                  {att.fileName}
+                                </Button>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -591,6 +643,14 @@ const FinanceDashboard = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      <DocumentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        fileUrl={previewUrl}
+        fileName={previewFileName}
+        onDownload={() => forceDownload(previewUrl, previewFileName)}
+      />
     </DashboardLayout>
   );
 };

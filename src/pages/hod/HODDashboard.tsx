@@ -10,12 +10,14 @@ import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, ClipboardList, FileText } from 'lucide-react';
+import { Plus, Edit, ClipboardList, FileText, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Department, Requisition } from '@/types/requisition';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { forceDownload } from '@/lib/utils';
+import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
+import { supabase } from '@/integrations/supabase/client';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +27,9 @@ const HODDashboard = () => {
   const previousRequisitionsRef = useRef<Requisition[]>([]);
   const [comments, setComments] = useState<Record<string, string>>({});
   const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewFileName, setPreviewFileName] = useState<string>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   
   const userDepartment: Department = (user?.department as Department) || 'IT';
   
@@ -148,6 +153,42 @@ const HODDashboard = () => {
     // Update the ref with current requisitions
     previousRequisitionsRef.current = requisitions;
   }, [requisitions, toast]);
+
+  const handlePreviewDocument = async (fileUrl: string, fileName: string) => {
+    try {
+      // Check if it's a public URL or needs signed URL
+      if (fileUrl.includes('requisition-documents')) {
+        // Public bucket - use directly
+        setPreviewUrl(fileUrl);
+      } else {
+        // Private bucket or other - create signed URL
+        const pathMatch = fileUrl.match(/\/storage\/v1\/object\/[^/]+\/[^/]+\/(.+)$/);
+        if (pathMatch) {
+          const filePath = pathMatch[1];
+          const bucketName = fileUrl.includes('tax-clearances') ? 'tax-clearances' : 'requisition-documents';
+          
+          const { data, error } = await supabase.storage
+            .from(bucketName)
+            .createSignedUrl(filePath, 3600);
+
+          if (error) throw error;
+          setPreviewUrl(data.signedUrl);
+        } else {
+          setPreviewUrl(fileUrl);
+        }
+      }
+      
+      setPreviewFileName(fileName);
+      setIsPreviewOpen(true);
+    } catch (error) {
+      console.error('Error creating preview:', error);
+      toast({
+        title: 'Preview Error',
+        description: 'Unable to preview document. Try downloading instead.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   return (
     <DashboardLayout title="Head of Department Dashboard">
@@ -378,14 +419,24 @@ const HODDashboard = () => {
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Chosen Requisition:</p>
                           {req.chosenRequisition && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => forceDownload(req.chosenRequisition, 'chosen-requisition.pdf')}
-                            >
-                              <FileText className="mr-2 h-4 w-4" />
-                              Download Chosen Requisition
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handlePreviewDocument(req.chosenRequisition, 'chosen-requisition.pdf')}
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Preview
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => forceDownload(req.chosenRequisition, 'chosen-requisition.pdf')}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                Download
+                              </Button>
+                            </div>
                           )}
                         </div>
 
@@ -394,10 +445,24 @@ const HODDashboard = () => {
                             <p className="text-sm font-medium">Supporting Documents:</p>
                             <div className="flex flex-wrap gap-2">
                               {req.attachments.map((att) => (
-                                <Button key={att.id} variant="outline" size="sm" onClick={() => forceDownload(att.fileUrl, att.fileName)}>
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  {att.fileName}
-                                </Button>
+                                <div key={att.id} className="flex gap-1">
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => handlePreviewDocument(att.fileUrl, att.fileName)}
+                                  >
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    Preview
+                                  </Button>
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => forceDownload(att.fileUrl, att.fileName)}
+                                  >
+                                    <FileText className="mr-2 h-4 w-4" />
+                                    {att.fileName}
+                                  </Button>
+                                </div>
                               ))}
                             </div>
                           </div>
@@ -454,6 +519,14 @@ const HODDashboard = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <DocumentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        fileUrl={previewUrl}
+        fileName={previewFileName}
+        onDownload={() => forceDownload(previewUrl, previewFileName)}
+      />
     </DashboardLayout>
   );
 };

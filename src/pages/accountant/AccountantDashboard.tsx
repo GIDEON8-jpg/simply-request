@@ -2,17 +2,17 @@ import { useState } from 'react';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Upload, CheckCircle, Mail, Download, FileText, X } from 'lucide-react';
+import { Upload, CheckCircle, Mail, Download, FileText, X, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { forceDownload } from '@/lib/utils';
+import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 
 const AccountantDashboard = () => {
   const { toast } = useToast();
@@ -23,6 +23,9 @@ const AccountantDashboard = () => {
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
   const [showWaitField, setShowWaitField] = useState<Record<string, boolean>>({});
   const [actionedIds, setActionedIds] = useState<Set<string>>(new Set());
+  const [previewUrl, setPreviewUrl] = useState<string>('');
+  const [previewFileName, setPreviewFileName] = useState<string>('');
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const pendingApprovals = requisitions.filter(r => 
     r.status === 'approved' && 
@@ -208,6 +211,38 @@ const AccountantDashboard = () => {
     });
   };
 
+  const handlePreviewDocument = async (fileUrl: string, fileName: string) => {
+    try {
+      if (fileUrl.includes('requisition-documents')) {
+        setPreviewUrl(fileUrl);
+      } else {
+        const pathMatch = fileUrl.match(/\/storage\/v1\/object\/[^/]+\/[^/]+\/(.+)$/);
+        if (pathMatch) {
+          const filePath = pathMatch[1];
+          const bucketName = fileUrl.includes('tax-clearances') ? 'tax-clearances' : 'requisition-documents';
+          
+          const { data, error } = await supabase.storage
+            .from(bucketName)
+            .createSignedUrl(filePath, 3600);
+
+          if (error) throw error;
+          setPreviewUrl(data.signedUrl);
+        } else {
+          setPreviewUrl(fileUrl);
+        }
+      }
+      
+      setPreviewFileName(fileName);
+      setIsPreviewOpen(true);
+    } catch (error) {
+      console.error('Error creating preview:', error);
+      toast({
+        title: 'Preview Error',
+        description: 'Unable to preview document. Try downloading instead.',
+        variant: 'destructive',
+      });
+    }
+  };
 
   const handleDownloadDocument = (fileName: string) => {
     // Create a blob with sample content
@@ -317,14 +352,24 @@ const AccountantDashboard = () => {
                       <div className="space-y-2">
                         <p className="text-sm font-medium">Chosen Requisition:</p>
                         {req.chosenRequisition && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => forceDownload(req.chosenRequisition!, 'chosen-requisition.pdf')}
-                          >
-                            <FileText className="mr-2 h-4 w-4" />
-                            Download Chosen Requisition
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePreviewDocument(req.chosenRequisition!, 'chosen-requisition.pdf')}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Preview
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => forceDownload(req.chosenRequisition!, 'chosen-requisition.pdf')}
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              Download
+                            </Button>
+                          </div>
                         )}
                       </div>
 
@@ -333,10 +378,24 @@ const AccountantDashboard = () => {
                           <p className="text-sm font-medium">Supporting Documents:</p>
                           <div className="flex flex-wrap gap-2">
                             {req.attachments.map((att) => (
-                              <Button key={att.id} variant="outline" size="sm" onClick={() => forceDownload(att.fileUrl, att.fileName)}>
-                                <Download className="mr-2 h-4 w-4" />
-                                {att.fileName}
-                              </Button>
+                              <div key={att.id} className="flex gap-1">
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => handlePreviewDocument(att.fileUrl, att.fileName)}
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Preview
+                                </Button>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => forceDownload(att.fileUrl, att.fileName)}
+                                >
+                                  <Download className="mr-2 h-4 w-4" />
+                                  {att.fileName}
+                                </Button>
+                              </div>
                             ))}
                           </div>
                         </div>
@@ -613,6 +672,14 @@ const AccountantDashboard = () => {
         </Card>
 
       </div>
+
+      <DocumentPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        fileUrl={previewUrl}
+        fileName={previewFileName}
+        onDownload={() => forceDownload(previewUrl, previewFileName)}
+      />
     </DashboardLayout>
   );
 };
