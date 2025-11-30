@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, FileText, FileDown, PlusCircle, ClipboardList, Plus, Edit, Eye } from 'lucide-react';
+import { Download, FileText, FileDown, PlusCircle, ClipboardList, Plus, Edit, Eye, BarChart3 } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
@@ -19,6 +19,8 @@ import { Badge } from '@/components/ui/badge';
 import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
+import { RequisitionStatus } from '@/types/requisition';
+import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -33,6 +35,7 @@ const FinanceDashboard = () => {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [previewFileName, setPreviewFileName] = useState<string>('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<RequisitionStatus | 'all'>('all');
 
   const pendingRequisitions = requisitions.filter(r => {
     const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
@@ -43,6 +46,16 @@ const FinanceDashboard = () => {
   
   const remainingBudget = getRemainingBudget('Finance');
 
+  // Status counts for ALL requisitions (for the report view)
+  const allStatusCounts = {
+    pending: requisitions.filter(r => r.status === 'pending').length,
+    approved: requisitions.filter(r => r.status === 'approved').length,
+    approved_wait: requisitions.filter(r => r.status === 'approved_wait').length,
+    completed: requisitions.filter(r => r.status === 'completed').length,
+    rejected: requisitions.filter(r => r.status === 'rejected').length,
+  };
+
+  // Status counts for department requisitions
   const statusCounts = {
     pending: departmentRequisitions.filter(r => r.status === 'pending').length,
     approved: departmentRequisitions.filter(r => r.status === 'approved').length,
@@ -54,6 +67,11 @@ const FinanceDashboard = () => {
   const totalAmount = departmentRequisitions
     .filter(r => r.status === 'completed')
     .reduce((sum, r) => sum + r.amount, 0);
+
+  // Filtered requisitions based on status filter
+  const filteredRequisitions = statusFilter === 'all' 
+    ? requisitions 
+    : requisitions.filter(r => r.status === statusFilter);
 
   useEffect(() => {
     if (remainingBudget <= 100) {
@@ -224,7 +242,7 @@ const FinanceDashboard = () => {
   return (
     <DashboardLayout title="Finance Dashboard">
       <Tabs defaultValue="approvals" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
+        <TabsList className="grid w-full max-w-lg grid-cols-3">
           <TabsTrigger value="department" className="flex items-center gap-2">
             <ClipboardList className="h-4 w-4" />
             My Department
@@ -232,6 +250,10 @@ const FinanceDashboard = () => {
           <TabsTrigger value="approvals" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
             Finance Officer Reviews
+          </TabsTrigger>
+          <TabsTrigger value="report" className="flex items-center gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Requisition Report
           </TabsTrigger>
         </TabsList>
 
@@ -333,6 +355,7 @@ const FinanceDashboard = () => {
                     <TableHead>Supplier</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Stuck At</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
@@ -340,23 +363,36 @@ const FinanceDashboard = () => {
                 <TableBody>
                   {departmentRequisitions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                         No requisitions yet
                       </TableCell>
                     </TableRow>
                   ) : (
                     departmentRequisitions.map((req) => (
                       <TableRow key={req.id}>
-                        <TableCell className="font-medium">{req.id}</TableCell>
+                        <TableCell className="font-medium">{req.id.slice(0, 8)}...</TableCell>
                         <TableCell>{req.title}</TableCell>
                         <TableCell>{req.chosenSupplier.name}</TableCell>
                         <TableCell>${req.amount.toFixed(2)}</TableCell>
                         <TableCell>
                           <StatusBadge status={req.status} />
                         </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              getStuckAt(req) === 'Completed' ? 'bg-green-100 text-green-800 border-green-300' :
+                              getStuckAt(req) === 'Rejected' ? 'bg-red-100 text-red-800 border-red-300' :
+                              getStuckAt(req) === 'On Hold' ? 'bg-orange-100 text-orange-800 border-orange-300' :
+                              'bg-yellow-100 text-yellow-800 border-yellow-300'
+                            }
+                          >
+                            {getStuckAt(req)}
+                          </Badge>
+                        </TableCell>
                         <TableCell>{new Date(req.submittedDate).toLocaleDateString()}</TableCell>
                         <TableCell>
-                          {req.status === 'rejected' ? (
+                          {req.status === 'rejected' && (
                             <Button 
                               variant="outline" 
                               size="sm"
@@ -365,8 +401,6 @@ const FinanceDashboard = () => {
                               <Edit className="mr-2 h-4 w-4" />
                               Edit & Resubmit
                             </Button>
-                          ) : (
-                            <Button variant="ghost" size="sm">View</Button>
                           )}
                         </TableCell>
                       </TableRow>
@@ -581,6 +615,132 @@ const FinanceDashboard = () => {
             )}
           </CardContent>
         </Card>
+        </TabsContent>
+
+        {/* Requisition Report Tab */}
+        <TabsContent value="report" className="space-y-6">
+          {/* Clickable Status Summary Cards */}
+          <Card>
+            <CardHeader>
+              <CardTitle>All Requisitions Summary</CardTitle>
+              <p className="text-sm text-muted-foreground">Click on a status to filter requisitions</p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                <button
+                  onClick={() => setStatusFilter('all')}
+                  className={`text-center p-4 rounded-lg border-2 transition-all hover:bg-muted ${statusFilter === 'all' ? 'border-primary bg-primary/10' : 'border-transparent'}`}
+                >
+                  <p className="text-sm text-muted-foreground">Total</p>
+                  <p className="text-3xl font-bold">{requisitions.length}</p>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('pending')}
+                  className={`text-center p-4 rounded-lg border-2 transition-all hover:bg-muted ${statusFilter === 'pending' ? 'border-yellow-500 bg-yellow-500/10' : 'border-transparent'}`}
+                >
+                  <p className="text-sm text-muted-foreground">Pending</p>
+                  <p className="text-3xl font-bold text-yellow-600">{allStatusCounts.pending}</p>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('approved')}
+                  className={`text-center p-4 rounded-lg border-2 transition-all hover:bg-muted ${statusFilter === 'approved' ? 'border-blue-500 bg-blue-500/10' : 'border-transparent'}`}
+                >
+                  <p className="text-sm text-muted-foreground">Approved</p>
+                  <p className="text-3xl font-bold text-blue-600">{allStatusCounts.approved}</p>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('approved_wait')}
+                  className={`text-center p-4 rounded-lg border-2 transition-all hover:bg-muted ${statusFilter === 'approved_wait' ? 'border-orange-500 bg-orange-500/10' : 'border-transparent'}`}
+                >
+                  <p className="text-sm text-muted-foreground">On Hold</p>
+                  <p className="text-3xl font-bold text-orange-600">{allStatusCounts.approved_wait}</p>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('completed')}
+                  className={`text-center p-4 rounded-lg border-2 transition-all hover:bg-muted ${statusFilter === 'completed' ? 'border-green-500 bg-green-500/10' : 'border-transparent'}`}
+                >
+                  <p className="text-sm text-muted-foreground">Completed</p>
+                  <p className="text-3xl font-bold text-green-600">{allStatusCounts.completed}</p>
+                </button>
+                <button
+                  onClick={() => setStatusFilter('rejected')}
+                  className={`text-center p-4 rounded-lg border-2 transition-all hover:bg-muted ${statusFilter === 'rejected' ? 'border-red-500 bg-red-500/10' : 'border-transparent'}`}
+                >
+                  <p className="text-sm text-muted-foreground">Rejected</p>
+                  <p className="text-3xl font-bold text-red-600">{allStatusCounts.rejected}</p>
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Requisitions Table with Stuck At column */}
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                {statusFilter === 'all' ? 'All Requisitions' : `${statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1).replace('_', ' ')} Requisitions`}
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Showing {filteredRequisitions.length} requisition{filteredRequisitions.length !== 1 ? 's' : ''}
+                {statusFilter !== 'all' && (
+                  <Button variant="link" size="sm" onClick={() => setStatusFilter('all')} className="ml-2 h-auto p-0">
+                    Clear filter
+                  </Button>
+                )}
+              </p>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>ID</TableHead>
+                    <TableHead>Title</TableHead>
+                    <TableHead>Created By</TableHead>
+                    <TableHead>Department</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Stuck At</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredRequisitions.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
+                        No requisitions found
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredRequisitions.map((req) => (
+                      <TableRow key={req.id}>
+                        <TableCell className="font-medium">{req.id.slice(0, 8)}...</TableCell>
+                        <TableCell>{req.title}</TableCell>
+                        <TableCell>{req.submittedBy}</TableCell>
+                        <TableCell>{req.department}</TableCell>
+                        <TableCell>${(req.amount || 0).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={req.status} />
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={
+                              getStuckAt(req) === 'Completed' ? 'bg-green-100 text-green-800 border-green-300' :
+                              getStuckAt(req) === 'Rejected' ? 'bg-red-100 text-red-800 border-red-300' :
+                              getStuckAt(req) === 'On Hold' ? 'bg-orange-100 text-orange-800 border-orange-300' :
+                              'bg-yellow-100 text-yellow-800 border-yellow-300'
+                            }
+                          >
+                            {getStuckAt(req)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(req.submittedDate).toLocaleDateString()}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
