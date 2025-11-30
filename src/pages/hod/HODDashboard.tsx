@@ -18,6 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
+import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
@@ -302,6 +303,7 @@ const HODDashboard = () => {
                     <TableHead>Supplier</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Stuck At</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Action</TableHead>
                   </TableRow>
@@ -309,23 +311,36 @@ const HODDashboard = () => {
                 <TableBody>
                   {departmentRequisitions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                         No requisitions yet
                       </TableCell>
                     </TableRow>
                   ) : (
                     departmentRequisitions.map((req) => (
                     <TableRow key={req.id}>
-                      <TableCell className="font-medium">{req.id}</TableCell>
+                      <TableCell className="font-medium">{req.id.slice(0, 8)}...</TableCell>
                       <TableCell>{req.title}</TableCell>
                       <TableCell>{req.chosenSupplier.name}</TableCell>
                       <TableCell>${req.amount.toFixed(2)}</TableCell>
                       <TableCell>
                         <StatusBadge status={req.status} />
                       </TableCell>
+                      <TableCell>
+                        <Badge 
+                          variant="outline" 
+                          className={
+                            getStuckAt(req) === 'Completed' ? 'bg-green-100 text-green-800 border-green-300' :
+                            getStuckAt(req) === 'Rejected' ? 'bg-red-100 text-red-800 border-red-300' :
+                            getStuckAt(req) === 'On Hold' ? 'bg-orange-100 text-orange-800 border-orange-300' :
+                            'bg-yellow-100 text-yellow-800 border-yellow-300'
+                          }
+                        >
+                          {getStuckAt(req)}
+                        </Badge>
+                      </TableCell>
                       <TableCell>{new Date(req.submittedDate).toLocaleDateString()}</TableCell>
                       <TableCell>
-                        {req.status === 'rejected' ? (
+                        {req.status === 'rejected' && (
                           <Button 
                             variant="outline" 
                             size="sm"
@@ -334,10 +349,6 @@ const HODDashboard = () => {
                             <Edit className="mr-2 h-4 w-4" />
                             Edit & Resubmit
                           </Button>
-                        ) : req.status === 'completed' ? (
-                          <span className="text-sm text-muted-foreground">Done</span>
-                        ) : (
-                          <Button variant="ghost" size="sm">View</Button>
                         )}
                       </TableCell>
                     </TableRow>

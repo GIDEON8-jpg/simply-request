@@ -6,7 +6,9 @@ import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Plus } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
+import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
+import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 
 const PreparerDashboard = () => {
   const navigate = useNavigate();
@@ -91,6 +93,12 @@ const PreparerDashboard = () => {
                         {format(new Date(req.submittedDate), 'MMM dd, yyyy')}
                       </span>
                       <StatusBadge status={req.status} />
+                      <Badge 
+                        variant="outline" 
+                        className={getStuckAtBadgeClass(getStuckAt(req))}
+                      >
+                        {getStuckAt(req)}
+                      </Badge>
                     </div>
                   </div>
                 ))}
