@@ -216,6 +216,12 @@ const NewRequisition = () => {
         chosenRequisitionUrl = publicUrl;
       }
 
+      // Determine if current user is HOD - if so, auto-approve and send to next approver
+      const isHOD = user?.role === 'hod';
+      const isTechnicalDirector = user?.role === 'technical_director';
+      const isCEO = user?.role === 'ceo';
+      const isHighLevelApprover = isHOD || isTechnicalDirector || isCEO;
+      
       // Create requisition in database
       const requisitionId = crypto.randomUUID();
       const { error: reqError } = await supabase
@@ -233,9 +239,13 @@ const NewRequisition = () => {
           deviation_reason: formData.deviationReason || null,
           budget_code: formData.budgetCode,
           description: formData.description,
-          status: 'pending',
+          // If HOD/TD/CEO creates requisition, auto-approve (skip their own approval step)
+          status: isHighLevelApprover ? 'approved' : 'pending',
           submitted_by: user?.id || '',
           tax_clearance_id: taxClearanceData?.id || null,
+          // If HOD creates, mark as HOD-approved
+          approved_by: isHighLevelApprover ? user?.id : null,
+          approved_date: isHighLevelApprover ? new Date().toISOString() : null,
         });
 
       if (reqError) {
@@ -287,15 +297,31 @@ const NewRequisition = () => {
           .eq('id', user?.id || '')
           .single();
 
-        await supabase.functions.invoke('notify-requisition-submitted', {
-          body: {
-            requisitionId,
-            requisitionTitle: formData.title,
-            department: formData.department,
-            submitterName: submitterProfile?.full_name || 'Unknown User',
-          },
-        });
-        console.log('Email notifications sent successfully');
+        if (isHighLevelApprover) {
+          // If HOD/TD/CEO creates requisition, notify next approver directly (skip HOD notification)
+          await supabase.functions.invoke('notify-hod-approval', {
+            body: {
+              requisitionId,
+              requisitionTitle: formData.title,
+              department: formData.department,
+              amount: parseFloat(formData.amount),
+              currency: formData.currency,
+              hodName: submitterProfile?.full_name || user?.fullName || 'HOD',
+            },
+          });
+          console.log('Notification sent to next approver (skipped HOD step)');
+        } else {
+          // Regular preparer - notify HOD
+          await supabase.functions.invoke('notify-requisition-submitted', {
+            body: {
+              requisitionId,
+              requisitionTitle: formData.title,
+              department: formData.department,
+              submitterName: submitterProfile?.full_name || 'Unknown User',
+            },
+          });
+          console.log('Email notifications sent successfully');
+        }
       } catch (emailError) {
         console.error('Error sending email notifications:', emailError);
         // Don't block submission if email fails
