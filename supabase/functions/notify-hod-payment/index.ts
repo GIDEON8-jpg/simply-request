@@ -13,6 +13,7 @@ interface NotificationRequest {
   title: string;
   amount: number;
   currency: string;
+  popFileName?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -25,7 +26,9 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { requisitionId, department, title, amount, currency }: NotificationRequest = await req.json();
+    const { requisitionId, department, title, amount, currency, popFileName }: NotificationRequest = await req.json();
+
+    console.log(`Processing payment notification for requisition ${requisitionId}`);
 
     // Get requisition details including submitter
     const { data: requisitionData, error: reqError } = await supabase
@@ -45,27 +48,47 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    // Get HOD and submitter emails
-    const { data: profilesData, error: profilesError } = await supabase
+    // Get the submitter's profile (the person who created the requisition)
+    const { data: submitterProfile, error: submitterError } = await supabase
       .from('profiles')
-      .select('id, email, full_name, department')
-      .or(`id.eq.${requisitionData.submitted_by},department.eq.${department}`);
+      .select('id, email, full_name')
+      .eq('id', requisitionData.submitted_by)
+      .single();
 
-    if (profilesError || !profilesData || profilesData.length === 0) {
-      console.error('Error fetching profiles:', profilesError);
-      return new Response(
-        JSON.stringify({ error: "Could not fetch recipient profiles" }),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
-      );
+    if (submitterError) {
+      console.error('Error fetching submitter profile:', submitterError);
     }
 
-    const submitter = profilesData.find(p => p.id === requisitionData.submitted_by);
-    const hod = profilesData.find(p => p.department === department && p.id !== requisitionData.submitted_by);
+    // Get HOD for the department
+    const { data: hodRoles, error: hodError } = await supabase
+      .from('user_roles')
+      .select('user_id, profiles!inner(email, full_name, department)')
+      .eq('role', 'hod');
 
-    if (!submitter && !hod) {
+    if (hodError) {
+      console.error('Error fetching HOD roles:', hodError);
+    }
+
+    // Find HOD matching the department
+    const hodProfile = hodRoles?.find((r: any) => r.profiles?.department === department)?.profiles as any;
+
+    const resendApiKey = Deno.env.get("RESEND_API_KEY");
+    const recipients: string[] = [];
+    const recipientNames: string[] = [];
+    
+    // Add submitter to recipients
+    if (submitterProfile?.email) {
+      recipients.push(submitterProfile.email);
+      recipientNames.push(submitterProfile.full_name || 'Requisition Owner');
+    }
+    
+    // Add HOD to recipients if different from submitter
+    if (hodProfile?.email && hodProfile.email !== submitterProfile?.email) {
+      recipients.push(hodProfile.email);
+      recipientNames.push(hodProfile.full_name || 'HOD');
+    }
+
+    if (recipients.length === 0) {
       console.error('No recipients found');
       return new Response(
         JSON.stringify({ error: "No recipients found" }),
@@ -76,14 +99,10 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    const resendApiKey = Deno.env.get("RESEND_API_KEY");
-    const recipients = [];
-    
-    if (submitter) recipients.push(submitter.email);
-    if (hod) recipients.push(hod.email);
-
     console.log(`Payment completed for requisition ${requisitionId}`);
     console.log(`Sending notifications to: ${recipients.join(', ')}`);
+
+    const appUrl = 'https://ca65c39b-c714-453d-accf-abcbcda568ac.lovableproject.com';
 
     // Send email notification using Resend
     try {
@@ -96,18 +115,34 @@ const handler = async (req: Request): Promise<Response> => {
         body: JSON.stringify({
           from: "onboarding@resend.dev",
           to: recipients,
-          subject: `Payment Completed: ${title}`,
+          subject: `✅ Payment Completed: ${title}`,
           html: `
-            <h2>Payment Completed</h2>
-            <p>The payment for the following requisition has been processed:</p>
-            <ul>
-              <li><strong>Title:</strong> ${title}</li>
-              <li><strong>Department:</strong> ${department}</li>
-              <li><strong>Amount:</strong> ${currency} ${amount}</li>
-              <li><strong>Requisition ID:</strong> ${requisitionId}</li>
-            </ul>
-            <p>The proof of payment has been uploaded and the requisition is now complete.</p>
-            <p>Please log in to the system to view the details.</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #16a34a;">Payment Completed</h1>
+              <p>Dear Recipient,</p>
+              
+              <p>We are pleased to inform you that the payment for the following requisition has been successfully processed:</p>
+              
+              <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a;">
+                <p><strong>Title:</strong> ${title}</p>
+                <p><strong>Department:</strong> ${department}</p>
+                <p><strong>Amount:</strong> ${currency} ${amount.toFixed(2)}</p>
+                <p><strong>Requisition ID:</strong> ${requisitionId}</p>
+                ${popFileName ? `<p><strong>Proof of Payment:</strong> ${popFileName}</p>` : ''}
+              </div>
+              
+              <p>The proof of payment has been uploaded and the requisition is now <strong style="color: #16a34a;">COMPLETED</strong>.</p>
+              
+              <a href="${appUrl}" 
+                 style="display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; 
+                        text-decoration: none; border-radius: 6px; margin: 20px 0;">
+                View Requisition Details
+              </a>
+              
+              <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+                This is an automated notification from the ICAZ Procurement System.
+              </p>
+            </div>
           `,
         }),
       });
@@ -127,6 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
           message: `Notification sent to ${recipients.length} recipient(s)`,
           requisitionId,
           recipients: recipients,
+          recipientNames: recipientNames,
         }),
         {
           status: 200,

@@ -77,11 +77,12 @@ const AccountantDashboard = () => {
 
     await updateRequisition(reqId, updates);
 
-    // Send email to HOD and log payment if approved
+    // Send email to HOD and submitter with proof of payment
     if (action === 'approve') {
       const req = requisitions.find(r => r.id === reqId);
       if (req) {
         try {
+          const popFileName = uploadedPOP[reqId]?.[0]?.name || 'Proof of Payment';
           await supabase.functions.invoke('notify-hod-payment', {
             body: { 
               requisitionId: reqId,
@@ -89,11 +90,11 @@ const AccountantDashboard = () => {
               title: req.title,
               amount: req.amount,
               currency: req.currency,
+              popFileName: popFileName,
             }
           });
 
           // Log payment in payments table for the schedule report
-          const popFileName = uploadedPOP[reqId]?.[0]?.name || 'N/A';
           await supabase.from('payments').insert({
             requisition_id: reqId,
             pop_file_name: popFileName,
@@ -179,8 +180,9 @@ const AccountantDashboard = () => {
       return;
     }
 
-    // Send email notification to HOD and submitter
+    // Send email notification to HOD and submitter with proof of payment
     try {
+      const popFileName = uploadedPOP[reqId]?.[0]?.name || 'Proof of Payment';
       const { error: notifyError } = await supabase.functions.invoke('notify-hod-payment', {
         body: {
           requisitionId: reqId,
@@ -188,6 +190,7 @@ const AccountantDashboard = () => {
           title: requisition.title,
           amount: requisition.amount,
           currency: requisition.currency,
+          popFileName: popFileName,
         }
       });
 
