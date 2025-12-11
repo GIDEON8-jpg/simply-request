@@ -31,7 +31,7 @@ const TechnicalDirectorDashboard = () => {
     return r.status === 'approved' && usdAmount >= 100 && usdAmount <= 500 && r.approvedById !== user?.id;
   });
 
-  const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
+  const handleAction = async (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
       toast({
         title: "Comment Required",
@@ -50,6 +50,8 @@ const TechnicalDirectorDashboard = () => {
       return;
     }
 
+    const requisition = pendingRequisitions.find(r => r.id === reqId);
+
     const updates: Partial<typeof requisitions[0]> = {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
@@ -59,6 +61,26 @@ const TechnicalDirectorDashboard = () => {
     };
 
     updateRequisition(reqId, updates);
+
+    // Send notification to accountant when approved
+    if (action === 'approve' && requisition) {
+      try {
+        await supabase.functions.invoke('notify-accountant', {
+          body: {
+            requisitionId: reqId,
+            requisitionTitle: requisition.title,
+            department: requisition.department,
+            amount: requisition.amount,
+            currency: requisition.currency,
+            approverName: user?.fullName || 'Technical Director',
+            approverRole: 'Technical Director',
+          },
+        });
+        console.log('Accountant notification sent successfully');
+      } catch (error) {
+        console.error('Failed to send accountant notification:', error);
+      }
+    }
 
     toast({
       title: action === 'approve' ? "Requisition Approved" : action === 'reject' ? "Requisition Rejected" : "Approved with Wait Status",
