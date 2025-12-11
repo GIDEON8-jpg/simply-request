@@ -19,6 +19,7 @@ import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
 import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
+import { logAuditEvent } from '@/lib/audit-utils';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
@@ -76,6 +77,7 @@ const HODDashboard = () => {
 
     setActionedIds(prev => new Set(prev).add(reqId));
 
+    const requisition = requisitions.find(r => r.id === reqId);
     const updates: Partial<Requisition> = {
       status: action === 'approve' ? 'approved' : 'rejected',
       approverComments: action === 'reject' ? comments[reqId] : undefined,
@@ -87,9 +89,17 @@ const HODDashboard = () => {
     try {
       await updateRequisition(reqId, updates);
       
+      // Log audit event
+      await logAuditEvent({
+        user_id: user?.id || '',
+        user_name: user?.fullName || user?.email || 'Unknown',
+        action_type: action === 'approve' ? 'approve' : 'reject',
+        requisition_id: reqId,
+        details: `HOD ${action === 'approve' ? 'approved' : 'rejected'} requisition "${requisition?.title}" - Amount: $${requisition?.amount}`,
+      });
+      
       // If approved, send notification to next approver
       if (action === 'approve') {
-        const requisition = requisitions.find(r => r.id === reqId);
         if (requisition) {
           try {
             const { supabase } = await import('@/integrations/supabase/client');

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, Mail, FileText, Save, RotateCcw, Upload, Users } from 'lucide-react';
+import { Download, Mail, FileText, Save, RotateCcw, Upload, Users, History } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,17 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Department, RequisitionStatus } from '@/types/requisition';
 import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
+import { supabase } from '@/integrations/supabase/client';
+
+interface AuditLog {
+  id: string;
+  user_id: string;
+  user_name: string;
+  action_type: string;
+  requisition_id: string | null;
+  details: string | null;
+  created_at: string;
+}
 
 const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Technical', 'HR', 'Finance', 'CEO', 'Registry'];
 
@@ -23,6 +34,8 @@ const AdminDashboard = () => {
   const { requisitions, budgets, saveBudgetsToBackend } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [statusFilter, setStatusFilter] = useState<RequisitionStatus | 'all'>('all');
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
+  const [auditLoading, setAuditLoading] = useState(true);
   const [localBudgets, setLocalBudgets] = useState<Record<Department, number>>({
     'Education': 10000,
     'IT': 20000,
@@ -33,6 +46,43 @@ const AdminDashboard = () => {
     'CEO': 100000,
     'Registry': 10000,
   });
+
+  // Fetch audit logs
+  useEffect(() => {
+    const fetchAuditLogs = async () => {
+      setAuditLoading(true);
+      const { data, error } = await supabase
+        .from('audit_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (error) {
+        console.error('Error fetching audit logs:', error);
+      } else {
+        setAuditLogs(data || []);
+      }
+      setAuditLoading(false);
+    };
+
+    fetchAuditLogs();
+
+    // Subscribe to realtime updates
+    const channel = supabase
+      .channel('audit-logs-changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'audit_logs' },
+        (payload) => {
+          setAuditLogs(prev => [payload.new as AuditLog, ...prev].slice(0, 100));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   // Sync with context budgets on mount
   useEffect(() => {
@@ -436,6 +486,70 @@ ${departments.map(dept => {
                 )}
               </TableBody>
             </Table>
+          </CardContent>
+        </Card>
+
+        {/* Audit Trail Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-5 w-5" />
+              Audit Trail
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Track user logins, approvals, and actions</p>
+          </CardHeader>
+          <CardContent>
+            {auditLoading ? (
+              <p className="text-center text-muted-foreground py-8">Loading audit logs...</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Timestamp</TableHead>
+                    <TableHead>User</TableHead>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Details</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditLogs.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                        No audit logs yet
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    auditLogs.map((log) => (
+                      <TableRow key={log.id}>
+                        <TableCell className="text-sm">
+                          {new Date(log.created_at).toLocaleString()}
+                        </TableCell>
+                        <TableCell className="font-medium">{log.user_name}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={
+                              log.action_type === 'login' ? 'bg-blue-100 text-blue-800 border-blue-300' :
+                              log.action_type === 'logout' ? 'bg-gray-100 text-gray-800 border-gray-300' :
+                              log.action_type === 'approve' ? 'bg-green-100 text-green-800 border-green-300' :
+                              log.action_type === 'reject' ? 'bg-red-100 text-red-800 border-red-300' :
+                              log.action_type === 'on_hold' ? 'bg-orange-100 text-orange-800 border-orange-300' :
+                              log.action_type === 'payment' ? 'bg-purple-100 text-purple-800 border-purple-300' :
+                              'bg-yellow-100 text-yellow-800 border-yellow-300'
+                            }
+                          >
+                            {log.action_type.replace('_', ' ').toUpperCase()}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground max-w-md truncate">
+                          {log.details || '-'}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

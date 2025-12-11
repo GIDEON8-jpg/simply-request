@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
+import { logAuditEvent } from '@/lib/audit-utils';
 
 const CEODashboard = () => {
   const { toast } = useToast();
