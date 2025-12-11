@@ -83,7 +83,7 @@ const FinanceDashboard = () => {
     }
   }, [remainingBudget, toast]);
 
-  const handleAction = (reqId: string, action: 'approve' | 'reject' | 'wait') => {
+  const handleAction = async (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
       toast({
         title: "Comment Required",
@@ -102,18 +102,41 @@ const FinanceDashboard = () => {
       return;
     }
 
+    const requisition = pendingRequisitions.find(r => r.id === reqId);
+
     const updates: Partial<typeof requisitions[0]> = {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: action !== 'reject' ? 'Finance Manager' : undefined,
+      approvedById: action !== 'reject' ? user?.id : undefined,
       approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
     };
 
     updateRequisition(reqId, updates);
 
+    // Send notification to accountant when approved
+    if (action === 'approve' && requisition) {
+      try {
+        await supabase.functions.invoke('notify-accountant', {
+          body: {
+            requisitionId: reqId,
+            requisitionTitle: requisition.title,
+            department: requisition.department,
+            amount: requisition.amount,
+            currency: requisition.currency,
+            approverName: user?.fullName || 'Finance Manager',
+            approverRole: 'Finance Manager',
+          },
+        });
+        console.log('Accountant notification sent successfully');
+      } catch (error) {
+        console.error('Failed to send accountant notification:', error);
+      }
+    }
+
     toast({
       title: action === 'approve' ? "Requisition Approved" : action === 'reject' ? "Requisition Rejected" : "Approved with Wait Status",
-      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to Admin' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
+      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to Accountant' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
     });
 
     setActionedIds(prev => new Set(prev).add(reqId));
