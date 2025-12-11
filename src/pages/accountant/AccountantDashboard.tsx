@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
+import { logAuditEvent } from '@/lib/audit-utils';
 
 const AccountantDashboard = () => {
   const { toast } = useToast();

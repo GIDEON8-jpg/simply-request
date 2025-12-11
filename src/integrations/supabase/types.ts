@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: string | null
+          id: string
+          ip_address: string | null
+          requisition_id: string | null
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          ip_address?: string | null
+          requisition_id?: string | null
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          ip_address?: string | null
+          requisition_id?: string | null
+          user_id?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_requisition_id_fkey"
+            columns: ["requisition_id"]
+            isOneToOne: false
+            referencedRelation: "requisitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       department_budgets: {
         Row: {
           created_at: string | null

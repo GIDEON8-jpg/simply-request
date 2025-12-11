@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
+import { logAuditEvent } from '@/lib/audit-utils';
 
 export type UserRole = 'preparer' | 'hod' | 'admin' | 'finance_manager' | 'hr' | 'accountant' | 'ceo' | 'technical_director';
 
@@ -116,7 +117,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) throw error;
       
-      // Profile will be loaded automatically by onAuthStateChange
+      // Log login event - profile will be loaded by onAuthStateChange
+      if (data.user) {
+        setTimeout(async () => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('full_name')
+            .eq('id', data.user.id)
+            .single();
+          
+          await logAuditEvent({
+            user_id: data.user.id,
+            user_name: profile?.full_name || data.user.email || 'Unknown',
+            action_type: 'login',
+            details: `User logged in at ${new Date().toISOString()}`,
+          });
+        }, 100);
+      }
+      
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -125,6 +143,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    // Log logout event before signing out
+    if (user) {
+      await logAuditEvent({
+        user_id: user.id,
+        user_name: user.fullName || user.email,
+        action_type: 'logout',
+        details: `User logged out at ${new Date().toISOString()}`,
+      });
+    }
+    
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

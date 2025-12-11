@@ -532,7 +532,10 @@ const NewRequisition = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="chosenRequisition">Upload Chosen Requisition *</Label>
+                  <div>
+                    <Label htmlFor="chosenRequisition">Upload Chosen Requisition (Proforma Invoice) *</Label>
+                    <p className="text-xs text-muted-foreground mt-0.5">The selected quotation/proforma invoice for this requisition</p>
+                  </div>
                   <input
                     type="file"
                     id="chosenRequisition"
@@ -549,7 +552,7 @@ const NewRequisition = () => {
                     <p className="mt-2 text-sm text-gray-600">
                       {chosenRequisitionFile ? `✓ ${chosenRequisitionFile.name}` : 'Click to upload chosen requisition'}
                     </p>
-                    <p className="text-xs text-gray-500">PDF, DOC (max 5MB)</p>
+                    <p className="text-xs text-gray-500">PDF, DOC (max 3MB)</p>
                   </label>
                 </div>
               </div>
@@ -639,7 +642,12 @@ const NewRequisition = () => {
               )}
 
               <div className="space-y-4 border-t pt-4">
-                <h3 className="text-lg font-semibold">Supporting Documents (Multiple files allowed)</h3>
+                <div>
+                  <h3 className="text-lg font-semibold">Supporting Documents (Multiple files allowed)</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upload either 2 Quotations and/or Deviation Form
+                  </p>
+                </div>
                 
                 <div className="space-y-2">
                   <input
@@ -656,7 +664,7 @@ const NewRequisition = () => {
                   >
                     <Upload className="h-8 w-8 text-gray-400" />
                     <p className="mt-2 text-sm text-gray-600">Click to upload supporting documents</p>
-                    <p className="text-xs text-gray-500">PDF, DOC, XLS (max 10MB each, multiple files allowed)</p>
+                    <p className="text-xs text-gray-500">PDF, DOC, XLS (max 3MB each, multiple files allowed)</p>
                   </label>
 
                   {supportingDocuments.length > 0 && (

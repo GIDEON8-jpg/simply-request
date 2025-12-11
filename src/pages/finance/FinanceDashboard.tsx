@@ -21,6 +21,7 @@ import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
 import { RequisitionStatus } from '@/types/requisition';
 import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
+import { logAuditEvent } from '@/lib/audit-utils';
 
 const FinanceDashboard = () => {
   const navigate = useNavigate();
@@ -113,6 +114,15 @@ const FinanceDashboard = () => {
     };
 
     updateRequisition(reqId, updates);
+
+    // Log audit event
+    await logAuditEvent({
+      user_id: user?.id || '',
+      user_name: user?.fullName || user?.email || 'Unknown',
+      action_type: action === 'approve' ? 'approve' : action === 'reject' ? 'reject' : 'on_hold',
+      requisition_id: reqId,
+      details: `Finance Manager ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'put on hold'} requisition "${requisition?.title}" - Amount: $${requisition?.amount}`,
+    });
 
     // Send notification to accountant when approved
     if (action === 'approve' && requisition) {
