@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, Mail, FileText, Save, RotateCcw, Upload, Users, History } from 'lucide-react';
+import { Download, Mail, FileText, Save, RotateCcw, Upload, Users, History, HardDrive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Department, RequisitionStatus } from '@/types/requisition';
 import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 import { supabase } from '@/integrations/supabase/client';
+import StorageManagement from '@/components/admin/StorageManagement';
 
 interface AuditLog {
   id: string;
@@ -550,6 +551,20 @@ ${departments.map(dept => {
                 </TableBody>
               </Table>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Storage Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <HardDrive className="h-5 w-5" />
+              Storage Management
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">Manage requisition storage and cleanup old data</p>
+          </CardHeader>
+          <CardContent>
+            <StorageManagement />
           </CardContent>
         </Card>
       </div>

@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.notify-accountant]
 verify_jwt = false
+
+[functions.cleanup-requisitions]
+verify_jwt = true
