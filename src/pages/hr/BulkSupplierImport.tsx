@@ -20,7 +20,8 @@ export const BulkSupplierImport = () => {
 
   const parseCSV = (text: string) => {
     const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    // Normalize headers: lowercase and replace spaces with underscores
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
     
     return lines.slice(1).filter(line => line.trim()).map(line => {
       // Handle CSV with quoted fields containing commas
