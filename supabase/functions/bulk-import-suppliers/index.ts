@@ -60,16 +60,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Check if user has finance_manager or CEO role
+    // Check if user has finance_manager, CEO, or HR role
     const { data: roles } = await supabaseAdmin
       .from('user_roles')
       .select('role')
       .eq('user_id', user.id);
     
-    const hasPermission = roles?.some(r => r.role === 'finance_manager' || r.role === 'ceo');
+    const hasPermission = roles?.some(r => r.role === 'finance_manager' || r.role === 'ceo' || r.role === 'hr');
     if (!hasPermission) {
       return new Response(
-        JSON.stringify({ error: 'Forbidden: Only Finance Manager or CEO can bulk import suppliers' }),
+        JSON.stringify({ error: 'Forbidden: Only Finance Manager, CEO, or HR can bulk import suppliers' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
