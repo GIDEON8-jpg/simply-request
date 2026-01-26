@@ -20,16 +20,33 @@ export const BulkSupplierImport = () => {
 
   const parseCSV = (text: string) => {
     const lines = text.trim().split('\n');
-    const headers = lines[0].split(',').map(h => h.trim());
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
     
-    return lines.slice(1).map(line => {
-      const values = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''));
+    return lines.slice(1).filter(line => line.trim()).map(line => {
+      // Handle CSV with quoted fields containing commas
+      const values: string[] = [];
+      let current = '';
+      let inQuotes = false;
+      
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        if (char === '"') {
+          inQuotes = !inQuotes;
+        } else if (char === ',' && !inQuotes) {
+          values.push(current.trim().replace(/^"|"$/g, ''));
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+      values.push(current.trim().replace(/^"|"$/g, ''));
+      
       const supplier: any = {};
       headers.forEach((header, index) => {
         supplier[header] = values[index] || '';
       });
       return supplier;
-    });
+    }).filter(s => s.name && s.name.trim());
   };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
