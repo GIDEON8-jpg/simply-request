@@ -15,7 +15,7 @@ import { useSuppliers } from '@/contexts/SuppliersContext';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import BudgetWarning from '@/components/BudgetWarning';
-
+import SupplierPicker from '@/components/SupplierPicker';
 const NewRequisition = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -476,53 +476,18 @@ const NewRequisition = () => {
                 <h3 className="text-lg font-semibold">Supplier & Documents</h3>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="departmentForSupplier">Select Department for Suppliers *</Label>
-                  <Select
-                    value={formData.selectedDepartmentForSupplier}
-                    onValueChange={(value) => {
-                      setFormData({ 
-                        ...formData, 
-                        selectedDepartmentForSupplier: value as Department,
-                        chosenSupplier: '' // Reset supplier when department changes
+                  <Label>Chosen Supplier *</Label>
+                  <SupplierPicker
+                    suppliers={suppliers}
+                    selectedSupplierId={formData.chosenSupplier}
+                    onSelectSupplier={(supplierId, department) => {
+                      setFormData({
+                        ...formData,
+                        chosenSupplier: supplierId,
+                        selectedDepartmentForSupplier: department,
                       });
                     }}
-                    required
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder="Select department to view suppliers" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      <SelectItem value="Education">Education</SelectItem>
-                      <SelectItem value="IT">IT</SelectItem>
-                      <SelectItem value="Marketing and PR">Marketing and PR</SelectItem>
-                      <SelectItem value="Technical">Technical</SelectItem>
-                      <SelectItem value="HR">HR</SelectItem>
-                      <SelectItem value="Finance">Finance</SelectItem>
-                      <SelectItem value="CEO">CEO</SelectItem>
-                      <SelectItem value="Registry">Registry</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="chosenSupplier">Chosen Supplier *</Label>
-                  <Select
-                    value={formData.chosenSupplier}
-                    onValueChange={(value) => setFormData({ ...formData, chosenSupplier: value })}
-                    required
-                    disabled={!formData.selectedDepartmentForSupplier}
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue placeholder={formData.selectedDepartmentForSupplier ? "Select supplier" : "First select a department"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover z-50">
-                      {suppliers.filter(s => s.status === 'active' && s.department === formData.selectedDepartmentForSupplier).map(supplier => (
-                        <SelectItem key={supplier.id} value={supplier.id}>
-                          {supplier.name} - {supplier.icazNumber}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                   {taxClearance && (
                     <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 p-2 rounded">
                       <CheckCircle className="h-4 w-4" />
