@@ -7,19 +7,31 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Building2, CheckCircle2 } from 'lucide-react';
-import { Supplier, Department } from '@/types/requisition';
+import { Supplier, SupplierCategory } from '@/types/requisition';
+
+const SUPPLIER_CATEGORIES: SupplierCategory[] = [
+  'Advertising and Promo',
+  'Building, electricians etc',
+  'Car hire & Air travel',
+  'Catering, Study and Graduation',
+  'Fumigators, Cleaners',
+  'Furniture & Repairs',
+  'HR & Legal',
+  'Hotels, Travel and Events',
+  'Insurance',
+  'Office Consumables',
+  'Stationery & Printing',
+  'Tech Services',
+  'Telecomms',
+  'Uniforms',
+];
 
 interface SupplierPickerProps {
   suppliers: Supplier[];
   selectedSupplierId: string;
-  onSelectSupplier: (supplierId: string, department: Department) => void;
+  onSelectSupplier: (supplierId: string) => void;
   disabled?: boolean;
 }
-
-const DEPARTMENTS: Department[] = [
-  'Education', 'IT', 'Marketing and PR', 'Technical', 
-  'HR', 'Finance', 'CEO', 'Registry'
-];
 
 const SupplierPicker = ({ 
   suppliers, 
@@ -29,7 +41,7 @@ const SupplierPicker = ({
 }: SupplierPickerProps) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
 
   const selectedSupplier = suppliers.find(s => s.id === selectedSupplierId);
 
@@ -37,41 +49,39 @@ const SupplierPicker = ({
     return suppliers
       .filter(s => s.status === 'active')
       .filter(s => {
-        // Filter by department if selected
-        if (departmentFilter !== 'all') {
-          return s.department === departmentFilter;
+        if (categoryFilter !== 'all') {
+          return s.category === categoryFilter;
         }
         return true;
       })
       .filter(s => {
-        // Filter by search query
         if (!searchQuery.trim()) return true;
         const query = searchQuery.toLowerCase();
         return (
           s.name.toLowerCase().includes(query) ||
           s.icazNumber?.toLowerCase().includes(query) ||
           s.contactInfo?.toLowerCase().includes(query) ||
-          s.department?.toLowerCase().includes(query)
+          s.category?.toLowerCase().includes(query)
         );
       })
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [suppliers, searchQuery, departmentFilter]);
+  }, [suppliers, searchQuery, categoryFilter]);
 
   const handleSelectSupplier = (supplier: Supplier) => {
-    onSelectSupplier(supplier.id, supplier.department);
+    onSelectSupplier(supplier.id);
     setOpen(false);
     setSearchQuery('');
-    setDepartmentFilter('all');
+    setCategoryFilter('all');
   };
 
-  const suppliersByDepartment = useMemo(() => {
+  const suppliersByCategory = useMemo(() => {
     const grouped: Record<string, Supplier[]> = {};
     filteredSuppliers.forEach(supplier => {
-      const dept = supplier.department || 'Other';
-      if (!grouped[dept]) {
-        grouped[dept] = [];
+      const cat = supplier.category || 'Other';
+      if (!grouped[cat]) {
+        grouped[cat] = [];
       }
-      grouped[dept].push(supplier);
+      grouped[cat].push(supplier);
     });
     return grouped;
   }, [filteredSuppliers]);
@@ -89,7 +99,7 @@ const SupplierPicker = ({
               <span className="font-medium">{selectedSupplier.name}</span>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Badge variant="secondary" className="text-xs">
-                  {selectedSupplier.department}
+                  {selectedSupplier.category}
                 </Badge>
                 <span>{selectedSupplier.icazNumber}</span>
               </div>
@@ -119,15 +129,15 @@ const SupplierPicker = ({
               autoFocus
             />
           </div>
-          <div className="w-full sm:w-48">
-            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+          <div className="w-full sm:w-56">
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="bg-background">
-                <SelectValue placeholder="Filter by department" />
+                <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent className="bg-popover z-[100]">
-                <SelectItem value="all">All Departments</SelectItem>
-                {DEPARTMENTS.map(dept => (
-                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
+                {SUPPLIER_CATEGORIES.map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -137,7 +147,7 @@ const SupplierPicker = ({
         {/* Results Count */}
         <div className="text-sm text-muted-foreground py-2">
           {filteredSuppliers.length} supplier{filteredSuppliers.length !== 1 ? 's' : ''} found
-          {departmentFilter !== 'all' && ` in ${departmentFilter}`}
+          {categoryFilter !== 'all' && ` in ${categoryFilter}`}
           {searchQuery && ` matching "${searchQuery}"`}
         </div>
 
@@ -151,13 +161,13 @@ const SupplierPicker = ({
             </div>
           ) : (
             <div className="space-y-4 pb-4">
-              {Object.entries(suppliersByDepartment).map(([dept, deptSuppliers]) => (
-                <div key={dept}>
+              {Object.entries(suppliersByCategory).map(([cat, catSuppliers]) => (
+                <div key={cat}>
                   <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 block">
-                    {dept} ({deptSuppliers.length})
+                    {cat} ({catSuppliers.length})
                   </Label>
                   <div className="space-y-1">
-                    {deptSuppliers.map(supplier => (
+                    {catSuppliers.map(supplier => (
                       <button
                         key={supplier.id}
                         onClick={() => handleSelectSupplier(supplier)}

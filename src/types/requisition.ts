@@ -3,6 +3,21 @@ export type RequisitionType = 'standard' | 'deviation';
 export type Department = 'Education' | 'IT' | 'Marketing and PR' | 'Technical' | 'HR' | 'Finance' | 'CEO' | 'Registry';
 export type AppRole = 'preparer' | 'hod' | 'finance_manager' | 'technical_director' | 'accountant' | 'ceo' | 'admin' | 'hr';
 export type Currency = 'USD' | 'ZWG' | 'GBP' | 'EUR';
+export type SupplierCategory = 
+  | 'Advertising and Promo'
+  | 'Building, electricians etc'
+  | 'Car hire & Air travel'
+  | 'Catering, Study and Graduation'
+  | 'Fumigators, Cleaners'
+  | 'Furniture & Repairs'
+  | 'HR & Legal'
+  | 'Hotels, Travel and Events'
+  | 'Insurance'
+  | 'Office Consumables'
+  | 'Stationery & Printing'
+  | 'Tech Services'
+  | 'Telecomms'
+  | 'Uniforms';
 
 export interface Supplier {
   id: string;
@@ -10,7 +25,7 @@ export interface Supplier {
   icazNumber: string;
   contactInfo: string;
   status: 'active' | 'inactive';
-  department: Department;
+  category: SupplierCategory;
 }
 
 export interface TaxClearance {

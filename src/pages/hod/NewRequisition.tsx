@@ -30,7 +30,6 @@ const NewRequisition = () => {
   const [formData, setFormData] = useState({
     title: '',
     department: '' as Department,
-    selectedDepartmentForSupplier: '' as Department,
     amount: '',
     currency: 'USD' as Currency,
     usdConvertible: '',
@@ -51,7 +50,6 @@ const NewRequisition = () => {
       setFormData({
         title: editRequisition.title,
         department: editRequisition.department,
-        selectedDepartmentForSupplier: editRequisition.chosenSupplier?.department || '' as Department,
         amount: editRequisition.amount.toString(),
         currency: editRequisition.currency || 'USD',
         usdConvertible: editRequisition.usdConvertible?.toString() || '',
@@ -480,11 +478,10 @@ const NewRequisition = () => {
                   <SupplierPicker
                     suppliers={suppliers}
                     selectedSupplierId={formData.chosenSupplier}
-                    onSelectSupplier={(supplierId, department) => {
+                    onSelectSupplier={(supplierId) => {
                       setFormData({
                         ...formData,
                         chosenSupplier: supplierId,
-                        selectedDepartmentForSupplier: department,
                       });
                     }}
                   />

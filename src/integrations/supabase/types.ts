@@ -290,27 +290,27 @@ export type Database = {
       }
       suppliers: {
         Row: {
+          category: Database["public"]["Enums"]["supplier_category"]
           contact_info: string
           created_at: string | null
-          department: Database["public"]["Enums"]["department_type"]
           icaz_number: string
           id: string
           name: string
           status: Database["public"]["Enums"]["supplier_status"]
         }
         Insert: {
+          category?: Database["public"]["Enums"]["supplier_category"]
           contact_info: string
           created_at?: string | null
-          department?: Database["public"]["Enums"]["department_type"]
           icaz_number: string
           id?: string
           name: string
           status?: Database["public"]["Enums"]["supplier_status"]
         }
         Update: {
+          category?: Database["public"]["Enums"]["supplier_category"]
           contact_info?: string
           created_at?: string | null
-          department?: Database["public"]["Enums"]["department_type"]
           icaz_number?: string
           id?: string
           name?: string
@@ -433,6 +433,21 @@ export type Database = {
         | "completed"
         | "rejected"
       requisition_type: "standard" | "deviation"
+      supplier_category:
+        | "Advertising and Promo"
+        | "Building, electricians etc"
+        | "Car hire & Air travel"
+        | "Catering, Study and Graduation"
+        | "Fumigators, Cleaners"
+        | "Furniture & Repairs"
+        | "HR & Legal"
+        | "Hotels, Travel and Events"
+        | "Insurance"
+        | "Office Consumables"
+        | "Stationery & Printing"
+        | "Tech Services"
+        | "Telecomms"
+        | "Uniforms"
       supplier_status: "active" | "inactive"
     }
     CompositeTypes: {
@@ -591,6 +606,22 @@ export const Constants = {
         "rejected",
       ],
       requisition_type: ["standard", "deviation"],
+      supplier_category: [
+        "Advertising and Promo",
+        "Building, electricians etc",
+        "Car hire & Air travel",
+        "Catering, Study and Graduation",
+        "Fumigators, Cleaners",
+        "Furniture & Repairs",
+        "HR & Legal",
+        "Hotels, Travel and Events",
+        "Insurance",
+        "Office Consumables",
+        "Stationery & Printing",
+        "Tech Services",
+        "Telecomms",
+        "Uniforms",
+      ],
       supplier_status: ["active", "inactive"],
     },
   },
