@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Supplier, TaxClearance, Department } from '@/types/requisition';
+import { Supplier, TaxClearance, SupplierCategory } from '@/types/requisition';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -35,7 +35,7 @@ export const SuppliersProvider = ({ children }: { children: ReactNode }) => {
         icazNumber: s.icaz_number,
         contactInfo: s.contact_info,
         status: s.status as 'active' | 'inactive',
-        department: s.department as Department,
+        category: (s as any).category as SupplierCategory,
       }));
 
       setSuppliers(mappedSuppliers);
@@ -122,8 +122,8 @@ export const SuppliersProvider = ({ children }: { children: ReactNode }) => {
           icaz_number: supplier.icazNumber,
           contact_info: supplier.contactInfo,
           status: supplier.status,
-          department: supplier.department,
-        }]);
+          category: supplier.category,
+        } as any]);
 
       if (error) throw error;
 

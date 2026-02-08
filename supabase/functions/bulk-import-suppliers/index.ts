@@ -19,6 +19,7 @@ interface SupplierImportRow {
   icaz_number: string;
   contact_info: string;
   status: string;
+  category: string;
 }
 
 Deno.serve(async (req) => {
@@ -124,12 +125,17 @@ Deno.serve(async (req) => {
         const sanitizedIcazNumber = sanitizeText(supplier.icaz_number || '');
         const sanitizedContactInfo = sanitizeText(supplier.contact_info);
 
-        const supplierData = {
+        const supplierData: Record<string, string> = {
           name: sanitizedName,
           icaz_number: sanitizedIcazNumber,
           contact_info: sanitizedContactInfo,
           status: supplier.status.toLowerCase() === 'active' ? 'active' : 'inactive',
         };
+
+        // Add category if provided
+        if (supplier.category) {
+          supplierData.category = sanitizeText(supplier.category);
+        }
 
         const { error } = await supabaseAdmin
           .from('suppliers')
