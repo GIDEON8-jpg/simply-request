@@ -6,9 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Upload, Trash2, Download, RefreshCw, Eye } from 'lucide-react';
+import { Plus, Upload, Trash2, Download, RefreshCw, Eye, CheckSquare } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useSuppliers } from '@/contexts/SuppliersContext';
 import { BulkSupplierImport } from './BulkSupplierImport';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,6 +31,9 @@ const HRDashboard = () => {
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [previewFileName, setPreviewFileName] = useState<string>('');
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [selectedSupplierIds, setSelectedSupplierIds] = useState<Set<string>>(new Set());
+  const [bulkCategory, setBulkCategory] = useState<SupplierCategory>('' as SupplierCategory);
+  const [isUpdatingBulk, setIsUpdatingBulk] = useState(false);
   
   // Tax clearance date fields
   const [taxClearanceData, setTaxClearanceData] = useState({
@@ -428,7 +432,163 @@ const HRDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Upload Tax Clearance */}
+        {/* Supplier Management - Bulk Category Update */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Supplier Management</CardTitle>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {selectedSupplierIds.size} selected
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  await refreshSuppliers();
+                  toast({ title: "Refreshed", description: "Supplier list updated" });
+                }}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Bulk action bar */}
+            {selectedSupplierIds.size > 0 && (
+              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg border">
+                <CheckSquare className="h-5 w-5 text-primary" />
+                <span className="text-sm font-medium">{selectedSupplierIds.size} supplier(s) selected</span>
+                <Select value={bulkCategory} onValueChange={(v) => setBulkCategory(v as SupplierCategory)}>
+                  <SelectTrigger className="w-[250px] bg-background">
+                    <SelectValue placeholder="Change category to..." />
+                  </SelectTrigger>
+                  <SelectContent className="bg-popover z-50">
+                    <SelectItem value="Advertising and Promo">Advertising and Promo</SelectItem>
+                    <SelectItem value="Building, electricians etc">Building, electricians etc</SelectItem>
+                    <SelectItem value="Car hire & Air travel">Car hire & Air travel</SelectItem>
+                    <SelectItem value="Catering, Study and Graduation">Catering, Study and Graduation</SelectItem>
+                    <SelectItem value="Fumigators, Cleaners">Fumigators, Cleaners</SelectItem>
+                    <SelectItem value="Furniture & Repairs">Furniture & Repairs</SelectItem>
+                    <SelectItem value="HR & Legal">HR & Legal</SelectItem>
+                    <SelectItem value="Hotels, Travel and Events">Hotels, Travel and Events</SelectItem>
+                    <SelectItem value="Insurance">Insurance</SelectItem>
+                    <SelectItem value="Office Consumables">Office Consumables</SelectItem>
+                    <SelectItem value="Stationery & Printing">Stationery & Printing</SelectItem>
+                    <SelectItem value="Tech Services">Tech Services</SelectItem>
+                    <SelectItem value="Telecomms">Telecomms</SelectItem>
+                    <SelectItem value="Uniforms">Uniforms</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  size="sm"
+                  disabled={!bulkCategory || isUpdatingBulk}
+                  onClick={async () => {
+                    if (!bulkCategory) return;
+                    setIsUpdatingBulk(true);
+                    try {
+                      const ids = Array.from(selectedSupplierIds);
+                      const { error } = await supabase
+                        .from('suppliers')
+                        .update({ category: bulkCategory })
+                        .in('id', ids);
+                      if (error) throw error;
+                      await refreshSuppliers();
+                      setSelectedSupplierIds(new Set());
+                      setBulkCategory('' as SupplierCategory);
+                      toast({
+                        title: "Categories Updated",
+                        description: `${ids.length} supplier(s) updated to "${bulkCategory}"`,
+                      });
+                    } catch (error) {
+                      console.error('Bulk update error:', error);
+                      toast({
+                        title: "Error",
+                        description: "Failed to update supplier categories",
+                        variant: "destructive",
+                      });
+                    } finally {
+                      setIsUpdatingBulk(false);
+                    }
+                  }}
+                >
+                  {isUpdatingBulk ? 'Updating...' : 'Apply'}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedSupplierIds(new Set())}
+                >
+                  Clear
+                </Button>
+              </div>
+            )}
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={suppliers.length > 0 && selectedSupplierIds.size === suppliers.length}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedSupplierIds(new Set(suppliers.map(s => s.id)));
+                        } else {
+                          setSelectedSupplierIds(new Set());
+                        }
+                      }}
+                    />
+                  </TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>ICAZ #</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {suppliers.map((supplier) => (
+                  <TableRow
+                    key={supplier.id}
+                    className={selectedSupplierIds.has(supplier.id) ? 'bg-muted/50' : ''}
+                  >
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedSupplierIds.has(supplier.id)}
+                        onCheckedChange={(checked) => {
+                          const next = new Set(selectedSupplierIds);
+                          if (checked) {
+                            next.add(supplier.id);
+                          } else {
+                            next.delete(supplier.id);
+                          }
+                          setSelectedSupplierIds(next);
+                        }}
+                      />
+                    </TableCell>
+                    <TableCell className="font-medium">{supplier.name}</TableCell>
+                    <TableCell>{supplier.icazNumber}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{supplier.category}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={supplier.status === 'active' ? 'bg-green-600' : 'bg-red-600'}>
+                        {supplier.status}
+                      </Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {suppliers.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      No suppliers found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Upload Tax Clearance for Supplier</CardTitle>
