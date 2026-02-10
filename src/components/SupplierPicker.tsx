@@ -11,19 +11,24 @@ import { Supplier, SupplierCategory } from '@/types/requisition';
 
 const SUPPLIER_CATEGORIES: SupplierCategory[] = [
   'Advertising and Promo',
+  'Airconditioning, Generator Repair',
   'Building, electricians etc',
   'Car hire & Air travel',
   'Catering, Study and Graduation',
+  'Courier',
   'Fumigators, Cleaners',
   'Furniture & Repairs',
   'HR & Legal',
   'Hotels, Travel and Events',
+  'ICT Hardware, software',
   'Insurance',
+  'Medical & Funeral',
   'Office Consumables',
   'Stationery & Printing',
   'Tech Services',
   'Telecomms',
   'Uniforms',
+  'Vehicle, service repairs',
 ];
 
 interface SupplierPickerProps {
