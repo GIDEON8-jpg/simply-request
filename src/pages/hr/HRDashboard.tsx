@@ -386,19 +386,24 @@ const HRDashboard = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
                     <SelectItem value="Advertising and Promo">Advertising and Promo</SelectItem>
+                    <SelectItem value="Airconditioning, Generator Repair">Airconditioning, Generator Repair</SelectItem>
                     <SelectItem value="Building, electricians etc">Building, electricians etc</SelectItem>
                     <SelectItem value="Car hire & Air travel">Car hire & Air travel</SelectItem>
                     <SelectItem value="Catering, Study and Graduation">Catering, Study and Graduation</SelectItem>
+                    <SelectItem value="Courier">Courier</SelectItem>
                     <SelectItem value="Fumigators, Cleaners">Fumigators, Cleaners</SelectItem>
                     <SelectItem value="Furniture & Repairs">Furniture & Repairs</SelectItem>
                     <SelectItem value="HR & Legal">HR & Legal</SelectItem>
                     <SelectItem value="Hotels, Travel and Events">Hotels, Travel and Events</SelectItem>
+                    <SelectItem value="ICT Hardware, software">ICT Hardware, software</SelectItem>
                     <SelectItem value="Insurance">Insurance</SelectItem>
+                    <SelectItem value="Medical & Funeral">Medical & Funeral</SelectItem>
                     <SelectItem value="Office Consumables">Office Consumables</SelectItem>
                     <SelectItem value="Stationery & Printing">Stationery & Printing</SelectItem>
                     <SelectItem value="Tech Services">Tech Services</SelectItem>
                     <SelectItem value="Telecomms">Telecomms</SelectItem>
                     <SelectItem value="Uniforms">Uniforms</SelectItem>
+                    <SelectItem value="Vehicle, service repairs">Vehicle, service repairs</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -465,19 +470,24 @@ const HRDashboard = () => {
                   </SelectTrigger>
                   <SelectContent className="bg-popover z-50">
                     <SelectItem value="Advertising and Promo">Advertising and Promo</SelectItem>
+                    <SelectItem value="Airconditioning, Generator Repair">Airconditioning, Generator Repair</SelectItem>
                     <SelectItem value="Building, electricians etc">Building, electricians etc</SelectItem>
                     <SelectItem value="Car hire & Air travel">Car hire & Air travel</SelectItem>
                     <SelectItem value="Catering, Study and Graduation">Catering, Study and Graduation</SelectItem>
+                    <SelectItem value="Courier">Courier</SelectItem>
                     <SelectItem value="Fumigators, Cleaners">Fumigators, Cleaners</SelectItem>
                     <SelectItem value="Furniture & Repairs">Furniture & Repairs</SelectItem>
                     <SelectItem value="HR & Legal">HR & Legal</SelectItem>
                     <SelectItem value="Hotels, Travel and Events">Hotels, Travel and Events</SelectItem>
+                    <SelectItem value="ICT Hardware, software">ICT Hardware, software</SelectItem>
                     <SelectItem value="Insurance">Insurance</SelectItem>
+                    <SelectItem value="Medical & Funeral">Medical & Funeral</SelectItem>
                     <SelectItem value="Office Consumables">Office Consumables</SelectItem>
                     <SelectItem value="Stationery & Printing">Stationery & Printing</SelectItem>
                     <SelectItem value="Tech Services">Tech Services</SelectItem>
                     <SelectItem value="Telecomms">Telecomms</SelectItem>
                     <SelectItem value="Uniforms">Uniforms</SelectItem>
+                    <SelectItem value="Vehicle, service repairs">Vehicle, service repairs</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
