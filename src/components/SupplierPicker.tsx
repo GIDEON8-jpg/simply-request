@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Search, Building2, CheckCircle2 } from 'lucide-react';
@@ -157,7 +157,7 @@ const SupplierPicker = ({
         </div>
 
         {/* Supplier List */}
-        <ScrollArea className="flex-1 -mx-6 px-6 max-h-[400px] [&>div>div[style]]:!block [&_[data-radix-scroll-area-scrollbar]]:!flex">
+        <div className="flex-1 -mx-6 px-6 max-h-[400px] overflow-y-auto scrollbar-dark">
           {filteredSuppliers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
@@ -207,7 +207,7 @@ const SupplierPicker = ({
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
