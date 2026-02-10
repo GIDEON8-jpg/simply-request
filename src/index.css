@@ -117,3 +117,23 @@
     @apply bg-[hsl(var(--status-rejected))] text-white;
   }
 }
+
+/* Dark visible scrollbar for supplier picker */
+.scrollbar-dark::-webkit-scrollbar {
+  width: 10px;
+}
+.scrollbar-dark::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+  border-radius: 5px;
+}
+.scrollbar-dark::-webkit-scrollbar-thumb {
+  background: hsl(var(--foreground) / 0.5);
+  border-radius: 5px;
+}
+.scrollbar-dark::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--foreground) / 0.7);
+}
+.scrollbar-dark {
+  scrollbar-width: auto;
+  scrollbar-color: hsl(var(--foreground) / 0.5) hsl(var(--muted));
+}
