@@ -448,6 +448,11 @@ export type Database = {
         | "Tech Services"
         | "Telecomms"
         | "Uniforms"
+        | "Airconditioning, Generator Repair"
+        | "Courier"
+        | "Medical & Funeral"
+        | "ICT Hardware, software"
+        | "Vehicle, service repairs"
       supplier_status: "active" | "inactive"
     }
     CompositeTypes: {
@@ -621,6 +626,11 @@ export const Constants = {
         "Tech Services",
         "Telecomms",
         "Uniforms",
+        "Airconditioning, Generator Repair",
+        "Courier",
+        "Medical & Funeral",
+        "ICT Hardware, software",
+        "Vehicle, service repairs",
       ],
       supplier_status: ["active", "inactive"],
     },
