@@ -157,7 +157,7 @@ const SupplierPicker = ({
         </div>
 
         {/* Supplier List */}
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        <ScrollArea className="flex-1 -mx-6 px-6 max-h-[400px] [&>div>div[style]]:!block [&_[data-radix-scroll-area-scrollbar]]:!flex">
           {filteredSuppliers.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               <Building2 className="h-12 w-12 mx-auto mb-3 opacity-50" />
