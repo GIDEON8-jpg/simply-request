@@ -5,19 +5,24 @@ export type AppRole = 'preparer' | 'hod' | 'finance_manager' | 'technical_direct
 export type Currency = 'USD' | 'ZWG' | 'GBP' | 'EUR';
 export type SupplierCategory = 
   | 'Advertising and Promo'
+  | 'Airconditioning, Generator Repair'
   | 'Building, electricians etc'
   | 'Car hire & Air travel'
   | 'Catering, Study and Graduation'
+  | 'Courier'
   | 'Fumigators, Cleaners'
   | 'Furniture & Repairs'
   | 'HR & Legal'
   | 'Hotels, Travel and Events'
+  | 'ICT Hardware, software'
   | 'Insurance'
+  | 'Medical & Funeral'
   | 'Office Consumables'
   | 'Stationery & Printing'
   | 'Tech Services'
   | 'Telecomms'
-  | 'Uniforms';
+  | 'Uniforms'
+  | 'Vehicle, service repairs';
 
 export interface Supplier {
   id: string;
