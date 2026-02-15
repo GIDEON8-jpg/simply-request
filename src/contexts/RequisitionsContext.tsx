@@ -152,6 +152,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         const reqDocs = docsMap[req.id] || [];
         return {
           id: req.id,
+          requisitionNumber: req.requisition_number,
           title: req.title,
           department: req.department as Department,
           amount: Number(req.amount),

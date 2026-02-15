@@ -205,6 +205,7 @@ export type Database = {
           description: string
           deviation_reason: string | null
           id: string
+          requisition_number: number
           status: Database["public"]["Enums"]["requisition_status"]
           submitted_by: string
           submitted_date: string | null
@@ -227,6 +228,7 @@ export type Database = {
           description: string
           deviation_reason?: string | null
           id?: string
+          requisition_number?: number
           status?: Database["public"]["Enums"]["requisition_status"]
           submitted_by: string
           submitted_date?: string | null
@@ -249,6 +251,7 @@ export type Database = {
           description?: string
           deviation_reason?: string | null
           id?: string
+          requisition_number?: number
           status?: Database["public"]["Enums"]["requisition_status"]
           submitted_by?: string
           submitted_date?: string | null
