@@ -46,6 +46,7 @@ export interface TaxClearance {
 
 export interface Requisition {
   id: string;
+  requisitionNumber?: number;
   title: string;
   department: Department;
   amount: number;

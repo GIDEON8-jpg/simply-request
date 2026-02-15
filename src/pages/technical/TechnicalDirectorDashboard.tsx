@@ -179,7 +179,7 @@ const TechnicalDirectorDashboard = () => {
 
     pendingRequisitions.forEach(req => {
       const row = [
-        req.id,
+        `REQ_${req.requisitionNumber || req.id}`,
         `"${req.title}"`,
         req.department,
         req.amount,
@@ -255,7 +255,7 @@ const TechnicalDirectorDashboard = () => {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <p className="text-sm text-muted-foreground">Requisition ID</p>
-                        <p className="font-semibold">{req.id}</p>
+                        <p className="font-semibold">REQ_{req.requisitionNumber || req.id}</p>
                       </div>
                       <div>
                         <p className="text-sm text-muted-foreground">Amount</p>
