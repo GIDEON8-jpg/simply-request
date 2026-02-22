@@ -1,11 +1,17 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.78.0";
+import { encode as base64Encode } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+
+interface PopFile {
+  name: string;
+  url: string;
+}
 
 interface NotificationRequest {
   requisitionId: string;
@@ -14,6 +20,7 @@ interface NotificationRequest {
   amount: number;
   currency: string;
   popFileName?: string;
+  popFileUrls?: PopFile[];
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -26,7 +33,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { requisitionId, department, title, amount, currency, popFileName }: NotificationRequest = await req.json();
+    const { requisitionId, department, title, amount, currency, popFileName, popFileUrls }: NotificationRequest = await req.json();
 
     console.log(`Processing payment notification for requisition ${requisitionId}`);
 
@@ -41,14 +48,11 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error fetching requisition:', reqError);
       return new Response(
         JSON.stringify({ error: "Requisition not found" }),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Get the submitter's profile (the person who created the requisition)
+    // Get the submitter's profile
     const { data: submitterProfile, error: submitterError } = await supabase
       .from('profiles')
       .select('id, email, full_name')
@@ -69,82 +73,108 @@ const handler = async (req: Request): Promise<Response> => {
       console.error('Error fetching HOD roles:', hodError);
     }
 
-    // Find HOD matching the department
     const hodProfile = hodRoles?.find((r: any) => r.profiles?.department === department)?.profiles as any;
 
     const resendApiKey = Deno.env.get("RESEND_API_KEY");
     const recipients: string[] = [];
     const recipientNames: string[] = [];
     
-    // Add submitter to recipients
     if (submitterProfile?.email) {
       recipients.push(submitterProfile.email);
       recipientNames.push(submitterProfile.full_name || 'Requisition Owner');
     }
     
-    // Add HOD to recipients if different from submitter
     if (hodProfile?.email && hodProfile.email !== submitterProfile?.email) {
       recipients.push(hodProfile.email);
       recipientNames.push(hodProfile.full_name || 'HOD');
     }
 
     if (recipients.length === 0) {
-      console.error('No recipients found');
       return new Response(
         JSON.stringify({ error: "No recipients found" }),
-        {
-          status: 404,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 404, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    console.log(`Payment completed for requisition ${requisitionId}`);
     console.log(`Sending notifications to: ${recipients.join(', ')}`);
 
-    const appUrl = 'https://ca65c39b-c714-453d-accf-abcbcda568ac.lovableproject.com';
+    // Build attachments from POP file URLs
+    const attachments: { filename: string; content: string }[] = [];
+    if (popFileUrls && popFileUrls.length > 0) {
+      for (const popFile of popFileUrls) {
+        try {
+          console.log(`Fetching POP file: ${popFile.name} from ${popFile.url}`);
+          const fileResponse = await fetch(popFile.url);
+          if (fileResponse.ok) {
+            const fileBuffer = await fileResponse.arrayBuffer();
+            const base64Content = base64Encode(new Uint8Array(fileBuffer));
+            attachments.push({
+              filename: popFile.name,
+              content: base64Content,
+            });
+            console.log(`Attached file: ${popFile.name}`);
+          } else {
+            console.error(`Failed to fetch file ${popFile.name}: ${fileResponse.status}`);
+          }
+        } catch (fileError) {
+          console.error(`Error fetching POP file ${popFile.name}:`, fileError);
+        }
+      }
+    }
 
-    // Send email notification using Resend
+    // Build POP links for the email body
+    const popLinksHtml = popFileUrls && popFileUrls.length > 0
+      ? `<div style="margin: 15px 0;">
+           <p><strong>Proof of Payment Files:</strong></p>
+           <ul style="list-style: none; padding: 0;">
+             ${popFileUrls.map(f => `<li style="margin: 5px 0;"><a href="${f.url}" style="color: #2563eb; text-decoration: underline;">${f.name}</a></li>`).join('')}
+           </ul>
+         </div>`
+      : '';
+
     try {
+      const emailPayload: any = {
+        from: "ICAZ Procurement <noreply@apps.icaz.org.zw>",
+        to: recipients,
+        subject: `✅ Payment Completed: ${title}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h1 style="color: #16a34a;">Payment Completed</h1>
+            <p>Dear Recipient,</p>
+            
+            <p>We are pleased to inform you that the payment for the following requisition has been successfully processed:</p>
+            
+            <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a;">
+              <p><strong>Title:</strong> ${title}</p>
+              <p><strong>Department:</strong> ${department}</p>
+              <p><strong>Amount:</strong> ${currency} ${amount.toFixed(2)}</p>
+              <p><strong>Requisition ID:</strong> ${requisitionId}</p>
+              ${popFileName ? `<p><strong>Proof of Payment:</strong> ${popFileName}</p>` : ''}
+            </div>
+            
+            ${popLinksHtml}
+            
+            <p>The proof of payment has been uploaded and the requisition is now <strong style="color: #16a34a;">COMPLETED</strong>.</p>
+            
+            <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+              This is an automated notification from the ICAZ Procurement System.
+            </p>
+          </div>
+        `,
+      };
+
+      // Add attachments if any were fetched
+      if (attachments.length > 0) {
+        emailPayload.attachments = attachments;
+      }
+
       const emailResponse = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${resendApiKey}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          from: "ICAZ Procurement <noreply@apps.icaz.org.zw>",
-          to: recipients,
-          subject: `✅ Payment Completed: ${title}`,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-              <h1 style="color: #16a34a;">Payment Completed</h1>
-              <p>Dear Recipient,</p>
-              
-              <p>We are pleased to inform you that the payment for the following requisition has been successfully processed:</p>
-              
-              <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #16a34a;">
-                <p><strong>Title:</strong> ${title}</p>
-                <p><strong>Department:</strong> ${department}</p>
-                <p><strong>Amount:</strong> ${currency} ${amount.toFixed(2)}</p>
-                <p><strong>Requisition ID:</strong> ${requisitionId}</p>
-                ${popFileName ? `<p><strong>Proof of Payment:</strong> ${popFileName}</p>` : ''}
-              </div>
-              
-              <p>The proof of payment has been uploaded and the requisition is now <strong style="color: #16a34a;">COMPLETED</strong>.</p>
-              
-              <a href="${appUrl}" 
-                 style="display: inline-block; background-color: #16a34a; color: white; padding: 12px 24px; 
-                        text-decoration: none; border-radius: 6px; margin: 20px 0;">
-                View Requisition Details
-              </a>
-              
-              <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
-                This is an automated notification from the ICAZ Procurement System.
-              </p>
-            </div>
-          `,
-        }),
+        body: JSON.stringify(emailPayload),
       });
 
       if (!emailResponse.ok) {
@@ -161,32 +191,24 @@ const handler = async (req: Request): Promise<Response> => {
           success: true,
           message: `Notification sent to ${recipients.length} recipient(s)`,
           requisitionId,
-          recipients: recipients,
-          recipientNames: recipientNames,
+          recipients,
+          recipientNames,
+          attachmentsCount: attachments.length,
         }),
-        {
-          status: 200,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     } catch (emailError: any) {
       console.error('Error sending email:', emailError);
       return new Response(
         JSON.stringify({ error: `Failed to send email: ${emailError.message}` }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
   } catch (error: any) {
     console.error("Error in notify-hod-payment function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };

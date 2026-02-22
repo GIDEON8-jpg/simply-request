@@ -83,7 +83,25 @@ const AccountantDashboard = () => {
       const req = requisitions.find(r => r.id === reqId);
       if (req) {
         try {
-          const popFileName = uploadedPOP[reqId]?.[0]?.name || 'Proof of Payment';
+          // Upload POP files to storage and collect URLs
+          const popFiles = uploadedPOP[reqId] || [];
+          const popFileUrls: { name: string; url: string }[] = [];
+          
+          for (const file of popFiles) {
+            const filePath = `pop/${reqId}/${Date.now()}_${file.name}`;
+            const { error: uploadError } = await supabase.storage
+              .from('requisition-documents')
+              .upload(filePath, file);
+            
+            if (!uploadError) {
+              const { data: urlData } = supabase.storage
+                .from('requisition-documents')
+                .getPublicUrl(filePath);
+              popFileUrls.push({ name: file.name, url: urlData.publicUrl });
+            }
+          }
+
+          const popFileName = popFiles[0]?.name || 'Proof of Payment';
           await supabase.functions.invoke('notify-hod-payment', {
             body: { 
               requisitionId: reqId,
@@ -92,6 +110,7 @@ const AccountantDashboard = () => {
               amount: req.amount,
               currency: req.currency,
               popFileName: popFileName,
+              popFileUrls: popFileUrls,
             }
           });
 
@@ -181,6 +200,24 @@ const AccountantDashboard = () => {
       return;
     }
 
+    // Upload POP files to storage and collect URLs
+    const popFiles = uploadedPOP[reqId] || [];
+    const popFileUrls: { name: string; url: string }[] = [];
+    
+    for (const file of popFiles) {
+      const filePath = `pop/${reqId}/${Date.now()}_${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from('requisition-documents')
+        .upload(filePath, file);
+      
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage
+          .from('requisition-documents')
+          .getPublicUrl(filePath);
+        popFileUrls.push({ name: file.name, url: urlData.publicUrl });
+      }
+    }
+
     // Send email notification to HOD and submitter with proof of payment
     try {
       const popFileName = uploadedPOP[reqId]?.[0]?.name || 'Proof of Payment';
@@ -192,6 +229,7 @@ const AccountantDashboard = () => {
           amount: requisition.amount,
           currency: requisition.currency,
           popFileName: popFileName,
+          popFileUrls: popFileUrls,
         }
       });
 

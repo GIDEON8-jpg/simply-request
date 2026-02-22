@@ -4,9 +4,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
-import { FileDown } from 'lucide-react';
+import { FileDown, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 interface PaymentRecord {
   id: string;
@@ -25,6 +26,7 @@ interface PaymentRecord {
 const PaymentSchedule = () => {
   const { requisitions } = useRequisitions();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -163,10 +165,16 @@ const PaymentSchedule = () => {
                   All completed payments and their records
                 </p>
               </div>
-              <Button onClick={handleExportCSV} variant="outline">
-                <FileDown className="mr-2 h-4 w-4" />
-                Export CSV
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleExportCSV} variant="outline">
+                  <FileDown className="mr-2 h-4 w-4" />
+                  Export CSV
+                </Button>
+                <Button onClick={() => navigate(-1)} variant="outline">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Go Back
+                </Button>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
