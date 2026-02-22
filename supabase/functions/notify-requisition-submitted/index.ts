@@ -82,11 +82,7 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <p>As the HOD, you are the first approver in the workflow. Please review and approve/reject this requisition.</p>
                 
-                <a href="${appUrl}" 
-                   style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 24px; 
-                          text-decoration: none; border-radius: 6px; margin: 20px 0;">
-                  Review Requisition
-                </a>
+                <p>Log in to the ICAZ Procurement System to review: <a href="${appUrl}" style="color: #2563eb; text-decoration: underline;">${appUrl}</a></p>
                 
                 <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
                   This is an automated notification from the ICAZ Procurement System.
