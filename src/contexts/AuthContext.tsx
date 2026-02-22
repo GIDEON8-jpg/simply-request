@@ -82,27 +82,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('profiles')
         .select('*')
         .eq('id', supabaseUser.id)
-        .single();
+        .maybeSingle();
 
       const { data: roles } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', supabaseUser.id);
 
-      const userRole = roles?.[0]?.role as UserRole;
+      const userRole = (roles?.[0]?.role as UserRole) || 'preparer';
 
-      if (profile) {
-        const userData: User = {
-          id: supabaseUser.id,
-          username: profile.email?.split('@')[0] || '',
-          fullName: profile.full_name || '',
-          firstName: profile.full_name?.split(' ')[0] || '',
-          email: profile.email || '',
-          role: userRole,
-          department: profile.department
-        };
-        setUser(userData);
-      }
+      const userData: User = {
+        id: supabaseUser.id,
+        username: profile?.email?.split('@')[0] || supabaseUser.email?.split('@')[0] || '',
+        fullName: profile?.full_name || supabaseUser.user_metadata?.full_name || '',
+        firstName: profile?.full_name?.split(' ')[0] || supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
+        email: profile?.email || supabaseUser.email || '',
+        role: userRole,
+        department: profile?.department || supabaseUser.user_metadata?.department
+      };
+      setUser(userData);
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
