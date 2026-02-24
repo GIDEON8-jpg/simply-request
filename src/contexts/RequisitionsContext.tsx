@@ -7,12 +7,14 @@ import { useAuth } from "@/contexts/AuthContext";
 interface RequisitionsContextType {
   requisitions: Requisition[];
   budgets: Record<Department, number>;
+  budgetLocks: Record<Department, boolean>;
   loading: boolean;
   addRequisition: (requisition: Requisition) => Promise<void>;
   updateRequisition: (id: string, updates: Partial<Requisition>) => Promise<void>;
   saveBudgetsToBackend: (budgets: Record<Department, number>) => Promise<void>;
   setBudgets: (budgets: Record<Department, number>) => void;
   getRemainingBudget: (department: Department) => number;
+  toggleBudgetLock: (department: Department, locked: boolean) => Promise<void>;
 }
 
 const RequisitionsContext = createContext<RequisitionsContextType | undefined>(undefined);
@@ -31,13 +33,17 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     CEO: 0,
     Registry: 0,
   });
+  const [budgetLocks, setBudgetLocksState] = useState<Record<Department, boolean>>({
+    Education: false, IT: false, "Marketing and PR": false, Technical: false,
+    HR: false, Finance: false, CEO: false, Registry: false,
+  });
 
   // Fetch budgets (latest per department) and subscribe to changes
   useEffect(() => {
     const fetchBudgets = async () => {
       const { data, error } = await supabase
         .from("department_budgets")
-        .select("department,total_budget,created_at")
+        .select("department,total_budget,is_locked,created_at")
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -47,14 +53,16 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
 
       if (data && data.length > 0) {
         const latestByDept: Record<Department, number> = {} as Record<Department, number>;
+        const locksByDept: Record<Department, boolean> = {} as Record<Department, boolean>;
         for (const row of data) {
           const dept = row.department as Department;
           if (latestByDept[dept] === undefined) {
             latestByDept[dept] = Number(row.total_budget);
+            locksByDept[dept] = !!(row as any).is_locked;
           }
         }
-        // Merge to avoid dropping departments that aren't in the latest response
         setBudgetsState((prev) => ({ ...prev, ...latestByDept }));
+        setBudgetLocksState((prev) => ({ ...prev, ...locksByDept }));
       }
     };
 
@@ -288,13 +296,20 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
 
   const saveBudgetsToBackend = async (newBudgets: Record<Department, number>) => {
     const fiscalYear = new Date().getFullYear();
-    const rows = Object.entries(newBudgets).map(([department, total]) => ({
-      department: department as Department,
-      fiscal_year: fiscalYear,
-      total_budget: total,
-    }));
+    // Only save budgets for unlocked departments
+    const rows = Object.entries(newBudgets)
+      .filter(([department]) => !budgetLocks[department as Department])
+      .map(([department, total]) => ({
+        department: department as Department,
+        fiscal_year: fiscalYear,
+        total_budget: total,
+      }));
 
-    // Use UPSERT to update existing budgets or insert new ones
+    if (rows.length === 0) {
+      toast.error("All departments are locked. Unlock to save.");
+      return;
+    }
+
     const { error } = await supabase.from("department_budgets").upsert(rows, {
       onConflict: "department,fiscal_year",
     });
@@ -312,6 +327,24 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     setBudgetsState((prev) => ({ ...prev, ...newBudgets }));
   };
 
+  const toggleBudgetLock = async (department: Department, locked: boolean) => {
+    const fiscalYear = new Date().getFullYear();
+    const { error } = await supabase
+      .from("department_budgets")
+      .update({ is_locked: locked } as any)
+      .eq("department", department as any)
+      .eq("fiscal_year", fiscalYear);
+
+    if (error) {
+      console.error("Error toggling budget lock:", error);
+      toast.error("Failed to update budget lock");
+      throw error;
+    }
+
+    setBudgetLocksState((prev) => ({ ...prev, [department]: locked }));
+    toast.success(`${department} budget ${locked ? "locked" : "unlocked"}`);
+  };
+
   const getRemainingBudget = (department: Department) => {
     const total = budgets[department] || 0;
     const used = requisitions
@@ -325,12 +358,14 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       value={{
         requisitions,
         budgets,
+        budgetLocks,
         loading,
         addRequisition,
         updateRequisition,
         saveBudgetsToBackend,
         setBudgets,
         getRemainingBudget,
+        toggleBudgetLock,
       }}
     >
       {children}

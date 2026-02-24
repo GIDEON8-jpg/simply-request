@@ -68,6 +68,7 @@ export type Database = {
           department: Database["public"]["Enums"]["department_type"]
           fiscal_year: number
           id: string
+          is_locked: boolean
           total_budget: number
           updated_at: string | null
         }
@@ -76,6 +77,7 @@ export type Database = {
           department: Database["public"]["Enums"]["department_type"]
           fiscal_year?: number
           id?: string
+          is_locked?: boolean
           total_budget: number
           updated_at?: string | null
         }
@@ -84,6 +86,7 @@ export type Database = {
           department?: Database["public"]["Enums"]["department_type"]
           fiscal_year?: number
           id?: string
+          is_locked?: boolean
           total_budget?: number
           updated_at?: string | null
         }

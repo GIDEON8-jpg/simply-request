@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, Mail, FileText, Save, RotateCcw, Upload, Users, History, HardDrive } from 'lucide-react';
+import { Download, Mail, FileText, Save, RotateCcw, Upload, Users, History, HardDrive, Lock, Unlock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -32,7 +32,7 @@ const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Techn
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { requisitions, budgets, saveBudgetsToBackend } = useRequisitions();
+  const { requisitions, budgets, budgetLocks, saveBudgetsToBackend, toggleBudgetLock } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [statusFilter, setStatusFilter] = useState<RequisitionStatus | 'all'>('all');
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -280,16 +280,28 @@ ${departments.map(dept => {
               {departments.map(dept => {
                 const usage = departmentBudgetUsage.find(d => d.department === dept);
                 const isExhausted = usage && usage.remaining <= 100;
+                const isLocked = budgetLocks[dept] || false;
                 
                 return (
                   <div key={dept} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor={`budget-${dept}`} className="font-medium">{dept}</Label>
-                      {usage && (
-                        <span className={`text-sm ${isExhausted ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
-                          Remaining: ${usage.remaining.toFixed(2)}
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {usage && (
+                          <span className={`text-sm ${isExhausted ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
+                            Remaining: ${usage.remaining.toFixed(2)}
+                          </span>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => toggleBudgetLock(dept, !isLocked)}
+                          title={isLocked ? 'Unlock budget' : 'Lock budget'}
+                        >
+                          {isLocked ? <Lock className="h-4 w-4 text-destructive" /> : <Unlock className="h-4 w-4 text-muted-foreground" />}
+                        </Button>
+                      </div>
                     </div>
                     <Input
                       id={`budget-${dept}`}
@@ -298,7 +310,11 @@ ${departments.map(dept => {
                       value={localBudgets[dept] || 0}
                       onChange={(e) => handleBudgetChange(dept, e.target.value)}
                       className={isExhausted ? 'border-destructive' : ''}
+                      disabled={isLocked}
                     />
+                    {isLocked && (
+                      <p className="text-xs text-muted-foreground font-medium">🔒 Budget locked — unlock to edit</p>
+                    )}
                     {isExhausted && (
                       <p className="text-xs text-destructive font-medium">⚠ Budget Exhausted - Cannot submit new requisitions</p>
                     )}
