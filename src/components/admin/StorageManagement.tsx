@@ -15,6 +15,7 @@ import { RequisitionStatus } from '@/types/requisition';
 
 interface RequisitionHistory {
   id: string;
+  requisitionNumber: number;
   title: string;
   department: string;
   amount: number;
@@ -85,6 +86,7 @@ const StorageManagement = () => {
         .from('requisitions')
         .select(`
           id,
+          requisition_number,
           title,
           department,
           amount,
@@ -101,6 +103,7 @@ const StorageManagement = () => {
       } else {
         const history = (historyData || []).map((req: any) => ({
           id: req.id,
+          requisitionNumber: req.requisition_number,
           title: req.title,
           department: req.department,
           amount: req.amount,
@@ -400,7 +403,7 @@ const StorageManagement = () => {
                 <TableBody>
                   {requisitionHistory.map((req) => (
                     <TableRow key={req.id}>
-                      <TableCell className="font-mono text-xs">{req.id.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-mono text-xs">REQ_{req.requisitionNumber}</TableCell>
                       <TableCell className="max-w-[200px] truncate">{req.title}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{req.department}</Badge>

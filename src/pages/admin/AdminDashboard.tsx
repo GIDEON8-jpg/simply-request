@@ -476,7 +476,7 @@ ${departments.map(dept => {
                 ) : (
                   filteredRequisitions.map((req) => (
                     <TableRow key={req.id}>
-                      <TableCell className="font-medium">{req.id.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-medium">REQ_{req.requisitionNumber}</TableCell>
                       <TableCell>{req.title}</TableCell>
                       <TableCell>{req.submittedBy}</TableCell>
                       <TableCell>{req.department}</TableCell>
