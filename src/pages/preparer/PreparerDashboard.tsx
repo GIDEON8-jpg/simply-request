@@ -76,7 +76,8 @@ const PreparerDashboard = () => {
               <div className="space-y-3">
                 {myRequisitions.map((req) => (
                   <div key={req.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
-                    <div className="flex-1">
+                    <div className="flex-1 flex items-center gap-3">
+                      <span className="text-sm font-mono text-muted-foreground">REQ_{req.requisitionNumber}</span>
                       {req.status === 'rejected' ? (
                         <button
                           className="text-primary hover:underline font-medium text-left"

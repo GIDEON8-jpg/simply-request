@@ -153,8 +153,8 @@ const HODDashboard = () => {
         toast({
           title: '❌ Requisition Rejected',
           description: currentReq.approverComments 
-            ? `Requisition ${currentReq.id} was rejected. Reason: ${currentReq.approverComments}`
-            : `Requisition ${currentReq.id} was rejected by ${currentReq.approvedBy || 'approver'}.`,
+            ? `Requisition REQ_${currentReq.requisitionNumber} was rejected. Reason: ${currentReq.approverComments}`
+            : `Requisition REQ_${currentReq.requisitionNumber} was rejected by ${currentReq.approvedBy || 'approver'}.`,
           variant: 'destructive',
           duration: 8000,
         });
@@ -328,7 +328,7 @@ const HODDashboard = () => {
                   ) : (
                     departmentRequisitions.map((req) => (
                     <TableRow key={req.id}>
-                      <TableCell className="font-medium">{req.id.slice(0, 8)}...</TableCell>
+                      <TableCell className="font-medium">REQ_{req.requisitionNumber}</TableCell>
                       <TableCell>{req.title}</TableCell>
                       <TableCell>{req.chosenSupplier.name}</TableCell>
                       <TableCell>${req.amount.toFixed(2)}</TableCell>

@@ -8,8 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { FileText } from 'lucide-react';
 import { Department } from '@/types/requisition';
+import icazLogo from '@/assets/icaz-logo.png';
 import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
@@ -112,9 +112,7 @@ const Login = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <FileText className="h-8 w-8 text-primary" />
-            </div>
+            <img src={icazLogo} alt="ICAZ - The Institute of Chartered Accountants of Zimbabwe" className="h-20 w-auto" />
           </div>
           <CardTitle className="text-2xl font-bold">Requisition Management System</CardTitle>
           <CardDescription>Sign in to continue</CardDescription>
