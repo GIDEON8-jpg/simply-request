@@ -348,18 +348,23 @@ ${departments.map(dept => {
                   <SelectValue placeholder="Select month" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="2025-01">January 2025</SelectItem>
-                  <SelectItem value="2025-02">February 2025</SelectItem>
-                  <SelectItem value="2025-03">March 2025</SelectItem>
-                  <SelectItem value="2025-04">April 2025</SelectItem>
-                  <SelectItem value="2025-05">May 2025</SelectItem>
-                  <SelectItem value="2025-06">June 2025</SelectItem>
-                  <SelectItem value="2025-07">July 2025</SelectItem>
-                  <SelectItem value="2025-08">August 2025</SelectItem>
-                  <SelectItem value="2025-09">September 2025</SelectItem>
-                  <SelectItem value="2025-10">October 2025</SelectItem>
-                  <SelectItem value="2025-11">November 2025</SelectItem>
-                  <SelectItem value="2025-12">December 2025</SelectItem>
+                  {(() => {
+                    // Build dynamic month options from actual requisition dates
+                    const monthSet = new Set<string>();
+                    requisitions.forEach(r => {
+                      if (r.submittedDate) {
+                        monthSet.add(r.submittedDate.slice(0, 7));
+                      }
+                    });
+                    // Also include the current month
+                    monthSet.add(new Date().toISOString().slice(0, 7));
+                    const sorted = Array.from(monthSet).sort().reverse();
+                    return sorted.map(m => {
+                      const [y, mo] = m.split('-');
+                      const label = new Date(Number(y), Number(mo) - 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                      return <SelectItem key={m} value={m}>{label}</SelectItem>;
+                    });
+                  })()}
                 </SelectContent>
               </Select>
             </div>
