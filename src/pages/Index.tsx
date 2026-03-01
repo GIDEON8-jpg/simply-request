@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { FileText, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import icazLogo from '@/assets/icaz-logo.png';
 
 const Index = () => {
   const navigate = useNavigate();
@@ -9,9 +10,7 @@ const Index = () => {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5">
       <div className="text-center max-w-2xl px-4">
         <div className="flex justify-center mb-6">
-          <div className="h-24 w-24 rounded-full bg-primary/10 flex items-center justify-center">
-            <FileText className="h-12 w-12 text-primary" />
-          </div>
+          <img src={icazLogo} alt="ICAZ Logo" className="h-24 w-auto" />
         </div>
         <h1 className="mb-4 text-5xl font-bold">Requisition Management System</h1>
         <p className="text-xl text-muted-foreground mb-8">
