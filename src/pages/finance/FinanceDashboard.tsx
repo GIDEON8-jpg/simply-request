@@ -108,9 +108,8 @@ const FinanceDashboard = () => {
     const updates: Partial<typeof requisitions[0]> = {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
-      approvedBy: action !== 'reject' ? 'Finance Manager' : undefined,
-      approvedById: action !== 'reject' ? user?.id : undefined,
-      approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
+      approvedBy: 'Finance Manager',
+      approvedDate: new Date().toISOString(),
     };
 
     updateRequisition(reqId, updates);

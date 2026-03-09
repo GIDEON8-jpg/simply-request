@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 interface PaymentRecord {
   id: string;
   requisitionId: string;
+  requisitionNumber?: number;
   popFileName: string;
   paymentDate: string;
   processedBy: string;
@@ -57,7 +58,8 @@ const PaymentSchedule = () => {
             amount,
             currency,
             department,
-            chosen_supplier_id
+            chosen_supplier_id,
+            requisition_number
           )
         `)
         .order('payment_date', { ascending: false });
@@ -70,6 +72,7 @@ const PaymentSchedule = () => {
           return {
             id: payment.id,
             requisitionId: payment.requisition_id,
+            requisitionNumber: req?.requisitionNumber || payment.requisitions?.requisition_number,
             popFileName: payment.pop_file_name,
             paymentDate: payment.payment_date,
             processedBy: payment.processed_by,
@@ -203,7 +206,7 @@ const PaymentSchedule = () => {
                     {payments.map((payment) => (
                       <TableRow key={payment.id}>
                         <TableCell className="font-mono text-xs">{payment.id.slice(0, 8)}</TableCell>
-                        <TableCell className="font-mono text-xs">{payment.requisitionId.slice(0, 8)}</TableCell>
+                        <TableCell className="font-mono text-xs">{payment.requisitionNumber ? `REQ_${payment.requisitionNumber}` : payment.requisitionId.slice(0, 8)}</TableCell>
                         <TableCell className="max-w-[200px] truncate">{payment.requisitionTitle || 'N/A'}</TableCell>
                         <TableCell>{payment.department || 'N/A'}</TableCell>
                         <TableCell>{payment.supplierName || 'N/A'}</TableCell>

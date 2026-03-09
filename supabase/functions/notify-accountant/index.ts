@@ -49,8 +49,16 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Found accountants to notify:', userRoles?.length);
 
-    const appUrl = 'https://ca65c39b-c714-453d-accf-abcbcda568ac.lovableproject.com';
+    const appUrl = 'https://simply-request.lovable.app';
     const emailsSent = [];
+
+    // Fetch the requisition_number for proper REQ_N format
+    const { data: reqData } = await supabase
+      .from('requisitions')
+      .select('requisition_number')
+      .eq('id', requisitionId)
+      .single();
+    const reqNumber = reqData?.requisition_number ? `REQ_${reqData.requisition_number}` : requisitionId;
 
     // Send email to each accountant
     for (const userRole of userRoles || []) {
@@ -80,7 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <p><strong>Title:</strong> ${requisitionTitle}</p>
                   <p><strong>Department:</strong> ${department}</p>
                   <p><strong>Amount:</strong> ${currency} ${amount.toFixed(2)}</p>
-                  <p><strong>Requisition ID:</strong> ${requisitionId}</p>
+                  <p><strong>Requisition ID:</strong> ${reqNumber}</p>
                   <p><strong>Final Approval by:</strong> ${approverName} (${approverRole})</p>
                 </div>
                 

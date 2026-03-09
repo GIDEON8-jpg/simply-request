@@ -58,9 +58,8 @@ const CEODashboard = () => {
     const updates: Partial<typeof requisitions[0]> = {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
-      approvedBy: action !== 'reject' ? 'CEO' : undefined,
-      approvedById: action !== 'reject' ? user?.id : undefined,
-      approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
+      approvedBy: 'CEO',
+      approvedDate: new Date().toISOString(),
     };
 
     updateRequisition(reqId, updates);
