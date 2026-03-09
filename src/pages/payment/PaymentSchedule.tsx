@@ -72,6 +72,7 @@ const PaymentSchedule = () => {
           return {
             id: payment.id,
             requisitionId: payment.requisition_id,
+            requisitionNumber: req?.requisitionNumber || payment.requisitions?.requisition_number,
             popFileName: payment.pop_file_name,
             paymentDate: payment.payment_date,
             processedBy: payment.processed_by,
