@@ -206,7 +206,7 @@ const PaymentSchedule = () => {
                     {payments.map((payment) => (
                       <TableRow key={payment.id}>
                         <TableCell className="font-mono text-xs">{payment.id.slice(0, 8)}</TableCell>
-                        <TableCell className="font-mono text-xs">{payment.requisitionId.slice(0, 8)}</TableCell>
+                        <TableCell className="font-mono text-xs">{payment.requisitionNumber ? `REQ_${payment.requisitionNumber}` : payment.requisitionId.slice(0, 8)}</TableCell>
                         <TableCell className="max-w-[200px] truncate">{payment.requisitionTitle || 'N/A'}</TableCell>
                         <TableCell>{payment.department || 'N/A'}</TableCell>
                         <TableCell>{payment.supplierName || 'N/A'}</TableCell>

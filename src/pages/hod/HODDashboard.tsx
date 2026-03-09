@@ -81,9 +81,8 @@ const HODDashboard = () => {
     const updates: Partial<Requisition> = {
       status: action === 'approve' ? 'approved' : 'rejected',
       approverComments: action === 'reject' ? comments[reqId] : undefined,
-      approvedBy: action === 'approve' ? `${user?.firstName || user?.fullName} (HOD)` : undefined,
-      approvedById: action === 'approve' ? user?.id : undefined,
-      approvedDate: action === 'approve' ? new Date().toISOString() : undefined,
+      approvedBy: `${user?.firstName || user?.fullName} (HOD)`,
+      approvedDate: new Date().toISOString(),
     };
 
     try {
