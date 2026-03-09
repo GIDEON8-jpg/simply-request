@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 interface PaymentRecord {
   id: string;
   requisitionId: string;
+  requisitionNumber?: number;
   popFileName: string;
   paymentDate: string;
   processedBy: string;
