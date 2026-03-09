@@ -57,7 +57,8 @@ const PaymentSchedule = () => {
             amount,
             currency,
             department,
-            chosen_supplier_id
+            chosen_supplier_id,
+            requisition_number
           )
         `)
         .order('payment_date', { ascending: false });
