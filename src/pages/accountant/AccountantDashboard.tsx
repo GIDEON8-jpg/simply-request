@@ -70,9 +70,8 @@ const AccountantDashboard = () => {
     const updates: Partial<typeof requisitions[0]> = {
       status: action === 'approve' ? 'completed' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
-      approvedBy: action !== 'reject' ? 'Accountant' : undefined,
-      approvedById: action !== 'reject' ? user?.id : undefined,
-      approvedDate: action !== 'reject' ? new Date().toISOString() : undefined,
+      approvedBy: 'Accountant',
+      approvedDate: action !== 'reject' ? new Date().toISOString() : new Date().toISOString(),
       paymentDate: action === 'approve' ? new Date().toISOString() : undefined,
     };
 
