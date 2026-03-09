@@ -123,7 +123,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
         // CEO: fetch all; component-level filters will apply (> $500 after HOD approval)
         // No additional filter
       } else if (user.role === "admin" || user.role === "hr") {
-        // Admins and HR see all requisitions
+        // Admins and HR see all requisitions (HR can also create)
         // No additional filter
       }
 
