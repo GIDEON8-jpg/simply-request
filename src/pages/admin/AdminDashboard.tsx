@@ -213,7 +213,8 @@ ${departments.map(dept => {
         description: "Department budgets have been updated and synced to the backend",
       });
     } catch (e) {
-      toast({ title: "Save Failed", description: "You may not have permission to save budgets.", variant: "destructive" });
+      const message = e instanceof Error ? e.message : 'Unable to save department budgets.';
+      toast({ title: "Save Failed", description: message, variant: "destructive" });
     }
   };
 
