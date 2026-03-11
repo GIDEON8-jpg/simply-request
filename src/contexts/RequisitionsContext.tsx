@@ -296,7 +296,6 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
 
   const saveBudgetsToBackend = async (newBudgets: Record<Department, number>) => {
     const fiscalYear = new Date().getFullYear();
-    // Only save budgets for unlocked departments
     const rows = Object.entries(newBudgets)
       .filter(([department]) => !budgetLocks[department as Department])
       .map(([department, total]) => ({
@@ -311,7 +310,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     }
 
     const { error } = await supabase.from("department_budgets").upsert(rows, {
-      onConflict: "department,fiscal_year",
+      onConflict: "department",
     });
 
     if (error) {
@@ -320,6 +319,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       throw error;
     }
 
+    setBudgetsState((prev) => ({ ...prev, ...newBudgets }));
     toast.success("Budgets saved successfully");
   };
 
