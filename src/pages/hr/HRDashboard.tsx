@@ -18,6 +18,7 @@ import { SupplierCategory } from '@/types/requisition';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 
 const HRDashboard = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { suppliers, taxClearances, addSupplier, addTaxClearance, deactivateSupplier, refreshSuppliers, refreshTaxClearances } = useSuppliers();
   const [newSupplier, setNewSupplier] = useState({
