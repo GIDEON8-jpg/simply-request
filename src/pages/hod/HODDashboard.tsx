@@ -10,7 +10,7 @@ import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, ClipboardList, FileText, Eye } from 'lucide-react';
+import { Plus, Edit, ClipboardList, FileText, Eye, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Department, Requisition } from '@/types/requisition';
 import { useToast } from '@/hooks/use-toast';
@@ -287,7 +287,17 @@ const HODDashboard = () => {
           </Card>
 
           {/* Actions */}
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-3">
+            {user?.roles?.includes('hr') && (
+              <Button 
+                variant="outline"
+                onClick={() => navigate('/hr')} 
+                size="lg"
+              >
+                <Users className="mr-2 h-5 w-5" />
+                Supplier Management
+              </Button>
+            )}
             <Button 
               onClick={() => navigate('/hod/new-requisition')} 
               size="lg"
