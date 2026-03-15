@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Upload, Trash2, Download, RefreshCw, Eye, CheckSquare } from 'lucide-react';
+import { Plus, Upload, Trash2, Download, RefreshCw, Eye, CheckSquare, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -17,6 +18,7 @@ import { SupplierCategory } from '@/types/requisition';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 
 const HRDashboard = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { suppliers, taxClearances, addSupplier, addTaxClearance, deactivateSupplier, refreshSuppliers, refreshTaxClearances } = useSuppliers();
   const [newSupplier, setNewSupplier] = useState({
@@ -342,6 +344,22 @@ const HRDashboard = () => {
   return (
     <DashboardLayout title="HR & Admin Dashboard">
       <div className="space-y-6">
+        {/* Create Requisition Button */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Requisitions</h3>
+                <p className="text-sm text-muted-foreground">Create a new procurement requisition for your department</p>
+              </div>
+              <Button onClick={() => navigate('/hr/new-requisition')}>
+                <FileText className="mr-2 h-4 w-4" />
+                New Requisition
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Bulk Import Suppliers */}
         <BulkSupplierImport />
 

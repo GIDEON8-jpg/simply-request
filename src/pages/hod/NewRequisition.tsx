@@ -214,10 +214,11 @@ const NewRequisition = () => {
         chosenRequisitionUrl = publicUrl;
       }
 
-      // Determine if current user is HOD - if so, auto-approve and send to next approver
-      const isHOD = user?.role === 'hod';
-      const isTechnicalDirector = user?.role === 'technical_director';
-      const isCEO = user?.role === 'ceo';
+      // Determine if current user is HOD/TD/CEO - if so, auto-approve and send to next approver
+      const userRoles = user?.roles || [user?.role];
+      const isHOD = userRoles.includes('hod');
+      const isTechnicalDirector = userRoles.includes('technical_director');
+      const isCEO = userRoles.includes('ceo');
       const isHighLevelApprover = isHOD || isTechnicalDirector || isCEO;
       
       // Create requisition in database
@@ -330,9 +331,8 @@ const NewRequisition = () => {
         description: "Your requisition has been submitted and is pending approval.",
       });
 
-      // Navigate based on department
-      const route = formData.department === 'Finance' ? '/finance' : '/hod';
-      navigate(route);
+      // Navigate back to user's dashboard
+      navigate(backRoute);
     } catch (error) {
       console.error('Error submitting requisition:', error);
       toast({
@@ -349,7 +349,7 @@ const NewRequisition = () => {
   const isOverBudget = hasDepartment ? parseFloat(formData.amount || '0') > remainingBudget : false;
   const isBudgetExhausted = hasDepartment && remainingBudget <= 100;
 
-  const backRoute = user?.role === 'finance_manager' ? '/finance_manager' : user?.role === 'preparer' ? '/preparer' : '/hod';
+  const backRoute = user?.role === 'finance_manager' ? '/finance_manager' : user?.role === 'preparer' ? '/preparer' : user?.role === 'hr' ? '/hr' : '/hod';
 
   return (
     <DashboardLayout title="Create New Requisition">

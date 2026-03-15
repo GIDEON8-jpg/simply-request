@@ -5,12 +5,16 @@ import { logAuditEvent } from '@/lib/audit-utils';
 
 export type UserRole = 'preparer' | 'hod' | 'admin' | 'finance_manager' | 'hr' | 'accountant' | 'ceo' | 'technical_director';
 
+// Priority order for determining primary role when user has multiple roles
+const ROLE_PRIORITY: UserRole[] = ['ceo', 'technical_director', 'finance_manager', 'hod', 'accountant', 'admin', 'hr', 'preparer'];
+
 interface User {
   id: string;
   username: string;
   fullName: string;
   email: string;
   role: UserRole;
+  roles: UserRole[];
   department?: string;
   firstName?: string;
 }
@@ -41,7 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             username: u.email?.split('@')[0] || '',
             fullName: '',
             email: u.email || '',
-            role: 'preparer',
+            role: 'preparer' as UserRole,
+            roles: ['preparer' as UserRole],
             department: undefined,
           });
           // Defer profile loading to avoid deadlocks
@@ -64,7 +69,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: u.email?.split('@')[0] || '',
           fullName: '',
           email: u.email || '',
-          role: 'preparer',
+          role: 'preparer' as UserRole,
+          roles: ['preparer' as UserRole],
           department: undefined,
         });
         setTimeout(() => {
@@ -89,7 +95,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('role')
         .eq('user_id', supabaseUser.id);
 
-      const userRole = (roles?.[0]?.role as UserRole) || 'preparer';
+      const allRoles = (roles?.map(r => r.role as UserRole)) || ['preparer'];
+      // Pick the highest-priority role as the primary
+      const primaryRole = ROLE_PRIORITY.find(r => allRoles.includes(r)) || allRoles[0] || 'preparer';
 
       const userData: User = {
         id: supabaseUser.id,
@@ -97,7 +105,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fullName: profile?.full_name || supabaseUser.user_metadata?.full_name || '',
         firstName: profile?.full_name?.split(' ')[0] || supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
         email: profile?.email || supabaseUser.email || '',
-        role: userRole,
+        role: primaryRole,
+        roles: allRoles,
         department: profile?.department || supabaseUser.user_metadata?.department
       };
       setUser(userData);
