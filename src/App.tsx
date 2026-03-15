@@ -23,15 +23,19 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const ProtectedRoute = ({ children, allowedRole }: { children: React.ReactNode; allowedRole?: string }) => {
+const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
   const { isAuthenticated, user } = useAuth();
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
   
-  if (allowedRole && user?.role !== allowedRole) {
-    return <Navigate to={`/${user?.role}`} replace />;
+  if (allowedRoles && allowedRoles.length > 0) {
+    const userRoles = user?.roles || (user?.role ? [user.role] : []);
+    const hasAccess = allowedRoles.some(r => userRoles.includes(r as any));
+    if (!hasAccess) {
+      return <Navigate to={`/${user?.role}`} replace />;
+    }
   }
   
   return <>{children}</>;
