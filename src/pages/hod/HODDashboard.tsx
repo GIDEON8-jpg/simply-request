@@ -10,7 +10,7 @@ import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Plus, Edit, ClipboardList, FileText, Eye } from 'lucide-react';
+import { Plus, Edit, ClipboardList, FileText, Eye, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Department, Requisition } from '@/types/requisition';
 import { useToast } from '@/hooks/use-toast';
