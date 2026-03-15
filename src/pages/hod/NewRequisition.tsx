@@ -214,10 +214,11 @@ const NewRequisition = () => {
         chosenRequisitionUrl = publicUrl;
       }
 
-      // Determine if current user is HOD - if so, auto-approve and send to next approver
-      const isHOD = user?.role === 'hod';
-      const isTechnicalDirector = user?.role === 'technical_director';
-      const isCEO = user?.role === 'ceo';
+      // Determine if current user is HOD/TD/CEO - if so, auto-approve and send to next approver
+      const userRoles = user?.roles || [user?.role];
+      const isHOD = userRoles.includes('hod');
+      const isTechnicalDirector = userRoles.includes('technical_director');
+      const isCEO = userRoles.includes('ceo');
       const isHighLevelApprover = isHOD || isTechnicalDirector || isCEO;
       
       // Create requisition in database
