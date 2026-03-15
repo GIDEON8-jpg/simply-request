@@ -344,6 +344,22 @@ const HRDashboard = () => {
   return (
     <DashboardLayout title="HR & Admin Dashboard">
       <div className="space-y-6">
+        {/* Create Requisition Button */}
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold">Requisitions</h3>
+                <p className="text-sm text-muted-foreground">Create a new procurement requisition for your department</p>
+              </div>
+              <Button onClick={() => navigate('/hr/new-requisition')}>
+                <FileText className="mr-2 h-4 w-4" />
+                New Requisition
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Bulk Import Suppliers */}
         <BulkSupplierImport />
 
