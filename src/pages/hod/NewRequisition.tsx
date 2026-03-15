@@ -331,9 +331,8 @@ const NewRequisition = () => {
         description: "Your requisition has been submitted and is pending approval.",
       });
 
-      // Navigate based on department
-      const route = formData.department === 'Finance' ? '/finance' : '/hod';
-      navigate(route);
+      // Navigate back to user's dashboard
+      navigate(backRoute);
     } catch (error) {
       console.error('Error submitting requisition:', error);
       toast({
