@@ -56,81 +56,86 @@ const App = () => (
             
             {/* Preparer Routes */}
             <Route path="/preparer" element={
-              <ProtectedRoute allowedRole="preparer">
+              <ProtectedRoute allowedRoles={["preparer"]}>
                 <PreparerDashboard />
               </ProtectedRoute>
             } />
             <Route path="/preparer/new-requisition" element={
-              <ProtectedRoute allowedRole="preparer">
+              <ProtectedRoute allowedRoles={["preparer"]}>
                 <NewRequisition />
               </ProtectedRoute>
             } />
             
             {/* HOD Routes */}
             <Route path="/hod" element={
-              <ProtectedRoute allowedRole="hod">
+              <ProtectedRoute allowedRoles={["hod"]}>
                 <HODDashboard />
               </ProtectedRoute>
             } />
             <Route path="/hod/new-requisition" element={
-              <ProtectedRoute allowedRole="hod">
+              <ProtectedRoute allowedRoles={["hod"]}>
                 <NewRequisition />
               </ProtectedRoute>
             } />
             
             {/* Finance Manager Routes */}
             <Route path="/finance_manager" element={
-              <ProtectedRoute allowedRole="finance_manager">
+              <ProtectedRoute allowedRoles={["finance_manager"]}>
                 <FinanceDashboard />
               </ProtectedRoute>
             } />
             <Route path="/finance_manager/new-requisition" element={
-              <ProtectedRoute allowedRole="finance_manager">
+              <ProtectedRoute allowedRoles={["finance_manager"]}>
                 <NewRequisition />
               </ProtectedRoute>
             } />
             
             {/* HR Routes */}
             <Route path="/hr" element={
-              <ProtectedRoute allowedRole="hr">
+              <ProtectedRoute allowedRoles={["hr"]}>
                 <HRDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/hr/new-requisition" element={
+              <ProtectedRoute allowedRoles={["hr"]}>
+                <NewRequisition />
               </ProtectedRoute>
             } />
             
             {/* Accountant Routes */}
             <Route path="/accountant" element={
-              <ProtectedRoute allowedRole="accountant">
+              <ProtectedRoute allowedRoles={["accountant"]}>
                 <AccountantDashboard />
               </ProtectedRoute>
             } />
             
             {/* Technical Director Routes */}
             <Route path="/technical_director" element={
-              <ProtectedRoute allowedRole="technical_director">
+              <ProtectedRoute allowedRoles={["technical_director"]}>
                 <TechnicalDirectorDashboard />
               </ProtectedRoute>
             } />
             <Route path="/technical_director/new-requisition" element={
-              <ProtectedRoute allowedRole="technical_director">
+              <ProtectedRoute allowedRoles={["technical_director"]}>
                 <NewRequisition />
               </ProtectedRoute>
             } />
             
             {/* CEO Routes */}
             <Route path="/ceo" element={
-              <ProtectedRoute allowedRole="ceo">
+              <ProtectedRoute allowedRoles={["ceo"]}>
                 <CEODashboard />
               </ProtectedRoute>
             } />
             <Route path="/ceo/new-requisition" element={
-              <ProtectedRoute allowedRole="ceo">
+              <ProtectedRoute allowedRoles={["ceo"]}>
                 <NewRequisition />
               </ProtectedRoute>
             } />
             
             {/* Admin Routes */}
             <Route path="/admin" element={
-              <ProtectedRoute allowedRole="admin">
+              <ProtectedRoute allowedRoles={["admin"]}>
                 <AdminDashboard />
               </ProtectedRoute>
             } />

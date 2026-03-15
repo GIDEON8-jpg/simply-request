@@ -93,7 +93,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('role')
         .eq('user_id', supabaseUser.id);
 
-      const userRole = (roles?.[0]?.role as UserRole) || 'preparer';
+      const allRoles = (roles?.map(r => r.role as UserRole)) || ['preparer'];
+      // Pick the highest-priority role as the primary
+      const primaryRole = ROLE_PRIORITY.find(r => allRoles.includes(r)) || allRoles[0] || 'preparer';
 
       const userData: User = {
         id: supabaseUser.id,
@@ -101,7 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fullName: profile?.full_name || supabaseUser.user_metadata?.full_name || '',
         firstName: profile?.full_name?.split(' ')[0] || supabaseUser.user_metadata?.full_name?.split(' ')[0] || '',
         email: profile?.email || supabaseUser.email || '',
-        role: userRole,
+        role: primaryRole,
+        roles: allRoles,
         department: profile?.department || supabaseUser.user_metadata?.department
       };
       setUser(userData);
