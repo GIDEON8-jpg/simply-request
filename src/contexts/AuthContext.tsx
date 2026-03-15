@@ -5,12 +5,16 @@ import { logAuditEvent } from '@/lib/audit-utils';
 
 export type UserRole = 'preparer' | 'hod' | 'admin' | 'finance_manager' | 'hr' | 'accountant' | 'ceo' | 'technical_director';
 
+// Priority order for determining primary role when user has multiple roles
+const ROLE_PRIORITY: UserRole[] = ['ceo', 'technical_director', 'finance_manager', 'hod', 'accountant', 'admin', 'hr', 'preparer'];
+
 interface User {
   id: string;
   username: string;
   fullName: string;
   email: string;
   role: UserRole;
+  roles: UserRole[];
   department?: string;
   firstName?: string;
 }
