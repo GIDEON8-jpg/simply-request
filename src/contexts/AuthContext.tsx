@@ -45,7 +45,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             username: u.email?.split('@')[0] || '',
             fullName: '',
             email: u.email || '',
-            role: 'preparer',
+            role: 'preparer' as UserRole,
+            roles: ['preparer' as UserRole],
             department: undefined,
           });
           // Defer profile loading to avoid deadlocks
