@@ -271,6 +271,9 @@ ${departments.map(dept => {
           </CardContent>
         </Card>
 
+        {/* Password Reset */}
+        <UserPasswordReset />
+
         {/* Department Budgets */}
         <Card>
           <CardHeader>
