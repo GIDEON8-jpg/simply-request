@@ -16,6 +16,7 @@ import { Department, RequisitionStatus } from '@/types/requisition';
 import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 import { supabase } from '@/integrations/supabase/client';
 import StorageManagement from '@/components/admin/StorageManagement';
+import UserPasswordReset from '@/components/admin/UserPasswordReset';
 
 interface AuditLog {
   id: string;
@@ -269,6 +270,9 @@ ${departments.map(dept => {
             </Button>
           </CardContent>
         </Card>
+
+        {/* Password Reset */}
+        <UserPasswordReset />
 
         {/* Department Budgets */}
         <Card>
