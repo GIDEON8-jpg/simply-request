@@ -14,6 +14,7 @@ import NewRequisition from "./pages/hod/NewRequisition";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import BulkImport from "./pages/admin/BulkImport";
 import FinanceDashboard from "./pages/finance/FinanceDashboard";
+import DeputyFinanceDashboard from "./pages/finance/DeputyFinanceDashboard";
 import HRDashboard from "./pages/hr/HRDashboard";
 import AccountantDashboard from "./pages/accountant/AccountantDashboard";
 import TechnicalDirectorDashboard from "./pages/technical/TechnicalDirectorDashboard";
