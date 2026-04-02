@@ -39,8 +39,8 @@ const FinanceDashboard = () => {
   const [statusFilter, setStatusFilter] = useState<RequisitionStatus | 'all'>('all');
 
   const pendingRequisitions = requisitions.filter(r => {
-    const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
-    return r.status === 'approved' && usdAmount <= 100 && r.approvedById !== user?.id;
+    return r.status === 'approved' && r.approvedById !== user?.id &&
+      getStuckAt(r) === 'Awaiting Finance Manager';
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
