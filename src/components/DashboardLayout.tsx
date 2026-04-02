@@ -38,9 +38,9 @@ const DashboardLayout = ({ children, title }: DashboardLayoutProps) => {
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">
-              {user?.email} ({user?.role})
+              {user?.email} ({user?.role === 'deputy_finance_manager' ? 'Deputy Finance Manager' : user?.role})
             </span>
-            {(user?.role === 'finance_manager' || user?.role === 'accountant' || user?.role === 'ceo') && (
+            {(user?.role === 'finance_manager' || user?.role === 'deputy_finance_manager' || user?.role === 'accountant' || user?.role === 'ceo') && (
               <Button variant="ghost" size="sm" onClick={() => navigate('/payment-schedule')}>
                 <FileText className="mr-2 h-4 w-4" />
                 Payment Schedule
