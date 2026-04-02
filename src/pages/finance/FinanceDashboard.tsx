@@ -450,9 +450,9 @@ const FinanceDashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Requisitions for Review (&lt; $100)</CardTitle>
+                <CardTitle>Requisitions for Review</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  HOD-approved requisitions requiring your approval (Amount &lt; $100 USD)
+                  Deputy Finance Manager-approved requisitions requiring your approval
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">
