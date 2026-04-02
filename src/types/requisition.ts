@@ -1,7 +1,7 @@
 export type RequisitionStatus = 'pending' | 'approved' | 'approved_wait' | 'completed' | 'rejected';
 export type RequisitionType = 'standard' | 'deviation';
 export type Department = 'Education' | 'IT' | 'Marketing and PR' | 'Technical' | 'HR' | 'Finance' | 'CEO' | 'Registry';
-export type AppRole = 'preparer' | 'hod' | 'finance_manager' | 'technical_director' | 'accountant' | 'ceo' | 'admin' | 'hr';
+export type AppRole = 'preparer' | 'hod' | 'finance_manager' | 'deputy_finance_manager' | 'technical_director' | 'accountant' | 'ceo' | 'admin' | 'hr';
 export type Currency = 'USD' | 'ZWG' | 'GBP' | 'EUR';
 export type SupplierCategory = 
   | 'Advertising and Promo'
