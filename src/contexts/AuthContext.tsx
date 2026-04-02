@@ -3,10 +3,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { logAuditEvent } from '@/lib/audit-utils';
 
-export type UserRole = 'preparer' | 'hod' | 'admin' | 'finance_manager' | 'hr' | 'accountant' | 'ceo' | 'technical_director';
+export type UserRole = 'preparer' | 'hod' | 'admin' | 'finance_manager' | 'deputy_finance_manager' | 'hr' | 'accountant' | 'ceo' | 'technical_director';
 
 // Priority order for determining primary role when user has multiple roles
-const ROLE_PRIORITY: UserRole[] = ['ceo', 'technical_director', 'finance_manager', 'hod', 'accountant', 'admin', 'hr', 'preparer'];
+const ROLE_PRIORITY: UserRole[] = ['ceo', 'technical_director', 'finance_manager', 'deputy_finance_manager', 'hod', 'accountant', 'admin', 'hr', 'preparer'];
 
 interface User {
   id: string;

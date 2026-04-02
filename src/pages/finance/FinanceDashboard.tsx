@@ -39,8 +39,8 @@ const FinanceDashboard = () => {
   const [statusFilter, setStatusFilter] = useState<RequisitionStatus | 'all'>('all');
 
   const pendingRequisitions = requisitions.filter(r => {
-    const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
-    return r.status === 'approved' && usdAmount <= 100 && r.approvedById !== user?.id;
+    return r.status === 'approved' && r.approvedById !== user?.id &&
+      getStuckAt(r) === 'Awaiting Finance Manager';
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
@@ -450,9 +450,9 @@ const FinanceDashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Requisitions for Review (&lt; $100)</CardTitle>
+                <CardTitle>Requisitions for Review</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  HOD-approved requisitions requiring your approval (Amount &lt; $100 USD)
+                  Deputy Finance Manager-approved requisitions requiring your approval
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">

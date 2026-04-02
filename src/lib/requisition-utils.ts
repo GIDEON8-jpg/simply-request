@@ -2,13 +2,12 @@ import { Requisition } from '@/types/requisition';
 
 /**
  * Determines where a requisition is currently stuck in the approval chain.
- * This helps requisition owners understand what approver needs to act next.
+ * 
+ * New flow: HOD → Deputy Finance Manager → Finance Manager → (amount-based: Tech Director/CEO) → Accountant
  */
 export const getStuckAt = (req: Requisition): string => {
   if (req.status === 'completed') return 'Completed';
   if (req.status === 'rejected') return 'Rejected';
-  
-  const usdAmount = req.currency === 'USD' ? req.amount : (req.usdConvertible || req.amount);
   
   // If pending, it's waiting for HOD approval
   if (req.status === 'pending') {
@@ -20,14 +19,24 @@ export const getStuckAt = (req: Requisition): string => {
     return 'On Hold';
   }
   
-  // If approved, check the approval chain based on amount
+  // If approved, check the approval chain
   if (req.status === 'approved') {
-    // Check if it has been approved by HOD only (first level)
-    // approvedBy contains "HOD" if approved by HOD
+    const usdAmount = req.currency === 'USD' ? req.amount : (req.usdConvertible || req.amount);
+    
+    // After HOD approval, goes to Deputy Finance Manager first
     if (!req.approvedBy || req.approvedBy.includes('HOD')) {
-      // Route based on amount
+      return 'Awaiting Deputy Finance Manager';
+    }
+    
+    // After Deputy FM, goes to Finance Manager
+    if (req.approvedBy === 'Deputy Finance Manager') {
+      return 'Awaiting Finance Manager';
+    }
+    
+    // After Finance Manager, route based on amount
+    if (req.approvedBy === 'Finance Manager') {
       if (usdAmount <= 100) {
-        return 'Awaiting Finance Manager';
+        return 'Awaiting Accountant';
       } else if (usdAmount <= 1000) {
         return 'Awaiting Technical Director';
       } else {
@@ -35,8 +44,8 @@ export const getStuckAt = (req: Requisition): string => {
       }
     }
     
-    // If approved by Finance Manager, Technical Director, or CEO, it's waiting for Accountant
-    if (['Finance Manager', 'Technical Director', 'CEO'].includes(req.approvedBy)) {
+    // After Technical Director or CEO, goes to Accountant
+    if (['Technical Director', 'CEO'].includes(req.approvedBy)) {
       return 'Awaiting Accountant';
     }
     

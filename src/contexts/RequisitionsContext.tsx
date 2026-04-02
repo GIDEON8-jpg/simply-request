@@ -113,8 +113,8 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
       } else if (user.role === "technical_director") {
         // Technical Directors: fetch all; component-level filters (status + amount) will apply
         // No additional DB filter to avoid excluding USD-only rows where usd_convertible is null
-      } else if (user.role === "finance_manager") {
-        // Finance Managers: fetch all; component-level filters will apply (< $100 after HOD approval)
+      } else if (user.role === "finance_manager" || user.role === "deputy_finance_manager") {
+        // Finance Managers & Deputy: fetch all; component-level filters will apply
         // No DB amount filter to include records with null usd_convertible
       } else if (user.role === "accountant") {
         // Accountants see approved requisitions for payment processing
