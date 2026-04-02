@@ -91,6 +91,13 @@ const App = () => (
               </ProtectedRoute>
             } />
             
+            {/* Deputy Finance Manager Routes */}
+            <Route path="/deputy_finance_manager" element={
+              <ProtectedRoute allowedRoles={["deputy_finance_manager"]}>
+                <DeputyFinanceDashboard />
+              </ProtectedRoute>
+            } />
+            
             {/* HR Routes */}
             <Route path="/hr" element={
               <ProtectedRoute allowedRoles={["hr"]}>
