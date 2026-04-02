@@ -525,14 +525,24 @@ const FinanceDashboard = () => {
                       <div className="space-y-2">
                         <p className="text-sm font-medium">Chosen Requisition:</p>
                         {req.chosenRequisition && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => forceDownload(req.chosenRequisition!, 'chosen-requisition.pdf')}
-                          >
-                            <FileText className="mr-2 h-4 w-4" />
-                            Download Chosen Requisition
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handlePreviewDocument(req.chosenRequisition!, 'chosen-requisition.pdf')}
+                            >
+                              <Eye className="mr-2 h-4 w-4" />
+                              Preview
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => forceDownload(req.chosenRequisition!, 'chosen-requisition.pdf')}
+                            >
+                              <FileText className="mr-2 h-4 w-4" />
+                              Download
+                            </Button>
+                          </div>
                         )}
                       </div>
 
