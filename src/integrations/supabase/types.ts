@@ -421,6 +421,7 @@ export type Database = {
         | "ceo"
         | "admin"
         | "hr"
+        | "deputy_finance_manager"
       currency_type: "USD" | "ZWG" | "GBP" | "EUR"
       department_type:
         | "Education"
@@ -596,6 +597,7 @@ export const Constants = {
         "ceo",
         "admin",
         "hr",
+        "deputy_finance_manager",
       ],
       currency_type: ["USD", "ZWG", "GBP", "EUR"],
       department_type: [
