@@ -22,7 +22,6 @@ interface NotificationRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -34,21 +33,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Determine next approver based on amount (authorization matrix)
-    let nextRole: string;
-    const usdAmount = currency === 'USD' ? amount : amount; // Simplified, should convert
-    
-    if (usdAmount <= 100) {
-      nextRole = 'finance_manager';
-    } else if (usdAmount <= 1000) {
-      nextRole = 'technical_director';
-    } else {
-      nextRole = 'ceo';
-    }
+    // After HOD approval, ALWAYS route to Deputy Finance Manager first
+    const nextRole = 'deputy_finance_manager';
 
-    console.log(`Amount: ${usdAmount} USD, Next approver role: ${nextRole}`);
+    console.log(`Amount: ${amount} ${currency}, Next approver role: ${nextRole} (Deputy Finance Manager)`);
 
-    // Get users with the next approver role
+    // Get users with the deputy_finance_manager role
     const { data: userRoles, error: rolesError } = await supabase
       .from('user_roles')
       .select('user_id, role, profiles!inner(email, full_name)')
@@ -64,7 +54,6 @@ const handler = async (req: Request): Promise<Response> => {
     const appUrl = 'https://simply-request.lovable.app';
     const emailsSent = [];
 
-    // Fetch the requisition_number for proper REQ_N format
     const { data: reqData } = await supabase
       .from('requisitions')
       .select('requisition_number')
@@ -72,7 +61,6 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
     const reqNumber = reqData?.requisition_number ? `REQ_${reqData.requisition_number}` : requisitionId;
 
-    // Send email to each user
     for (const userRole of userRoles || []) {
       const profile = userRole.profiles as unknown as { email: string; full_name: string };
       
@@ -104,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
                   <p><strong>Approved by:</strong> ${hodName} (HOD)</p>
                 </div>
                 
-                <p>Based on the authorization matrix, this requisition requires your approval.</p>
+                <p>As Deputy Finance Manager, this requisition requires your review before proceeding to the Finance Manager.</p>
                 
                 <p>Log in to the ICAZ Procurement System to review: <a href="${appUrl}" style="color: #2563eb; text-decoration: underline;">${appUrl}</a></p>
                 
