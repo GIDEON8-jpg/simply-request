@@ -174,6 +174,12 @@ const DeputyFinanceDashboard = () => {
 
   return (
     <DashboardLayout title="Deputy Finance Manager Dashboard">
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => navigate('/deputy_finance_manager/new-requisition')} className="flex items-center gap-2">
+          <PlusCircle className="h-4 w-4" />
+          Create Requisition
+        </Button>
+      </div>
       <Tabs defaultValue="approvals" className="space-y-6">
         <TabsList className="grid w-full max-w-lg grid-cols-2">
           <TabsTrigger value="approvals" className="flex items-center gap-2">
