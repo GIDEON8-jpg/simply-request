@@ -1,5 +1,61 @@
 import { Requisition } from '@/types/requisition';
 
+type ApprovalRoutingSnapshot = Pick<Requisition, 'status' | 'currency' | 'amount' | 'usdConvertible' | 'approvedByRole' | 'approvedBy'>;
+
+const getUsdAmount = (req: ApprovalRoutingSnapshot): number => {
+  return req.currency === 'USD' ? req.amount : (req.usdConvertible || req.amount);
+};
+
+export const getNextApprovalRole = (req: ApprovalRoutingSnapshot): string | null => {
+  if (req.status !== 'approved') return null;
+
+  const usdAmount = getUsdAmount(req);
+  const role = req.approvedByRole;
+
+  if (role) {
+    if (role === 'hod' || role === 'preparer' || role === 'hr' || role === 'ceo_self' || role === 'technical_director_self' || role === 'finance_manager_self') {
+      return 'deputy_finance_manager';
+    }
+    if (role === 'deputy_finance_manager') {
+      return 'finance_manager';
+    }
+    if (role === 'finance_manager') {
+      if (usdAmount <= 100) return 'accountant';
+      if (usdAmount <= 1000) return 'technical_director';
+      return 'ceo';
+    }
+    if (role === 'technical_director' || role === 'ceo') {
+      return 'accountant';
+    }
+    return 'accountant';
+  }
+
+  if (!req.approvedBy || req.approvedBy.includes('HOD')) {
+    return 'deputy_finance_manager';
+  }
+  if (req.approvedBy === 'Deputy Finance Manager') {
+    return 'finance_manager';
+  }
+  if (req.approvedBy === 'Finance Manager') {
+    if (usdAmount <= 100) return 'accountant';
+    if (usdAmount <= 1000) return 'technical_director';
+    return 'ceo';
+  }
+  if (['Technical Director', 'CEO'].includes(req.approvedBy)) {
+    return 'accountant';
+  }
+
+  return 'deputy_finance_manager';
+};
+
+const APPROVAL_STAGE_LABELS: Record<string, string> = {
+  deputy_finance_manager: 'Awaiting Deputy Finance Manager',
+  finance_manager: 'Awaiting Finance Manager',
+  technical_director: 'Awaiting Technical Director',
+  ceo: 'Awaiting CEO',
+  accountant: 'Awaiting Accountant',
+};
+
 /**
  * Determines where a requisition is currently stuck in the approval chain.
  * 
@@ -19,53 +75,8 @@ export const getStuckAt = (req: Requisition): string => {
   }
   
   if (req.status === 'approved') {
-    const usdAmount = req.currency === 'USD' ? req.amount : (req.usdConvertible || req.amount);
-    const role = req.approvedByRole;
-    
-    // Use role-based routing when available
-    if (role) {
-      if (role === 'hod' || role === 'preparer' || role === 'hr' || role === 'ceo_self' || role === 'technical_director_self' || role === 'finance_manager_self') {
-        return 'Awaiting Deputy Finance Manager';
-      }
-      if (role === 'deputy_finance_manager') {
-        return 'Awaiting Finance Manager';
-      }
-      if (role === 'finance_manager') {
-        if (usdAmount <= 100) {
-          return 'Awaiting Accountant';
-        } else if (usdAmount <= 1000) {
-          return 'Awaiting Technical Director';
-        } else {
-          return 'Awaiting CEO';
-        }
-      }
-      if (role === 'technical_director' || role === 'ceo') {
-        return 'Awaiting Accountant';
-      }
-      return 'Awaiting Accountant';
-    }
-    
-    // Fallback: name-based matching for old data without approvedByRole
-    if (!req.approvedBy || req.approvedBy.includes('HOD')) {
-      return 'Awaiting Deputy Finance Manager';
-    }
-    if (req.approvedBy === 'Deputy Finance Manager') {
-      return 'Awaiting Finance Manager';
-    }
-    if (req.approvedBy === 'Finance Manager') {
-      if (usdAmount <= 100) {
-        return 'Awaiting Accountant';
-      } else if (usdAmount <= 1000) {
-        return 'Awaiting Technical Director';
-      } else {
-        return 'Awaiting CEO';
-      }
-    }
-    if (['Technical Director', 'CEO'].includes(req.approvedBy)) {
-      return 'Awaiting Accountant';
-    }
-    
-    return 'Awaiting Deputy Finance Manager';
+    const nextRole = getNextApprovalRole(req);
+    return nextRole ? APPROVAL_STAGE_LABELS[nextRole] || 'Awaiting Accountant' : 'Awaiting Deputy Finance Manager';
   }
   
   return 'Unknown';
