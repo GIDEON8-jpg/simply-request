@@ -197,6 +197,7 @@ export type Database = {
         Row: {
           amount: number
           approved_by: string | null
+          approved_by_role: string | null
           approved_date: string | null
           approver_comments: string | null
           budget_code: string
@@ -220,6 +221,7 @@ export type Database = {
         Insert: {
           amount: number
           approved_by?: string | null
+          approved_by_role?: string | null
           approved_date?: string | null
           approver_comments?: string | null
           budget_code: string
@@ -243,6 +245,7 @@ export type Database = {
         Update: {
           amount?: number
           approved_by?: string | null
+          approved_by_role?: string | null
           approved_date?: string | null
           approver_comments?: string | null
           budget_code?: string
