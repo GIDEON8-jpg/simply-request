@@ -14,6 +14,7 @@ import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
 import { logAuditEvent } from '@/lib/audit-utils';
+import { getNextApprovalRole } from '@/lib/requisition-utils';
 
 const TechnicalDirectorDashboard = () => {
   const { toast } = useToast();
@@ -28,8 +29,7 @@ const TechnicalDirectorDashboard = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const pendingRequisitions = requisitions.filter(r => {
-    const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
-    return r.status === 'approved' && usdAmount >= 100 && usdAmount <= 500 && r.approvedById !== user?.id;
+    return r.status === 'approved' && r.approvedById !== user?.id && getNextApprovalRole(r) === 'technical_director';
   });
 
   const handleAction = async (reqId: string, action: 'approve' | 'reject' | 'wait') => {
@@ -217,9 +217,9 @@ const TechnicalDirectorDashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Requisitions for Technical Director Approval ($100 - $500)</CardTitle>
+                <CardTitle>Requisitions for Technical Director Approval ($101 - $1000)</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  HOD-approved requisitions requiring your approval ($100 - $500 USD)
+                  Finance Manager-approved requisitions requiring your approval ($101 - $1000 USD)
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">

@@ -20,7 +20,7 @@ import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
 import { RequisitionStatus } from '@/types/requisition';
-import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
+import { getNextApprovalRole, getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 import { logAuditEvent } from '@/lib/audit-utils';
 
 const FinanceDashboard = () => {
@@ -40,7 +40,7 @@ const FinanceDashboard = () => {
 
   const pendingRequisitions = requisitions.filter(r => {
     return r.status === 'approved' && r.approvedById !== user?.id &&
-      getStuckAt(r) === 'Awaiting Finance Manager';
+      getNextApprovalRole(r) === 'finance_manager';
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
@@ -113,7 +113,7 @@ const FinanceDashboard = () => {
       approvedDate: new Date().toISOString(),
     };
 
-    updateRequisition(reqId, updates);
+    await updateRequisition(reqId, updates);
 
     // Log audit event
     await logAuditEvent({
@@ -124,29 +124,56 @@ const FinanceDashboard = () => {
       details: `Finance Manager ${action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'put on hold'} requisition "${requisition?.title}" - Amount: $${requisition?.amount}`,
     });
 
-    // Send notification to accountant when approved
+    let nextApproverLabel = 'next approver';
+
     if (action === 'approve' && requisition) {
+      const nextRole = getNextApprovalRole({
+        ...requisition,
+        approvedByRole: 'finance_manager',
+        approvedBy: 'Finance Manager',
+      });
+
+      nextApproverLabel = nextRole === 'accountant'
+        ? 'Accountant'
+        : nextRole === 'technical_director'
+          ? 'Technical Director'
+          : 'CEO';
+
       try {
-        await supabase.functions.invoke('notify-accountant', {
-          body: {
-            requisitionId: reqId,
-            requisitionTitle: requisition.title,
-            department: requisition.department,
-            amount: requisition.amount,
-            currency: requisition.currency,
-            approverName: user?.fullName || 'Finance Manager',
-            approverRole: 'Finance Manager',
-          },
-        });
-        console.log('Accountant notification sent successfully');
+        if (nextRole === 'accountant') {
+          await supabase.functions.invoke('notify-accountant', {
+            body: {
+              requisitionId: reqId,
+              requisitionTitle: requisition.title,
+              department: requisition.department,
+              amount: requisition.amount,
+              currency: requisition.currency,
+              approverName: user?.fullName || 'Finance Manager',
+              approverRole: 'Finance Manager',
+            },
+          });
+        } else if (nextRole) {
+          await supabase.functions.invoke('notify-next-approver', {
+            body: {
+              requisitionId: reqId,
+              requisitionTitle: requisition.title,
+              department: requisition.department,
+              amount: requisition.amount,
+              currency: requisition.currency,
+              approverName: user?.fullName || 'Finance Manager',
+              approverRole: 'Finance Manager',
+              nextRole,
+            },
+          });
+        }
       } catch (error) {
-        console.error('Failed to send accountant notification:', error);
+        console.error('Failed to send next-approver notification:', error);
       }
     }
 
     toast({
       title: action === 'approve' ? "Requisition Approved" : action === 'reject' ? "Requisition Rejected" : "Approved with Wait Status",
-      description: `Requisition ${reqId} has been ${action === 'approve' ? 'approved and sent to Accountant' : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
+      description: `Requisition ${reqId} has been ${action === 'approve' ? `approved and sent to ${nextApproverLabel}` : action === 'reject' ? 'rejected' : 'approved but marked for wait'}.`,
     });
 
     setActionedIds(prev => new Set(prev).add(reqId));

@@ -16,6 +16,7 @@ import { useRequisitions } from '@/contexts/RequisitionsContext';
 import { useAuth } from '@/contexts/AuthContext';
 import BudgetWarning from '@/components/BudgetWarning';
 import SupplierPicker from '@/components/SupplierPicker';
+import { getNextApprovalRole } from '@/lib/requisition-utils';
 const NewRequisition = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -308,18 +309,52 @@ const NewRequisition = () => {
           .single();
 
         if (isHighLevelApprover) {
-          // If HOD/TD/CEO creates requisition, notify next approver directly (skip HOD notification)
-          await supabase.functions.invoke('notify-hod-approval', {
-            body: {
-              requisitionId,
-              requisitionTitle: formData.title,
-              department: formData.department,
-              amount: parseFloat(formData.amount),
-              currency: formData.currency,
-              hodName: submitterProfile?.full_name || user?.fullName || 'HOD',
-            },
+          const nextRole = getNextApprovalRole({
+            status: 'approved',
+            amount: parseFloat(formData.amount),
+            currency: formData.currency,
+            usdConvertible: formData.currency !== 'USD' && formData.usdConvertible ? parseFloat(formData.usdConvertible) : undefined,
+            approvedByRole: selfApproveRole || undefined,
+            approvedBy: submitterProfile?.full_name || user?.fullName || undefined,
           });
-          console.log('Notification sent to next approver (skipped HOD step)');
+
+          const approverRoleLabel = selfApproveRole === 'deputy_finance_manager'
+            ? 'Deputy Finance Manager'
+            : selfApproveRole === 'finance_manager_self'
+              ? 'Finance Manager'
+              : selfApproveRole === 'technical_director_self'
+                ? 'Technical Director'
+                : selfApproveRole === 'ceo_self'
+                  ? 'CEO'
+                  : 'HOD';
+
+          if (nextRole === 'accountant') {
+            await supabase.functions.invoke('notify-accountant', {
+              body: {
+                requisitionId,
+                requisitionTitle: formData.title,
+                department: formData.department,
+                amount: parseFloat(formData.amount),
+                currency: formData.currency,
+                approverName: submitterProfile?.full_name || user?.fullName || approverRoleLabel,
+                approverRole: approverRoleLabel,
+              },
+            });
+          } else if (nextRole) {
+            await supabase.functions.invoke('notify-next-approver', {
+              body: {
+                requisitionId,
+                requisitionTitle: formData.title,
+                department: formData.department,
+                amount: parseFloat(formData.amount),
+                currency: formData.currency,
+                approverName: submitterProfile?.full_name || user?.fullName || approverRoleLabel,
+                approverRole: approverRoleLabel,
+                nextRole,
+              },
+            });
+          }
+          console.log('Notification sent to the correct next approver');
         } else {
           // Regular preparer - notify HOD
           await supabase.functions.invoke('notify-requisition-submitted', {

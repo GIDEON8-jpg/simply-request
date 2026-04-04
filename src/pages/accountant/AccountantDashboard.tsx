@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { logAuditEvent } from '@/lib/audit-utils';
+import { getNextApprovalRole } from '@/lib/requisition-utils';
 
 const AccountantDashboard = () => {
   const { toast } = useToast();
@@ -30,7 +31,8 @@ const AccountantDashboard = () => {
 
   const pendingApprovals = requisitions.filter(r => 
     r.status === 'approved' && 
-    !r.paymentDate
+    !r.paymentDate &&
+    getNextApprovalRole(r) === 'accountant'
   );
 
   const approvedForPayment = requisitions.filter(r => 

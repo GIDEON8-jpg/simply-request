@@ -20,7 +20,7 @@ import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
 import { RequisitionStatus } from '@/types/requisition';
-import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
+import { getNextApprovalRole, getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 import { logAuditEvent } from '@/lib/audit-utils';
 
 const DeputyFinanceDashboard = () => {
@@ -41,9 +41,7 @@ const DeputyFinanceDashboard = () => {
   // Deputy FM sees HOD-approved requisitions that haven't been acted on by them yet
   // These are requisitions with status 'approved' where approvedBy contains HOD info
   const pendingRequisitions = requisitions.filter(r => {
-    return r.status === 'approved' && r.approvedById !== user?.id && 
-      // Show only those that were approved by HOD (not by deputy FM or FM)
-      getStuckAt(r) === 'Awaiting Deputy Finance Manager';
+    return r.status === 'approved' && r.approvedById !== user?.id && getNextApprovalRole(r) === 'deputy_finance_manager';
   });
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
@@ -90,7 +88,26 @@ const DeputyFinanceDashboard = () => {
       approvedDate: new Date().toISOString(),
     };
 
-    updateRequisition(reqId, updates);
+    await updateRequisition(reqId, updates);
+
+    if (action === 'approve' && requisition) {
+      try {
+        await supabase.functions.invoke('notify-next-approver', {
+          body: {
+            requisitionId: reqId,
+            requisitionTitle: requisition.title,
+            department: requisition.department,
+            amount: requisition.amount,
+            currency: requisition.currency,
+            approverName: user?.fullName || 'Deputy Finance Manager',
+            approverRole: 'Deputy Finance Manager',
+            nextRole: 'finance_manager',
+          },
+        });
+      } catch (error) {
+        console.error('Failed to send Finance Manager notification:', error);
+      }
+    }
 
     // Log audit event
     await logAuditEvent({

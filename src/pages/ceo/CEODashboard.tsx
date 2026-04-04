@@ -15,6 +15,7 @@ import { forceDownload } from '@/lib/utils';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
 import { supabase } from '@/integrations/supabase/client';
 import { logAuditEvent } from '@/lib/audit-utils';
+import { getNextApprovalRole } from '@/lib/requisition-utils';
 
 const CEODashboard = () => {
   const { toast } = useToast();
@@ -30,8 +31,7 @@ const CEODashboard = () => {
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const pendingRequisitions = requisitions.filter(r => {
-    const usdAmount = r.currency === 'USD' ? r.amount : (r.usdConvertible || 0);
-    return r.status === 'approved' && usdAmount > 500 && r.approvedById !== user?.id;
+    return r.status === 'approved' && r.approvedById !== user?.id && getNextApprovalRole(r) === 'ceo';
   });
 
   const handleAction = async (reqId: string, action: 'approve' | 'reject' | 'wait') => {
@@ -215,9 +215,9 @@ const CEODashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Requisitions for CEO Approval (&gt; $500)</CardTitle>
+                <CardTitle>Requisitions for CEO Approval (&gt; $1000)</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  HOD-approved requisitions requiring your approval (&gt; $500 USD)
+                  Finance Manager-approved requisitions requiring your approval (&gt; $1000 USD)
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">
