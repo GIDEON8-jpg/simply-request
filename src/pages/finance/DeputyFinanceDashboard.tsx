@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, FileText, FileDown, Eye, ClipboardList, BarChart3 } from 'lucide-react';
+import { Download, FileText, FileDown, Eye, ClipboardList, BarChart3, PlusCircle } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
