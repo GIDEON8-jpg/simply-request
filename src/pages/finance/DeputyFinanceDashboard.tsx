@@ -86,6 +86,7 @@ const DeputyFinanceDashboard = () => {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: 'Deputy Finance Manager',
+      approvedByRole: 'deputy_finance_manager',
       approvedDate: new Date().toISOString(),
     };
 

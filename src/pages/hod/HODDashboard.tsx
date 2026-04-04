@@ -82,6 +82,7 @@ const HODDashboard = () => {
       status: action === 'approve' ? 'approved' : 'rejected',
       approverComments: action === 'reject' ? comments[reqId] : undefined,
       approvedBy: `${user?.firstName || user?.fullName} (HOD)`,
+      approvedByRole: 'hod',
       approvedDate: new Date().toISOString(),
     };
 
