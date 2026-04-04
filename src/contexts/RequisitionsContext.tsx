@@ -185,6 +185,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
           approverComments: req.approver_comments,
           approvedBy: req.approved_by_profile?.full_name,
           approvedById: req.approved_by,
+          approvedByRole: req.approved_by_role,
           approvedDate: req.approved_date,
           documents: reqDocs.map((d) => d.file_name),
           attachments: reqDocs.map((d) => ({ id: d.id, fileName: d.file_name, fileUrl: d.file_url, uploadedAt: d.uploaded_at || undefined })),
