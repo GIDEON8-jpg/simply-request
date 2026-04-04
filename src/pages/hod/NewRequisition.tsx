@@ -214,12 +214,22 @@ const NewRequisition = () => {
         chosenRequisitionUrl = publicUrl;
       }
 
-      // Determine if current user is HOD/TD/CEO - if so, auto-approve and send to next approver
+      // Determine if current user is HOD/TD/CEO/FM/DFM - if so, auto-approve and send to next approver
       const userRoles = user?.roles || [user?.role];
       const isHOD = userRoles.includes('hod');
       const isTechnicalDirector = userRoles.includes('technical_director');
       const isCEO = userRoles.includes('ceo');
-      const isHighLevelApprover = isHOD || isTechnicalDirector || isCEO;
+      const isFinanceManager = userRoles.includes('finance_manager');
+      const isDeputyFinanceManager = userRoles.includes('deputy_finance_manager');
+      const isHighLevelApprover = isHOD || isTechnicalDirector || isCEO || isFinanceManager || isDeputyFinanceManager;
+
+      // Determine the role to store for routing
+      let selfApproveRole: string | null = null;
+      if (isHOD) selfApproveRole = 'hod';
+      else if (isDeputyFinanceManager) selfApproveRole = 'deputy_finance_manager';
+      else if (isFinanceManager) selfApproveRole = 'finance_manager_self';
+      else if (isTechnicalDirector) selfApproveRole = 'technical_director_self';
+      else if (isCEO) selfApproveRole = 'ceo_self';
       
       // Create requisition in database
       const requisitionId = crypto.randomUUID();
@@ -238,14 +248,15 @@ const NewRequisition = () => {
           deviation_reason: formData.deviationReason || null,
           budget_code: formData.budgetCode,
           description: formData.description,
-          // If HOD/TD/CEO creates requisition, auto-approve (skip their own approval step)
+          // If HOD/TD/CEO/FM/DFM creates requisition, auto-approve (skip their own approval step)
           status: isHighLevelApprover ? 'approved' : 'pending',
           submitted_by: user?.id || '',
           tax_clearance_id: taxClearanceData?.id || null,
-          // If HOD creates, mark as HOD-approved
+          // If high-level approver creates, mark as self-approved
           approved_by: isHighLevelApprover ? user?.id : null,
           approved_date: isHighLevelApprover ? new Date().toISOString() : null,
-        });
+          approved_by_role: selfApproveRole,
+        } as any);
 
       if (reqError) {
         console.error('Error creating requisition:', reqError);

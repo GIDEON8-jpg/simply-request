@@ -57,6 +57,7 @@ const TechnicalDirectorDashboard = () => {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: 'Technical Director',
+      approvedByRole: 'technical_director',
       approvedDate: new Date().toISOString(),
     };
 

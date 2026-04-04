@@ -68,6 +68,7 @@ export interface Requisition {
   approverComments?: string;
   approvedBy?: string;
   approvedById?: string;
+  approvedByRole?: string;
   approvedDate?: string;
   paymentProof?: string;
   paymentDate?: string;

@@ -109,6 +109,7 @@ const FinanceDashboard = () => {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: 'Finance Manager',
+      approvedByRole: 'finance_manager',
       approvedDate: new Date().toISOString(),
     };
 

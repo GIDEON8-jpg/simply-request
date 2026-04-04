@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, FileText, FileDown, Eye, ClipboardList, BarChart3 } from 'lucide-react';
+import { Download, FileText, FileDown, Eye, ClipboardList, BarChart3, PlusCircle } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import BudgetWarning from '@/components/BudgetWarning';
 import { RequisitionSummary } from '@/components/RequisitionSummary';
@@ -86,6 +86,7 @@ const DeputyFinanceDashboard = () => {
       status: action === 'approve' ? 'approved' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: 'Deputy Finance Manager',
+      approvedByRole: 'deputy_finance_manager',
       approvedDate: new Date().toISOString(),
     };
 
@@ -173,6 +174,12 @@ const DeputyFinanceDashboard = () => {
 
   return (
     <DashboardLayout title="Deputy Finance Manager Dashboard">
+      <div className="flex justify-end mb-4">
+        <Button onClick={() => navigate('/deputy_finance_manager/new-requisition')} className="flex items-center gap-2">
+          <PlusCircle className="h-4 w-4" />
+          Create Requisition
+        </Button>
+      </div>
       <Tabs defaultValue="approvals" className="space-y-6">
         <TabsList className="grid w-full max-w-lg grid-cols-2">
           <TabsTrigger value="approvals" className="flex items-center gap-2">

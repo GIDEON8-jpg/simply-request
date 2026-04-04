@@ -185,6 +185,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
           approverComments: req.approver_comments,
           approvedBy: req.approved_by_profile?.full_name,
           approvedById: req.approved_by,
+          approvedByRole: req.approved_by_role,
           approvedDate: req.approved_date,
           documents: reqDocs.map((d) => d.file_name),
           attachments: reqDocs.map((d) => ({ id: d.id, fileName: d.file_name, fileUrl: d.file_url, uploadedAt: d.uploaded_at || undefined })),
@@ -282,6 +283,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     if (updates.approverComments !== undefined) dbUpdates.approver_comments = updates.approverComments;
     if (updates.approvedDate) dbUpdates.approved_date = updates.approvedDate;
     if (updates.approvedBy || updates.status === 'rejected') dbUpdates.approved_by = user.id;
+    if (updates.approvedByRole) dbUpdates.approved_by_role = updates.approvedByRole;
 
     const { error } = await supabase.from("requisitions").update(dbUpdates).eq("id", id);
 

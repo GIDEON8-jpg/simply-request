@@ -71,6 +71,7 @@ const AccountantDashboard = () => {
       status: action === 'approve' ? 'completed' : action === 'reject' ? 'rejected' : 'approved_wait',
       approverComments: action === 'reject' ? comments[reqId] : action === 'wait' ? waitReasons[reqId] : undefined,
       approvedBy: 'Accountant',
+      approvedByRole: 'accountant',
       approvedDate: action !== 'reject' ? new Date().toISOString() : new Date().toISOString(),
       paymentDate: action === 'approve' ? new Date().toISOString() : undefined,
     };
