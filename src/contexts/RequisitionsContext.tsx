@@ -283,6 +283,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
     if (updates.approverComments !== undefined) dbUpdates.approver_comments = updates.approverComments;
     if (updates.approvedDate) dbUpdates.approved_date = updates.approvedDate;
     if (updates.approvedBy || updates.status === 'rejected') dbUpdates.approved_by = user.id;
+    if (updates.approvedByRole) dbUpdates.approved_by_role = updates.approvedByRole;
 
     const { error } = await supabase.from("requisitions").update(dbUpdates).eq("id", id);
 
