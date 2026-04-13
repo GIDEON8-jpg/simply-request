@@ -215,9 +215,9 @@ const CEODashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Requisitions for CEO Approval (&gt; $1000)</CardTitle>
+                <CardTitle>Requisitions for CEO Approval (&gt; $500)</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Finance Manager-approved requisitions requiring your approval (&gt; $1000 USD)
+                  Finance Manager-approved requisitions requiring your approval (&gt; $500 USD)
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">

@@ -217,9 +217,9 @@ const TechnicalDirectorDashboard = () => {
           <CardHeader>
             <div className="flex justify-between items-start">
               <div>
-                <CardTitle>Requisitions for Technical Director Approval ($101 - $1000)</CardTitle>
+                <CardTitle>Requisitions for Technical Director Approval ($100 - $500)</CardTitle>
                 <p className="text-sm text-muted-foreground">
-                  Finance Manager-approved requisitions requiring your approval ($101 - $1000 USD)
+                  Finance Manager-approved requisitions requiring your approval ($100 - $500 USD)
                 </p>
               </div>
               <Button onClick={handleExportCSV} variant="outline" size="sm">
