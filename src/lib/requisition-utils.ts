@@ -20,8 +20,8 @@ export const getNextApprovalRole = (req: ApprovalRoutingSnapshot): string | null
       return 'finance_manager';
     }
     if (role === 'finance_manager') {
-      if (usdAmount <= 100) return 'accountant';
-      if (usdAmount <= 1000) return 'technical_director';
+      if (usdAmount < 100) return 'accountant';
+      if (usdAmount <= 500) return 'technical_director';
       return 'ceo';
     }
     if (role === 'technical_director' || role === 'ceo') {
@@ -37,8 +37,8 @@ export const getNextApprovalRole = (req: ApprovalRoutingSnapshot): string | null
     return 'finance_manager';
   }
   if (req.approvedBy === 'Finance Manager') {
-    if (usdAmount <= 100) return 'accountant';
-    if (usdAmount <= 1000) return 'technical_director';
+    if (usdAmount < 100) return 'accountant';
+    if (usdAmount <= 500) return 'technical_director';
     return 'ceo';
   }
   if (['Technical Director', 'CEO'].includes(req.approvedBy)) {
@@ -59,7 +59,7 @@ const APPROVAL_STAGE_LABELS: Record<string, string> = {
 /**
  * Determines where a requisition is currently stuck in the approval chain.
  * 
- * New flow: HOD → Deputy Finance Manager → Finance Manager → (amount-based: Tech Director/CEO) → Accountant
+ * New flow: HOD → Deputy Finance Manager → Finance Manager → (USD 100-500: Tech Director, above USD 500: CEO) → Accountant
  * Uses approvedByRole for reliable role-based routing.
  */
 export const getStuckAt = (req: Requisition): string => {
