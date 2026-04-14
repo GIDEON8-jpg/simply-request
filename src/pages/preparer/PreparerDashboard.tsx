@@ -91,7 +91,7 @@ const PreparerDashboard = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-muted-foreground">
-                        {format(new Date(req.submittedDate), 'MMM dd, yyyy')}
+                        {req.submittedDate ? format(new Date(req.submittedDate), 'MMM dd, yyyy') : 'N/A'}
                       </span>
                       <StatusBadge status={req.status} />
                       <Badge 

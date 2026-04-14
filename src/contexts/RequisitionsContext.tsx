@@ -182,6 +182,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
           submittedById: req.submitted_by,
           submittedBy: req.submitted_by_profile?.full_name || "",
           submittedDate: req.submitted_date,
+          // Fallback: use created_at if submitted_date is null
           approverComments: req.approver_comments,
           approvedBy: req.approved_by_profile?.full_name,
           approvedById: req.approved_by,
