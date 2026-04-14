@@ -181,7 +181,7 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
           status: req.status,
           submittedById: req.submitted_by,
           submittedBy: req.submitted_by_profile?.full_name || "",
-          submittedDate: req.submitted_date,
+          submittedDate: req.submitted_date || req.created_at || new Date().toISOString(),
           approverComments: req.approver_comments,
           approvedBy: req.approved_by_profile?.full_name,
           approvedById: req.approved_by,
