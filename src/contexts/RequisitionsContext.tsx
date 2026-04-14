@@ -378,7 +378,10 @@ export const RequisitionsProvider = ({ children }: { children: ReactNode }) => {
 export const useRequisitions = () => {
   const context = useContext(RequisitionsContext);
   if (context === undefined) {
-    throw new Error("useRequisitions must be used within a RequisitionsProvider");
+    // During HMR the provider may momentarily be absent; a full page
+    // reload resolves this.  Throw so React shows the error boundary
+    // instead of silently rendering bad data.
+    throw new Error("useRequisitions must be used within a RequisitionsProvider. Try a full page reload (Ctrl+Shift+R).");
   }
   return context;
 };
