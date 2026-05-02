@@ -52,13 +52,13 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <SuppliersProvider>
-        <RequisitionsProvider>
-          <TooltipProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <SuppliersProvider>
+          <RequisitionsProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
             <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -176,11 +176,11 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-          </TooltipProvider>
-        </RequisitionsProvider>
-      </SuppliersProvider>
-    </AuthProvider>
+            </TooltipProvider>
+          </RequisitionsProvider>
+        </SuppliersProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
