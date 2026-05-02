@@ -22,7 +22,7 @@ const NewRequisition = () => {
   const location = useLocation();
   const { toast } = useToast();
   const { suppliers, taxClearances } = useSuppliers();
-  const { addRequisition, getRemainingBudget } = useRequisitions();
+  const { addRequisition } = useRequisitions();
   const { user } = useAuth();
   const editRequisition = location.state?.editRequisition;
   const [isSubmitting, setIsSubmitting] = useState(false);
