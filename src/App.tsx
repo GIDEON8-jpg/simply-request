@@ -3,9 +3,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext";
-import { SuppliersProvider } from "./contexts/SuppliersContext";
-import { RequisitionsProvider } from "./contexts/RequisitionsContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SuppliersProvider } from "@/contexts/SuppliersContext";
+import { RequisitionsProvider } from "@/contexts/RequisitionsContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import PreparerDashboard from "./pages/preparer/PreparerDashboard";
@@ -25,7 +25,15 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAuthReady, user } = useAuth();
+  
+  if (!isAuthReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+        Loading...
+      </div>
+    );
+  }
   
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
@@ -44,13 +52,13 @@ const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode;
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <SuppliersProvider>
-        <RequisitionsProvider>
-          <TooltipProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <SuppliersProvider>
+          <RequisitionsProvider>
+            <TooltipProvider>
             <Toaster />
             <Sonner />
-            <BrowserRouter>
             <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -168,11 +176,11 @@ const App = () => (
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </BrowserRouter>
-          </TooltipProvider>
-        </RequisitionsProvider>
-      </SuppliersProvider>
-    </AuthProvider>
+            </TooltipProvider>
+          </RequisitionsProvider>
+        </SuppliersProvider>
+      </AuthProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 
