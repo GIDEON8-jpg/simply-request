@@ -7,13 +7,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Plus } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
 import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 
 const PreparerDashboard = () => {
   const navigate = useNavigate();
   const { requisitions } = useRequisitions();
   const { user } = useAuth();
+
+  const formatDisplayDate = (dateValue?: string) => {
+    if (!dateValue) return 'N/A';
+    const date = new Date(dateValue);
+    return Number.isNaN(date.getTime()) ? dateValue : date.toLocaleDateString();
+  };
 
   const myRequisitions = requisitions.filter(
     r => r.submittedById === user?.id
@@ -91,7 +96,7 @@ const PreparerDashboard = () => {
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-muted-foreground">
-                        {req.submittedDate ? format(new Date(req.submittedDate), 'MMM dd, yyyy') : 'N/A'}
+                        {formatDisplayDate(req.submittedDate)}
                       </span>
                       <StatusBadge status={req.status} />
                       <Badge 
