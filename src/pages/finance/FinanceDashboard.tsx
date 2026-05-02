@@ -26,7 +26,7 @@ import { logAuditEvent } from '@/lib/audit-utils';
 const FinanceDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { requisitions, updateRequisition, getRemainingBudget } = useRequisitions();
+  const { requisitions, updateRequisition } = useRequisitions();
   const { user } = useAuth();
   const [comments, setComments] = useState<Record<string, string>>({});
   const [waitReasons, setWaitReasons] = useState<Record<string, string>>({});
@@ -45,8 +45,6 @@ const FinanceDashboard = () => {
 
   const departmentRequisitions = requisitions.filter(r => r.department === 'Finance');
   
-  const remainingBudget = getRemainingBudget('Finance');
-
   // Status counts for ALL requisitions (for the report view)
   const allStatusCounts = {
     pending: requisitions.filter(r => r.status === 'pending').length,
@@ -74,15 +72,6 @@ const FinanceDashboard = () => {
     ? requisitions 
     : requisitions.filter(r => r.status === statusFilter);
 
-  useEffect(() => {
-    if (remainingBudget <= 100) {
-      toast({
-        title: 'Budget Exhausted',
-        description: `Finance cannot create new requisitions. Remaining: $${remainingBudget.toFixed(2)}`,
-        variant: 'destructive',
-      });
-    }
-  }, [remainingBudget, toast]);
 
   const handleAction = async (reqId: string, action: 'approve' | 'reject' | 'wait') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
@@ -394,10 +383,9 @@ const FinanceDashboard = () => {
             <Button 
               onClick={() => navigate('/finance/new-requisition')} 
               size="lg"
-              disabled={remainingBudget <= 100}
             >
               <Plus className="mr-2 h-5 w-5" />
-              {remainingBudget <= 100 ? 'Budget Exhausted' : 'Create New Requisition'}
+              Create New Requisition
             </Button>
           </div>
 
