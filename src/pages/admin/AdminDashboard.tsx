@@ -321,7 +321,7 @@ ${departments.map(dept => {
                       <p className="text-xs text-muted-foreground font-medium">🔒 Budget locked — unlock to edit</p>
                     )}
                     {isExhausted && (
-                      <p className="text-xs text-destructive font-medium">⚠ Budget Exhausted - Cannot submit new requisitions</p>
+                      <p className="text-xs text-muted-foreground">Remaining funds are low — Accounts will track manually.</p>
                     )}
                   </div>
                 );

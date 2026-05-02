@@ -23,7 +23,7 @@ import { logAuditEvent } from '@/lib/audit-utils';
 
 const HODDashboard = () => {
   const navigate = useNavigate();
-  const { requisitions, updateRequisition, getRemainingBudget } = useRequisitions();
+  const { requisitions, updateRequisition } = useRequisitions();
   const { user } = useAuth();
   const { toast } = useToast();
   const previousRequisitionsRef = useRef<Requisition[]>([]);
@@ -53,17 +53,6 @@ const HODDashboard = () => {
     .filter(r => r.status === 'completed')
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const remainingBudget = getRemainingBudget(userDepartment);
-
-  useEffect(() => {
-    if (remainingBudget <= 100) {
-      toast({
-        title: 'Budget Exhausted',
-        description: `${userDepartment} cannot create new requisitions. Remaining: $${remainingBudget.toFixed(2)}`,
-        variant: 'destructive',
-      });
-    }
-  }, [remainingBudget, userDepartment, toast]);
 
   const handleAction = async (reqId: string, action: 'approve' | 'reject') => {
     if (action === 'reject' && !comments[reqId]?.trim()) {
@@ -302,10 +291,9 @@ const HODDashboard = () => {
             <Button 
               onClick={() => navigate('/hod/new-requisition')} 
               size="lg"
-              disabled={remainingBudget <= 100}
             >
               <Plus className="mr-2 h-5 w-5" />
-              {remainingBudget <= 100 ? 'Budget Exhausted' : 'Create New Requisition'}
+              Create New Requisition
             </Button>
           </div>
 
