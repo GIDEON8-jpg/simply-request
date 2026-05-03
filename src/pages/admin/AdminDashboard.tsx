@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, Mail, FileText, Save, RotateCcw, Upload, Users, History, HardDrive, Lock, Unlock } from 'lucide-react';
+import { Download, Mail, FileText, Upload, Users, History, HardDrive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
