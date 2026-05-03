@@ -101,7 +101,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .select('role')
         .eq('user_id', supabaseUser.id);
 
-      const allRoles = (roles?.map(r => r.role as UserRole)) || ['preparer'];
+      const loadedRoles = (roles || []).map(r => r.role as UserRole);
+      const allRoles = loadedRoles.length > 0 ? loadedRoles : ['preparer'];
       // Pick the highest-priority role as the primary
       const primaryRole = ROLE_PRIORITY.find(r => allRoles.includes(r)) || allRoles[0] || 'preparer';
 
