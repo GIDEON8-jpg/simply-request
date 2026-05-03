@@ -206,41 +206,6 @@ ${departments.map(dept => {
     });
   };
 
-  const handleSaveBudgets = async () => {
-    try {
-      await saveBudgetsToBackend(localBudgets);
-      toast({
-        title: "Budgets Saved",
-        description: "Department budgets have been updated and synced to the backend",
-      });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Unable to save department budgets.';
-      toast({ title: "Save Failed", description: message, variant: "destructive" });
-    }
-  };
-
-  const handleResetBudgets = async () => {
-    const zeros = departments.reduce((acc, dept) => {
-      acc[dept] = 0;
-      return acc;
-    }, {} as Record<Department, number>);
-    setLocalBudgets(zeros);
-    try {
-      await saveBudgetsToBackend(zeros);
-      toast({
-        title: 'Budgets Reset',
-        description: 'All department budgets set to $0 and synced to backend.',
-      });
-    } catch (e) {
-      toast({ title: 'Reset Failed', description: 'You may not have permission to reset budgets.', variant: 'destructive' });
-    }
-  };
-
-  const handleBudgetChange = (dept: Department, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setLocalBudgets(prev => ({ ...prev, [dept]: numValue }));
-  };
-
   // Calculate budget usage per department
   const departmentBudgetUsage = departments.map(dept => {
     const used = requisitions
