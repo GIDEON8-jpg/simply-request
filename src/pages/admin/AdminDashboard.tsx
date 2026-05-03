@@ -33,7 +33,7 @@ const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Techn
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { requisitions, budgets, budgetLocks, saveBudgetsToBackend, toggleBudgetLock } = useRequisitions();
+  const { requisitions, budgets } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [statusFilter, setStatusFilter] = useState<RequisitionStatus | 'all'>('all');
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
