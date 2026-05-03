@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import StatusBadge from '@/components/StatusBadge';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, Mail, FileText, Save, RotateCcw, Upload, Users, History, HardDrive, Lock, Unlock } from 'lucide-react';
+import { Download, Mail, FileText, Upload, Users, History, HardDrive } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+
 import { Badge } from '@/components/ui/badge';
 import { Department, RequisitionStatus } from '@/types/requisition';
 import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
@@ -33,7 +33,7 @@ const departments: Department[] = ['Education', 'IT', 'Marketing and PR', 'Techn
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { requisitions, budgets, budgetLocks, saveBudgetsToBackend, toggleBudgetLock } = useRequisitions();
+  const { requisitions, budgets } = useRequisitions();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [statusFilter, setStatusFilter] = useState<RequisitionStatus | 'all'>('all');
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -206,41 +206,6 @@ ${departments.map(dept => {
     });
   };
 
-  const handleSaveBudgets = async () => {
-    try {
-      await saveBudgetsToBackend(localBudgets);
-      toast({
-        title: "Budgets Saved",
-        description: "Department budgets have been updated and synced to the backend",
-      });
-    } catch (e) {
-      const message = e instanceof Error ? e.message : 'Unable to save department budgets.';
-      toast({ title: "Save Failed", description: message, variant: "destructive" });
-    }
-  };
-
-  const handleResetBudgets = async () => {
-    const zeros = departments.reduce((acc, dept) => {
-      acc[dept] = 0;
-      return acc;
-    }, {} as Record<Department, number>);
-    setLocalBudgets(zeros);
-    try {
-      await saveBudgetsToBackend(zeros);
-      toast({
-        title: 'Budgets Reset',
-        description: 'All department budgets set to $0 and synced to backend.',
-      });
-    } catch (e) {
-      toast({ title: 'Reset Failed', description: 'You may not have permission to reset budgets.', variant: 'destructive' });
-    }
-  };
-
-  const handleBudgetChange = (dept: Department, value: string) => {
-    const numValue = parseFloat(value) || 0;
-    setLocalBudgets(prev => ({ ...prev, [dept]: numValue }));
-  };
-
   // Calculate budget usage per department
   const departmentBudgetUsage = departments.map(dept => {
     const used = requisitions
@@ -274,68 +239,32 @@ ${departments.map(dept => {
         {/* Password Reset */}
         <UserPasswordReset />
 
-        {/* Department Budgets */}
+        {/* Department Spend Tracker */}
         <Card>
           <CardHeader>
-            <CardTitle>Department Budgets</CardTitle>
-            <p className="text-sm text-muted-foreground">Set and manage budgets for each department</p>
+            <CardTitle>Department Spend</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Total amount paid out per department (increments as the Accountant completes payments)
+            </p>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {departments.map(dept => {
                 const usage = departmentBudgetUsage.find(d => d.department === dept);
-                const isExhausted = usage && usage.remaining <= 100;
-                const isLocked = budgetLocks[dept] || false;
-                
+                const spent = usage?.used || 0;
+                const count = requisitions.filter(
+                  r => r.department === dept && (r.status === 'completed' || r.paymentDate)
+                ).length;
                 return (
-                  <div key={dept} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor={`budget-${dept}`} className="font-medium">{dept}</Label>
-                      <div className="flex items-center gap-2">
-                        {usage && (
-                          <span className={`text-sm ${isExhausted ? 'text-destructive font-bold' : 'text-muted-foreground'}`}>
-                            Remaining: ${usage.remaining.toFixed(2)}
-                          </span>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => toggleBudgetLock(dept, !isLocked)}
-                          title={isLocked ? 'Unlock budget' : 'Lock budget'}
-                        >
-                          {isLocked ? <Lock className="h-4 w-4 text-destructive" /> : <Unlock className="h-4 w-4 text-muted-foreground" />}
-                        </Button>
-                      </div>
+                  <div key={dept} className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
+                      <p className="font-medium">{dept}</p>
+                      <p className="text-xs text-muted-foreground">{count} paid requisition{count === 1 ? '' : 's'}</p>
                     </div>
-                    <Input
-                      id={`budget-${dept}`}
-                      type="number"
-                      step="0.01"
-                      value={localBudgets[dept] || 0}
-                      onChange={(e) => handleBudgetChange(dept, e.target.value)}
-                      className={isExhausted ? 'border-destructive' : ''}
-                      disabled={isLocked}
-                    />
-                    {isLocked && (
-                      <p className="text-xs text-muted-foreground font-medium">🔒 Budget locked — unlock to edit</p>
-                    )}
-                    {isExhausted && (
-                      <p className="text-xs text-muted-foreground">Remaining funds are low — Accounts will track manually.</p>
-                    )}
+                    <p className="text-lg font-bold">${spent.toFixed(2)}</p>
                   </div>
                 );
               })}
-            </div>
-            <div className="flex gap-3">
-              <Button onClick={handleSaveBudgets} className="flex-1">
-                <Save className="mr-2 h-4 w-4" />
-                Save Department Budgets
-              </Button>
-              <Button onClick={handleResetBudgets} variant="destructive" className="flex-1">
-                <RotateCcw className="mr-2 h-4 w-4" />
-                Reset All Budgets
-              </Button>
             </div>
           </CardContent>
         </Card>
