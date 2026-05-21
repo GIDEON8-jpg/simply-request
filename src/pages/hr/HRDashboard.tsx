@@ -25,6 +25,14 @@ const HRDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { suppliers, taxClearances, addSupplier, addTaxClearance, deactivateSupplier, refreshSuppliers, refreshTaxClearances } = useSuppliers();
+  const { requisitions } = useRequisitions();
+  const { user } = useAuth();
+  const myRequisitions = requisitions.filter(r => r.submittedById === user?.id);
+  const formatDisplayDate = (dateValue?: string) => {
+    if (!dateValue) return 'N/A';
+    const date = new Date(dateValue);
+    return Number.isNaN(date.getTime()) ? dateValue : date.toLocaleDateString();
+  };
   const [newSupplier, setNewSupplier] = useState({
     name: '',
     contactInfo: '',
