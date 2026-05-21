@@ -12,10 +12,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useSuppliers } from '@/contexts/SuppliersContext';
+import { useRequisitions } from '@/contexts/RequisitionsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { BulkSupplierImport } from './BulkSupplierImport';
 import { supabase } from '@/integrations/supabase/client';
 import { SupplierCategory } from '@/types/requisition';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
+import StatusBadge from '@/components/StatusBadge';
+import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 
 const HRDashboard = () => {
   const navigate = useNavigate();
