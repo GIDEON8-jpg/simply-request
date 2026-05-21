@@ -12,15 +12,27 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useSuppliers } from '@/contexts/SuppliersContext';
+import { useRequisitions } from '@/contexts/RequisitionsContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { BulkSupplierImport } from './BulkSupplierImport';
 import { supabase } from '@/integrations/supabase/client';
 import { SupplierCategory } from '@/types/requisition';
 import { DocumentPreviewModal } from '@/components/DocumentPreviewModal';
+import StatusBadge from '@/components/StatusBadge';
+import { getStuckAt, getStuckAtBadgeClass } from '@/lib/requisition-utils';
 
 const HRDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { suppliers, taxClearances, addSupplier, addTaxClearance, deactivateSupplier, refreshSuppliers, refreshTaxClearances } = useSuppliers();
+  const { requisitions } = useRequisitions();
+  const { user } = useAuth();
+  const myRequisitions = requisitions.filter(r => r.submittedById === user?.id);
+  const formatDisplayDate = (dateValue?: string) => {
+    if (!dateValue) return 'N/A';
+    const date = new Date(dateValue);
+    return Number.isNaN(date.getTime()) ? dateValue : date.toLocaleDateString();
+  };
   const [newSupplier, setNewSupplier] = useState({
     name: '',
     contactInfo: '',
@@ -359,6 +371,44 @@ const HRDashboard = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* My Requisitions - status tracker */}
+        <Card>
+          <CardHeader>
+            <CardTitle>My Requisitions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {myRequisitions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                You haven't submitted any requisitions yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myRequisitions.map((req) => (
+                  <div key={req.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                    <div className="flex-1 flex items-center gap-3">
+                      <span className="text-sm font-mono text-muted-foreground">REQ_{req.requisitionNumber}</span>
+                      <span className="font-medium">{req.title}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">
+                        {formatDisplayDate(req.submittedDate)}
+                      </span>
+                      <StatusBadge status={req.status} />
+                      <Badge
+                        variant="outline"
+                        className={getStuckAtBadgeClass(getStuckAt(req))}
+                      >
+                        {getStuckAt(req)}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
 
         {/* Bulk Import Suppliers */}
         <BulkSupplierImport />
