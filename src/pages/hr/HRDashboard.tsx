@@ -372,6 +372,44 @@ const HRDashboard = () => {
           </CardContent>
         </Card>
 
+        {/* My Requisitions - status tracker */}
+        <Card>
+          <CardHeader>
+            <CardTitle>My Requisitions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {myRequisitions.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                You haven't submitted any requisitions yet.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {myRequisitions.map((req) => (
+                  <div key={req.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50">
+                    <div className="flex-1 flex items-center gap-3">
+                      <span className="text-sm font-mono text-muted-foreground">REQ_{req.requisitionNumber}</span>
+                      <span className="font-medium">{req.title}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-muted-foreground">
+                        {formatDisplayDate(req.submittedDate)}
+                      </span>
+                      <StatusBadge status={req.status} />
+                      <Badge
+                        variant="outline"
+                        className={getStuckAtBadgeClass(getStuckAt(req))}
+                      >
+                        {getStuckAt(req)}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+
         {/* Bulk Import Suppliers */}
         <BulkSupplierImport />
 
