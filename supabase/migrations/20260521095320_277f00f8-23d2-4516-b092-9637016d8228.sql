@@ -1,0 +1,1 @@
+ALTER SEQUENCE requisition_number_seq RESTART WITH 1;
