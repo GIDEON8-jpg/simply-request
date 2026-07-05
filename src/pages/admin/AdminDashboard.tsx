@@ -421,7 +421,15 @@ ${departments.map(dept => {
                       <TableCell>{req.department}</TableCell>
                       <TableCell>${(req.amount || 0).toFixed(2)}</TableCell>
                       <TableCell>
-                        <StatusBadge status={req.status} />
+                        <StatusBadge
+                          status={
+                            req.status === 'rejected'
+                              ? 'rejected'
+                              : req.status === 'completed'
+                              ? 'approved'
+                              : 'pending'
+                          }
+                        />
                       </TableCell>
                       <TableCell>
                         <Badge 
