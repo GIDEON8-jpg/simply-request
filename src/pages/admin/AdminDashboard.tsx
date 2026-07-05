@@ -4,9 +4,10 @@ import DashboardLayout from '@/components/DashboardLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import StatusBadge from '@/components/StatusBadge';
 import { useRequisitions } from '@/contexts/RequisitionsContext';
-import { Download, Mail, FileText, Upload, Users, History, HardDrive } from 'lucide-react';
+import { Download, Mail, FileText, Upload, Users, History, HardDrive, HelpCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -400,7 +401,23 @@ ${departments.map(dept => {
                   <TableHead>Created By</TableHead>
                   <TableHead>Department</TableHead>
                   <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger className="flex items-center gap-1 cursor-help underline decoration-dotted">
+                          Status <HelpCircle className="h-3.5 w-3.5" />
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <p className="font-semibold mb-1">Status legend</p>
+                          <ul className="list-disc pl-4 space-y-1 text-xs">
+                            <li><strong>Approved</strong> — requisition has completed the full lifecycle.</li>
+                            <li><strong>Pending</strong> — still moving through the approval workflow.</li>
+                            <li><strong>Rejected</strong> — denied at any stage.</li>
+                          </ul>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </TableHead>
                   <TableHead>Stuck At</TableHead>
                   <TableHead>Date</TableHead>
                 </TableRow>
